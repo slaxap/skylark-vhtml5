@@ -1,0 +1,61 @@
+{
+  "name": "skylark-ve-html5",
+  "title": "Skylark visual html5 designer",
+  "runtime": {
+    "waitseconds" : 600,
+    "skylarkjs": {
+      "version": "0.9.6"
+    },
+    "packages" : [
+       { "name": "codemirror","location": "lib/codemirror" },
+       { "name": "codemirror-formatting","location": "lib/codemirror-formatting","main":"formatting" },
+       { "name": "spectrum-colorpicker","location": "lib/spectrum-colorpicker","main":"spectrum" }
+    ],
+    "paths": {
+      "text": "https://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text",
+      "jquery" : "http://registry.skylarkjs.org/packages/skylark-jquery/v0.9.3/uncompressed/skylark-jquery",
+      "underscore" : "http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min",
+      "backbone" :  "http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone",
+      "backbone-undo": "lib/backbone-undo/Backbone.Undo",
+      "keymaster" : "http://cdnjs.cloudflare.com/ajax/libs/keymaster/1.6.1/keymaster.min"      
+    },
+    "shim": {
+      "backbone": {
+        "deps": ["underscore", "jquery"],
+        "exports": "Backbone"
+      },
+      "backbone-undo": {
+        "deps": ["underscore", "backbone"],
+        "exports": "UndoManager"
+      },
+      "underscore": {
+        "exports": "_"
+      },
+      "keymaster": {
+        "exports": "key"
+      }
+    }
+  },
+  "page": {
+    "routeViewer": "body"
+  },
+
+  "plugins":  {
+        "app": {
+            "hookers": "starting started",
+            "controller":
+            {
+                "type": "scripts/plugins/app/AppController"
+            }
+        }
+    },
+    "routes": {
+        "home":  {
+            "pathto": "/",
+            "controller":
+            {
+                "type": "scripts/routes/home/HomeController"
+            }
+        }
+    }
+}

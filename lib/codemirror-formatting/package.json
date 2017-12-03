@@ -1,0 +1,88 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "codemirror-formatting@^1.0.0",
+        "scope": null,
+        "escapedName": "codemirror-formatting",
+        "name": "codemirror-formatting",
+        "rawSpec": "^1.0.0",
+        "spec": ">=1.0.0 <2.0.0",
+        "type": "range"
+      },
+      "C:\\Studio\\Repo\\utilhub\\frontend\\packages\\skylib\\tools\\grapesjs"
+    ]
+  ],
+  "_from": "codemirror-formatting@>=1.0.0 <2.0.0",
+  "_id": "codemirror-formatting@1.0.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/codemirror-formatting",
+  "_nodeVersion": "5.6.0",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/codemirror-formatting-1.0.0.tgz_1479909101887_0.49919256940484047"
+  },
+  "_npmUser": {
+    "name": "artf",
+    "email": "artur.catch@hotmail.it"
+  },
+  "_npmVersion": "3.10.9",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "codemirror-formatting@^1.0.0",
+    "scope": null,
+    "escapedName": "codemirror-formatting",
+    "name": "codemirror-formatting",
+    "rawSpec": "^1.0.0",
+    "spec": ">=1.0.0 <2.0.0",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/codemirror-formatting/-/codemirror-formatting-1.0.0.tgz",
+  "_shasum": "879cc1fdd9018343c1d5511769ce5360d705ebf2",
+  "_shrinkwrap": null,
+  "_spec": "codemirror-formatting@^1.0.0",
+  "_where": "C:\\Studio\\Repo\\utilhub\\frontend\\packages\\skylib\\tools\\grapesjs",
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/artf/codemirror-formatting/issues"
+  },
+  "dependencies": {},
+  "description": "Codemirror formatting addon http://codemirror.net/2/demo/formatting.html",
+  "devDependencies": {},
+  "directories": {
+    "test": "test"
+  },
+  "dist": {
+    "shasum": "879cc1fdd9018343c1d5511769ce5360d705ebf2",
+    "tarball": "https://registry.npmjs.org/codemirror-formatting/-/codemirror-formatting-1.0.0.tgz"
+  },
+  "gitHead": "6e204db7c8b8a2f8eb4bfeea35b0078dc0fad336",
+  "homepage": "https://github.com/artf/codemirror-formatting#readme",
+  "keywords": [
+    "codemirror",
+    "formatting"
+  ],
+  "license": "MIT",
+  "main": "formatting.js",
+  "maintainers": [
+    {
+      "name": "artf",
+      "email": "artur.catch@hotmail.it"
+    }
+  ],
+  "name": "codemirror-formatting",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/artf/codemirror-formatting.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.0"
+}
