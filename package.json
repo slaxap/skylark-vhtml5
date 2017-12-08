@@ -3,8 +3,8 @@
   "version": "0.9.0-beta",
   "private": true,
   "scripts": {
-    "browse": "sjs browse ./deploy/skylark-ve-html5.slax",
-    "serve": "sjs serve ./deploy/skylark-ve-html5.slax",
+    "browse": "sjs browse ./deploy/skylark-vhtml5.slax",
+    "serve": "sjs serve ./deploy/skylark-vhtml5.slax",
     "build": "sjs build .",
     "deploy": "sjs deploy .",
     "route-add": "sjs routes add . ",
