@@ -1,14 +1,14 @@
-define([
-    "backbone",
-    "./TraitView"
-], function(Backbone, TraitView) {
-    return TraitView.extend({
+define(['exports', 'module', './TraitView'], function(exports, module, TraitView) {
+    'use strict';
 
-        initialize(o) {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = TraitView.extend({
+        initialize: function initialize(o) {
             TraitView.prototype.initialize.apply(this, arguments);
             var ppfx = this.ppfx;
-            this.tmpl = '<div class="' + this.fieldClass + '"><div class="' + this.inputhClass + '"></div>' +
-                '<div class="' + ppfx + 'sel-arrow"><div class="' + ppfx + 'd-s-arrow"></div></div> </div>';
+            this.tmpl = '<div class="' + this.fieldClass + '"><div class="' + this.inputhClass + '"></div>' + '<div class="' + ppfx + 'sel-arrow"><div class="' + ppfx + 'd-s-arrow"></div></div> </div>';
         },
 
         /**
@@ -16,14 +16,14 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getInputEl() {
+        getInputEl: function getInputEl() {
             if (!this.$input) {
                 var md = this.model;
                 var opts = md.get('options') || [];
                 var input = '<select>';
 
                 if (opts.length) {
-                    _.each(opts, el => {
+                    _.each(opts, function(el) {
                         var name, value, style;
                         var attrs = '';
                         if (typeof el === 'string') {
@@ -54,12 +54,10 @@ define([
                     val = attrs[name];
                 }
 
-                if (val)
-                    this.$input.val(val);
+                if (val) this.$input.val(val);
             }
 
             return this.$input.get(0);
-        },
-
+        }
     });
 });

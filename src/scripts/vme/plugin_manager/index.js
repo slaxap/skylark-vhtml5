@@ -1,23 +1,22 @@
-define(['./config/config'], function(defaults) {
-    return function(config) {
+define(['exports', 'module', './config/config'], function(exports, module, defaults) {
+    'use strict';
 
+    module.exports = function(config) {
         var c = config || {};
 
         // Set default options
         for (var name in defaults) {
-            if (!(name in c))
-                c[name] = defaults[name];
+            if (!(name in c)) c[name] = defaults[name];
         }
 
         var plugins = {};
 
         return {
-
             /**
              * Add new plugin. Plugins could not be overwritten
              * @param {string} id Plugin ID
              * @param {Function} plugin Function which contains all plugin logic
-             * @return {this}
+             * @return {Function} The plugin function
              * @example
              * PluginManager.add('some-plugin', function(editor){
              *   editor.Commands.add('new-command', {
@@ -27,11 +26,13 @@ define(['./config/config'], function(defaults) {
              *   })
              * });
              */
-            add(id, plugin) {
-                if (plugins[id])
-                    return this;
+            add: function add(id, plugin) {
+                if (plugins[id]) {
+                    return plugins[id];
+                }
+
                 plugins[id] = plugin;
-                return this;
+                return plugin;
             },
 
             /**
@@ -42,7 +43,7 @@ define(['./config/config'], function(defaults) {
              * var plugin = PluginManager.get('some-plugin');
              * plugin(editor);
              */
-            get(id) {
+            get: function get(id) {
                 return plugins[id];
             },
 
@@ -50,10 +51,9 @@ define(['./config/config'], function(defaults) {
              * Returns object with all plugins
              * @return {Object}
              */
-            getAll() {
+            getAll: function getAll() {
                 return plugins;
             }
-
         };
     };
 });

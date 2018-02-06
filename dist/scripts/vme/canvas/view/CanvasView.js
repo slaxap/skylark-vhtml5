@@ -1,11 +1,13 @@
-define([
-    "backbone",
-    "./FrameView"
-], function(backbone, FrameView) {
-    return Backbone.View.extend({
+define(['exports', 'module', './FrameView'], function(exports, module, FrameView) {
+    'use strict';
 
-        initialize(o) {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
             _.bindAll(this, 'renderBody', 'onFrameScroll', 'clearOff');
+            window.onscroll = this.clearOff;
             this.config = o.config || {};
             this.em = this.config.em || {};
             this.ppfx = this.config.pStylePrefix || '';
@@ -18,10 +20,23 @@ define([
         },
 
         /**
+         * Checks if the element is visible in the canvas's viewport
+         * @param  {HTMLElement}  el
+         * @return {Boolean}
+         */
+        isElInViewport: function isElInViewport(el) {
+            var rect = el.getBoundingClientRect();
+            var frameRect = this.getFrameOffset(1);
+            var rTop = rect.top;
+            var rLeft = rect.left;
+            return rTop >= 0 && rLeft >= 0 && rTop <= frameRect.height && rLeft <= frameRect.width;
+        },
+
+        /**
          * Update tools position
          * @private
          */
-        onFrameScroll() {
+        onFrameScroll: function onFrameScroll() {
             var u = 'px';
             var body = this.frame.el.contentDocument.body;
             this.toolsEl.style.top = '-' + body.scrollTop + u;
@@ -33,12 +48,13 @@ define([
          * Insert scripts into head, it will call renderBody after all scripts loaded or failed
          * @private
          */
-        renderScripts() {
+        renderScripts: function renderScripts() {
             var frame = this.frame;
             var that = this;
 
-            frame.el.onload = () => {
-                var scripts = that.config.scripts.slice(0), // clone
+            frame.el.onload = function() {
+                var scripts = that.config.scripts.slice(0),
+                    // clone
                     counter = 0;
 
                 function appendScript(scripts) {
@@ -60,90 +76,89 @@ define([
          * Render inside frame's body
          * @private
          */
-        renderBody() {
+        renderBody: function renderBody() {
+            var _this = this;
+
             var wrap = this.model.get('frame').get('wrapper');
             var em = this.config.em;
             if (wrap) {
-                var ppfx = this.ppfx;
-                var body = this.frame.$el.contents().find('body');
-                var cssc = em.get('CssComposer');
-                var conf = em.get('Config');
-                var confCanvas = this.config;
-                var protCss = conf.protectedCss;
-                var externalStyles = '';
+                var ppfx;
+                var body;
+                var cssc;
+                var conf;
+                var confCanvas;
+                var protCss;
+                var externalStyles;
+                var frameCss;
 
-                confCanvas.styles.forEach((style) => {
-                    externalStyles += `<link rel="stylesheet" href="${style}"/>`;
-                });
+                (function() {
+                    ppfx = _this.ppfx;
 
-                // rgb(255, 202, 111)
-                const colorWarn = '#ffca6f';
+                    //var body = this.frame.$el.contents().find('body');
+                    body = $(_this.frame.el.contentWindow.document.body);
+                    cssc = em.get('CssComposer');
+                    conf = em.get('Config');
+                    confCanvas = _this.config;
+                    protCss = conf.protectedCss;
+                    externalStyles = '';
 
-                let baseCss = `
-        * {
-          box-sizing: border-box;
-        }
-        html, body, #wrapper {
-          min-height: 100%;
-        }
-        html {
-          height: 100%;
-        }
-        body {
-          margin: 0;
-          height: auto;
-          background-color: #fff
-        }
-        #wrapper {
-          overflow: auto
-        }
-      `;
+                    confCanvas.styles.forEach(function(style) {
+                        externalStyles += '<link rel="stylesheet" href="' + style + '"/>';
+                    });
 
-                let layoutCss = `
-        .${ppfx}comp-selected{
-          outline: 3px solid #3b97e3 !important
-        }
-        .${ppfx}comp-selected-parent{
-          outline: 2px solid ${colorWarn} !important
-        }
-      `;
+                    var colorWarn = '#ffca6f';
 
-                // I need all this styles to make the editor work properly
-                var frameCss = baseCss +
-                    '.' + ppfx + 'dashed :not([contenteditable]) > *[data-highlightable]{outline: 1px dashed rgba(170,170,170,0.7); outline-offset: -2px}' +
-                    layoutCss +
-                    '.' + ppfx + 'no-select{user-select: none; -webkit-user-select:none; -moz-user-select: none}' +
-                    '.' + ppfx + 'freezed{opacity: 0.5; pointer-events: none}' +
-                    '.' + ppfx + 'no-pointer{pointer-events: none}' +
-                    '.' + ppfx + 'plh-image{background:#f5f5f5; border:none; height:50px; width:50px; display:block; outline:3px solid #ffca6f; cursor:pointer}' +
-                    '.' + ppfx + 'grabbing{cursor: grabbing; cursor: -webkit-grabbing}' +
-                    '* ::-webkit-scrollbar-track {background: rgba(0, 0, 0, 0.1)}' +
-                    '* ::-webkit-scrollbar-thumb {background: rgba(255, 255, 255, 0.2)}' +
-                    '* ::-webkit-scrollbar {width: 10px}' +
-                    (conf.canvasCss || '');
-                frameCss += protCss || '';
+                    var baseCss = '\n        * {\n          box-sizing: border-box;\n        }\n        html, body, #wrapper {\n          min-height: 100%;\n        }\n        body {\n          margin: 0;\n          height: 100%;\n          background-color: #fff\n        }\n        #wrapper {\n          overflow: auto;\n          overflow-x: hidden;\n        }\n      ';
+                    // Remove `html { height: 100%;}` from the baseCss as it gives jumpings
+                    // effects (on ENTER) with RTE like CKEditor (maybe some bug there?!?)
+                    // With `body {height: auto;}` jumps in CKEditor are removed but in
+                    // Firefox is impossible to drag stuff in empty canvas, so bring back
+                    // `body {height: 100%;}`.
+                    // For the moment I give the priority to Firefox as it might be
+                    // CKEditor's issue
 
-                if (externalStyles) {
-                    body.append(externalStyles);
-                }
+                    // I need all this styles to make the editor work properly
+                    frameCss = '\n        ' + baseCss + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -3px\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 50px;\n          width: 50px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        * ::-webkit-scrollbar-track {\n          background: rgba(0, 0, 0, 0.1)\n        }\n\n        * ::-webkit-scrollbar-thumb {\n          background: rgba(255, 255, 255, 0.2)\n        }\n\n        * ::-webkit-scrollbar {\n          width: 10px\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (protCss || '') + '\n      ';
 
-                body.append('<style>' + frameCss + '</style>');
-                body.append(wrap.render()).append(cssc.render());
-                body.append(this.getJsContainer());
-                em.trigger('loaded');
-                this.frame.el.contentWindow.onscroll = this.onFrameScroll;
-                this.frame.udpateOffset();
+                    if (externalStyles) {
+                        body.append(externalStyles);
+                    }
 
-                // When the iframe is focused the event dispatcher is not the same so
-                // I need to delegate all events to the parent document
-                var doc = document;
-                var fdoc = this.frame.el.contentDocument;
-                fdoc.addEventListener('keydown', e => {
-                    doc.dispatchEvent(new KeyboardEvent(e.type, e));
-                });
-                fdoc.addEventListener('keyup', e => {
-                    doc.dispatchEvent(new KeyboardEvent(e.type, e));
-                });
+                    body.append('<style>' + frameCss + '</style>');
+                    body.append(wrap.render()).append(cssc.render());
+                    body.append(_this.getJsContainer());
+                    em.trigger('loaded');
+                    _this.frame.el.contentWindow.onscroll = _this.onFrameScroll;
+                    _this.frame.udpateOffset();
+
+                    // When the iframe is focused the event dispatcher is not the same so
+                    // I need to delegate all events to the parent document
+                    var doc = document;
+                    var fdoc = _this.frame.el.contentDocument;
+
+                    // Unfortunately just creating `KeyboardEvent(e.type, e)` is not enough,
+                    // the keyCode/which will be always `0`. Even if it's an old/deprecated
+                    // property keymaster (and many others) still use it... using `defineProperty`
+                    // hack seems the only way
+                    var createCustomEvent = function createCustomEvent(e) {
+                        var oEvent = new KeyboardEvent(e.type, e);
+                        oEvent.keyCodeVal = e.keyCode;
+                        ['keyCode', 'which'].forEach(function(prop) {
+                            Object.defineProperty(oEvent, prop, {
+                                get: function get() {
+                                    return this.keyCodeVal;
+                                }
+                            });
+                        });
+                        return oEvent;
+                    };
+                    fdoc.addEventListener('keydown', function(e) {
+                        doc.dispatchEvent(createCustomEvent(e));
+                    });
+                    fdoc.addEventListener('keyup', function(e) {
+                        doc.dispatchEvent(createCustomEvent(e));
+                    });
+                })();
             }
         },
 
@@ -152,14 +167,14 @@ define([
          * @param  {HTMLElement} el
          * @return {Object}
          */
-        offset(el) {
+        offset: function offset(el) {
             var rect = el.getBoundingClientRect();
             var docBody = el.ownerDocument.body;
             return {
                 top: rect.top + docBody.scrollTop,
                 left: rect.left + docBody.scrollLeft,
                 width: rect.width,
-                height: rect.height,
+                height: rect.height
             };
         },
 
@@ -167,7 +182,7 @@ define([
          * Cleare cached offsets
          * @private
          */
-        clearOff() {
+        clearOff: function clearOff() {
             this.frmOff = null;
             this.cvsOff = null;
         },
@@ -177,9 +192,10 @@ define([
          * @return {Object}
          * @private
          */
-        getFrameOffset(force = 0) {
-            if (!this.frmOff || force)
-                this.frmOff = this.offset(this.frame.el);
+        getFrameOffset: function getFrameOffset() {
+            var force = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+
+            if (!this.frmOff || force) this.frmOff = this.offset(this.frame.el);
             return this.frmOff;
         },
 
@@ -188,9 +204,8 @@ define([
          * @return {Object}
          * @private
          */
-        getCanvasOffset() {
-            if (!this.cvsOff)
-                this.cvsOff = this.offset(this.el);
+        getCanvasOffset: function getCanvasOffset() {
+            if (!this.cvsOff) this.cvsOff = this.offset(this.el);
             return this.cvsOff;
         },
 
@@ -200,7 +215,7 @@ define([
          * @return {Object}
          * @private
          */
-        getElementPos(el, opts) {
+        getElementPos: function getElementPos(el, opts) {
             var opt = opts || {};
             var frmOff = this.getFrameOffset();
             var cvsOff = this.getCanvasOffset();
@@ -211,12 +226,11 @@ define([
 
             var top = eo.top + frmTop - cvsOff.top;
             var left = eo.left + frmLeft - cvsOff.left;
-            return {
-                top,
-                left,
-                height: el.offsetHeight,
-                width: el.offsetWidth
-            };
+            // clientHeight/clientWidth are for SVGs
+            var height = el.offsetHeight || el.clientHeight;
+            var width = el.offsetWidth || el.clientWidth;
+
+            return { top: top, left: left, height: height, width: width };
         },
 
         /**
@@ -224,7 +238,7 @@ define([
          * @return {Object} obj Position object
          * @private
          */
-        getPosition() {
+        getPosition: function getPosition() {
             var bEl = this.frame.el.contentDocument.body;
             var fo = this.getFrameOffset();
             var co = this.getCanvasOffset();
@@ -239,43 +253,35 @@ define([
          * @param {View} view Component's View
          * @private
          */
-        updateScript(view) {
+        updateScript: function updateScript(view) {
             if (!view.scriptContainer) {
                 view.scriptContainer = $('<div>');
                 this.getJsContainer().append(view.scriptContainer.get(0));
             }
 
-            var id = view.model.cid;
-            var script = view.model.get('script');
-            var scrStr = 'function(){' + script + '}';
-            scrStr = typeof script == 'function' ? script.toString() : scrStr;
-
+            var model = view.model;
+            var id = model.getId();
             view.el.id = id;
             view.scriptContainer.html('');
-
             // In editor, I make use of setTimeout as during the append process of elements
             // those will not be available immediatly, therefore 'item' variable
-            view.scriptContainer.append(`<script>
-        setTimeout(function() {
-          var item = document.getElementById('${id}');
-          (${scrStr}.bind(item))()
-        }, 1);
-      </script>`);
+            var script = document.createElement('script');
+            script.innerText = '\n        setTimeout(function() {\n          var item = document.getElementById(\'' + id + '\');\n          if (!item) return;\n          (function(){\n            ' + model.getScriptString() + ';\n          }.bind(item))()\n        }, 1);';
+            view.scriptContainer.get(0).appendChild(script);
         },
 
         /**
          * Get javascript container
          * @private
          */
-        getJsContainer() {
+        getJsContainer: function getJsContainer() {
             if (!this.jsContainer) {
-                this.jsContainer = $('<div>', { class: this.ppfx + 'js-cont' }).get(0);
+                this.jsContainer = $('<div class="' + this.ppfx + 'js-cont">').get(0);
             }
             return this.jsContainer;
         },
 
-
-        render() {
+        render: function render() {
             this.wrapper = this.model.get('wrapper');
 
             if (this.wrapper && typeof this.wrapper.render == 'function') {
@@ -289,37 +295,20 @@ define([
                 }
             }
             var ppfx = this.ppfx;
-            var toolsEl = $('<div>', { id: ppfx + 'tools' }).get(0);
-            this.hlEl = $('<div>', { class: ppfx + 'highlighter' }).get(0);
-            this.badgeEl = $('<div>', { class: ppfx + 'badge' }).get(0);
-            this.placerEl = $('<div>', { class: ppfx + 'placeholder' }).get(0);
-            this.placerIntEl = $('<div>', { class: ppfx + 'placeholder-int' }).get(0);
-            this.ghostEl = $('<div>', { class: ppfx + 'ghost' }).get(0);
-            this.toolbarEl = $('<div>', { class: ppfx + 'toolbar' }).get(0);
-            this.resizerEl = $('<div>', { class: ppfx + 'resizer' }).get(0);
-            this.offsetEl = $('<div>', { class: ppfx + 'offset-v' }).get(0);
-            this.fixedOffsetEl = $('<div>', { class: ppfx + 'offset-fixed-v' }).get(0);
-            this.placerEl.appendChild(this.placerIntEl);
-            toolsEl.appendChild(this.hlEl);
-            toolsEl.appendChild(this.badgeEl);
-            toolsEl.appendChild(this.placerEl);
-            toolsEl.appendChild(this.ghostEl);
-            toolsEl.appendChild(this.toolbarEl);
-            toolsEl.appendChild(this.resizerEl);
-            toolsEl.appendChild(this.offsetEl);
-            toolsEl.appendChild(this.fixedOffsetEl);
-            this.$el.append(toolsEl);
-            var rte = this.em.get('rte');
-
-            if (rte)
-                toolsEl.appendChild(rte.render());
-
+            this.$el.append('\n      <div id="' + ppfx + 'tools" style="pointer-events:none">\n        <div class="' + ppfx + 'highlighter"></div>\n        <div class="' + ppfx + 'badge"></div>\n        <div class="' + ppfx + 'placeholder">\n          <div class="' + ppfx + 'placeholder-int"></div>\n        </div>\n        <div class="' + ppfx + 'ghost"></div>\n        <div class="' + ppfx + 'toolbar" style="pointer-events:all"></div>\n        <div class="' + ppfx + 'resizer"></div>\n        <div class="' + ppfx + 'offset-v"></div>\n        <div class="' + ppfx + 'offset-fixed-v"></div>\n      </div>\n    ');
+            var el = this.el;
+            var toolsEl = el.querySelector('#' + ppfx + 'tools');
+            this.hlEl = el.querySelector('.' + ppfx + 'highlighter');
+            this.badgeEl = el.querySelector('.' + ppfx + 'badge');
+            this.placerEl = el.querySelector('.' + ppfx + 'placeholder');
+            this.ghostEl = el.querySelector('.' + ppfx + 'ghost');
+            this.toolbarEl = el.querySelector('.' + ppfx + 'toolbar');
+            this.resizerEl = el.querySelector('.' + ppfx + 'resizer');
+            this.offsetEl = el.querySelector('.' + ppfx + 'offset-v');
+            this.fixedOffsetEl = el.querySelector('.' + ppfx + 'offset-fixed-v');
             this.toolsEl = toolsEl;
-            this.$el.attr({ class: this.className });
+            this.el.className = this.className;
             return this;
-        },
-
+        }
     });
-
-
 });

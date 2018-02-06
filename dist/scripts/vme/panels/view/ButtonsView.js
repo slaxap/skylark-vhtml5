@@ -1,10 +1,12 @@
-define([
-    "backbone",
-    "./ButtonView"
-], function(Backbone, ButtonView) {
-    return Backbone.View.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        initialize(o) {
+
+    require(['scripts/vme/panels/view/ButtonView']);
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
             this.opt = o || {};
             this.config = this.opt.config || {};
             this.pfx = this.config.stylePrefix || '';
@@ -20,7 +22,7 @@ define([
          *
          * @return Object
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             this.addToCollection(model);
         },
 
@@ -31,12 +33,12 @@ define([
          *
          * @return Object Object created
          * */
-        addToCollection(model, fragmentEl) {
+        addToCollection: function addToCollection(model, fragmentEl) {
             var fragment = fragmentEl || null;
-            var viewObject = ButtonView;
+            var viewObject = require('scripts/vme/panels/view/ButtonView');
 
             var view = new viewObject({
-                model,
+                model: model,
                 config: this.config,
                 parentM: this.parentM
             });
@@ -51,7 +53,7 @@ define([
             return rendered;
         },
 
-        render() {
+        render: function render() {
             var fragment = document.createDocumentFragment();
             this.$el.empty();
 

@@ -1,39 +1,41 @@
-/**
- * * [add](#add)
- * * [get](#get)
- * * [getAll](#getall)
- * * [remove](#remove)
- *
- * This module allows to customize the toolbar of the Rich Text Editor and use commands from the HTML Editing APIs.
- * For more info about HTML Editing APIs check here:
- * https://developer.mozilla.org/it/docs/Web/API/Document/execCommand
- *
- * It's highly recommended to keep this toolbar as small as possible, especially from styling commands (eg. 'fontSize')
- * and leave this task to the Style Manager.
- *
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var rte = editor.RichTextEditor;
- * ```
- * Complete list of commands
- * https://developer.mozilla.org/it/docs/Web/API/Document/execCommand
- * http://www.quirksmode.org/dom/execCommand.html
- * @module RichTextEditor
- */
-define([
-    './config/config',
-    './model/CommandButtons',
-    './view/TextEditorView',
-    './view/CommandButtonsView'
-], function(defaults, CommandButtons, rte, CommandButtonsView) {
-    return function() {
-        var c = {};
-        var tlbPfx, toolbar, commands;
-        var mainSelf;
+define(['exports', 'module', './model/RichTextEditor', '../utils/mixins', './config/config'], function(exports, module, modelRichTextEditor, utilsMixins, defaults) {
+    /**
+     * This module allows to customize the toolbar of the Rich Text Editor and use commands from the HTML Editing APIs.
+     * For more info about HTML Editing APIs check here:
+     * https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+     *
+     * It's highly recommended to keep this toolbar as small as possible, especially from styling commands (eg. 'fontSize')
+     * and leave this task to the Style Manager.
+     *
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var rte = editor.RichTextEditor;
+     * ```
+     * @module RichTextEditor
+     */
+    'use strict';
+
+    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+    var _RichTextEditor = _interopRequireDefault(modelRichTextEditor);
+
+    module.exports = function() {
+        var config = {};
+        var toolbar = undefined,
+            actions = undefined,
+            lastEl = undefined,
+            globalRte = undefined;
+
+        var hideToolbar = function hideToolbar() {
+            var style = toolbar.style;
+            var size = '-100px';
+            style.top = size;
+            style.left = size;
+            style.display = 'none';
+        };
 
         return {
-
             customRte: null,
 
             /**
@@ -41,128 +43,235 @@ define([
              * @type {String}
              * @private
              */
-            name: 'rte',
+            name: 'RichTextEditor',
 
             /**
              * Initialize module. Automatically called with a new instance of the editor
-             * @param {Object} config Configurations
+             * @param {Object} opts Options
              * @private
              */
-            init(config) {
-                mainSelf = this;
-                c = config || {};
-                for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+            init: function init() {
+                var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+                config = opts;
+
+                for (var _name in defaults) {
+                    if (!(_name in config)) {
+                        config[_name] = defaults[_name];
+                    }
                 }
 
-                var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                var ppfx = config.pStylePrefix;
 
-                tlbPfx = c.stylePrefix;
-                commands = new CommandButtons(c.commands);
-                toolbar = new CommandButtonsView({
-                    collection: commands,
-                    config: c,
+                if (ppfx) {
+                    config.stylePrefix = ppfx + config.stylePrefix;
+                }
+
+                this.pfx = config.stylePrefix;
+                actions = config.actions || [];
+                toolbar = document.createElement('div');
+                toolbar.className = ppfx + 'rte-toolbar ' + ppfx + 'one-bg';
+                globalRte = this.initRte(document.createElement('div'));
+
+                //Avoid closing on toolbar clicking
+                (0, utilsMixins.on)(toolbar, 'mousedown', function(e) {
+                    return e.stopPropagation();
                 });
                 return this;
             },
 
             /**
-             * Add a new command to the toolbar
-             * @param {string} command Command name
-             * @param {Object} opts Command options
-             * @return {Model} Added command
-             * @example
-             * var cm = rte.add('bold', {
-             *   title: 'Make bold',
-             *   class: 'fa fa-bold',
-             * });
-             * // With arguments
-             * var cm = rte.add('fontSize', {
-             *   title: 'Font size',
-             *   options: [
-             *     {name: 'Big', value: 5},
-             *     {name: 'Normal', value: 3},
-             *     {name: 'Small', value: 1}
-             *   ]
-             * });
-             */
-            add(command, opts) {
-                var obj = opts || {};
-                obj.command = command;
-                return commands.add(obj);
-            },
-
-            /**
-             * Get the command by its name
-             * @param {string} command Command name
-             * @return {Model}
-             * @example
-             * var cm = rte.get('fontSize');
-             */
-            get(command) {
-                return commands.where({
-                    command
-                })[0];
-            },
-
-            /**
-             * Returns the collection of commands
-             * @return {Collection}
-             */
-            getAll() {
-                return commands;
-            },
-
-            /**
-             * Triggered when the offset of the editro is changed
+             * Post render callback
+             * @param  {View} ev
              * @private
              */
-            udpatePosition() {
-                var u = 'px';
-                var canvas = c.em.get('Canvas');
-                var pos = canvas.getTargetToElementDim(toolbar.el, this.lastEl, {
-                    event: 'rteToolbarPosUpdate',
-                });
-                var toolbarStyle = toolbar.el.style;
-                toolbarStyle.top = pos.top + u;
-                toolbarStyle.left = pos.left + u;
+            postRender: function postRender(ev) {
+                var canvas = ev.model.get('Canvas');
+                toolbar.style.pointerEvents = 'all';
+                hideToolbar();
+                canvas.getToolsEl().appendChild(toolbar);
             },
 
             /**
-             * Bind rich text editor to the element
-             * @param {View} view
+             * Init the built-in RTE
+             * @param  {HTMLElement} el
+             * @return {RichTextEditor}
+             * @private
+             */
+            initRte: function initRte(el) {
+                var pfx = this.pfx;
+                var actionbarContainer = toolbar;
+                var actionbar = this.actionbar;
+                var actions = this.actions || config.actions;
+                var classes = {
+                    actionbar: pfx + 'actionbar',
+                    button: pfx + 'action',
+                    active: pfx + 'active'
+                };
+                var rte = new _RichTextEditor['default']({
+                    el: el,
+                    classes: classes,
+                    actions: actions,
+                    actionbar: actionbar,
+                    actionbarContainer: actionbarContainer
+                });
+                globalRte && globalRte.setEl(el);
+
+                if (rte.actionbar) {
+                    this.actionbar = rte.actionbar;
+                }
+
+                if (rte.actions) {
+                    this.actions = rte.actions;
+                }
+
+                return rte;
+            },
+
+            /**
+             * Add a new action to the built-in RTE toolbar
+             * @param {string} name Action name
+             * @param {Object} action Action options
+             * @example
+             * rte.add('bold', {
+             *   icon: '<b>B</b>',
+             *   attributes: {title: 'Bold',}
+             *   result: rte => rte.exec('bold')
+             * });
+             * rte.add('link', {
+             *   icon: document.getElementById('t'),
+             *   attributes: {title: 'Link',}
+             *   // Example on it's easy to wrap a selected content
+             *   result: rte => rte.insertHTML(`<a href="#">${rte.selection()}</a>`)
+             * });
+             * // An example with fontSize
+             * rte.add('fontSize', {
+             *   icon: `<select class="gjs-field">
+             *         <option>1</option>
+             *         <option>4</option>
+             *         <option>7</option>
+             *       </select>`,
+             *     // Bind the 'result' on 'change' listener
+             *   event: 'change',
+             *   result: (rte, action) => rte.exec('fontSize', action.btn.firstChild.value),
+             *   // Callback on any input change (mousedown, keydown, etc..)
+             *   update: (rte, action) => {
+             *     const value = rte.doc.queryCommandValue(action.name);
+             *     if (value != 'false') { // value is a string
+             *       action.btn.firstChild.value = value;
+             *     }
+             *    }
+             *   })
+             */
+            add: function add(name) {
+                var action = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+                action.name = name;
+                globalRte.addAction(action, { sync: 1 });
+            },
+
+            /**
+             * Get the action by its name
+             * @param {string} name Action name
+             * @return {Object}
+             * @example
+             * const action = rte.get('bold');
+             * // {name: 'bold', ...}
+             */
+            get: function get(name) {
+                var result = undefined;
+                globalRte.getActions().forEach(function(action) {
+                    if (action.name == name) {
+                        result = action;
+                    }
+                });
+                return result;
+            },
+
+            /**
+             * Get all actions
+             * @return {Array}
+             */
+            getAll: function getAll() {
+                return globalRte.getActions();
+            },
+
+            /**
+             * Remove the action from the toolbar
+             * @param  {string} name
+             * @return {Object} Removed action
+             * @example
+             * const action = rte.remove('bold');
+             * // {name: 'bold', ...}
+             */
+            remove: function remove(name) {
+                var actions = this.getAll();
+                var action = this.get(name);
+
+                if (action) {
+                    var btn = action.btn;
+                    var index = actions.indexOf(action);
+                    btn.parentNode.removeChild(btn);
+                    actions.splice(index, 1);
+                }
+
+                return action;
+            },
+
+            /**
+             * Get the toolbar element
+             * @return {HTMLElement}
+             */
+            getToolbarEl: function getToolbarEl() {
+                return toolbar;
+            },
+
+            /**
+             * Triggered when the offset of the editor is changed
+             * @private
+             */
+            udpatePosition: function udpatePosition() {
+                var un = 'px';
+                var canvas = config.em.get('Canvas');
+                var pos = canvas.getTargetToElementDim(toolbar, lastEl, {
+                    event: 'rteToolbarPosUpdate'
+                });
+
+                if (config.adjustToolbar) {
+                    // Move the toolbar down when the top canvas edge is reached
+                    if (pos.top <= pos.canvasTop) {
+                        pos.top = pos.elementTop + pos.elementHeight;
+                    }
+                }
+
+                var toolbarStyle = toolbar.style;
+                toolbarStyle.top = pos.top + un;
+                toolbarStyle.left = pos.left + un;
+            },
+
+            /**
+             * Enable rich text editor on the element
+             * @param {View} view Component view
              * @param {Object} rte The instance of already defined RTE
              * @private
              * */
-            attach(view, rte) {
-                // lastEl will be used to place the RTE toolbar
-                this.lastEl = view.el;
+            enable: function enable(view, rte) {
+                lastEl = view.el;
+                var em = config.em;
                 var el = view.getChildrenContainer();
                 var customRte = this.customRte;
 
-                // If a custom RTE is defined
-                if (customRte) {
-                    rte = customRte.enable(el, rte);
-                } else {
-                    $(el).wysiwyg({}).focus();
-                }
+                toolbar.style.display = '';
+                rte = customRte ? customRte.enable(el, rte) : this.initRte(el).enable();
 
-                this.show();
-
-                if (c.em) {
+                if (em) {
                     setTimeout(this.udpatePosition.bind(this), 0);
-                    c.em.off('change:canvasOffset', this.udpatePosition, this);
-                    c.em.on('change:canvasOffset', this.udpatePosition, this);
-                    // Update position on scrolling
-                    c.em.off('canvasScroll', this.udpatePosition, this);
-                    c.em.on('canvasScroll', this.udpatePosition, this);
+                    var _event = 'change:canvasOffset canvasScroll';
+                    em.off(_event, this.udpatePosition, this);
+                    em.on(_event, this.udpatePosition, this);
+                    em.trigger('rte:enable', view, rte);
                 }
 
-                //Avoid closing edit mode clicking on toolbar
-                toolbar.$el.on('mousedown', this.disableProp);
                 return rte;
             },
 
@@ -172,79 +281,20 @@ define([
              * @param {Object} rte The instance of already defined RTE
              * @private
              * */
-            detach(view, rte) {
+            disable: function disable(view, rte) {
+                var em = config.em;
                 var customRte = this.customRte;
                 var el = view.getChildrenContainer();
+
                 if (customRte) {
-                    view.model.set('content', el.innerHTML);
                     customRte.disable(el, rte);
                 } else {
-                    $(el).wysiwyg('destroy');
+                    rte && rte.disable();
                 }
-                this.hide();
-                toolbar.$el.off('mousedown', this.disableProp);
-            },
 
-            /**
-             * Unbind rich text editor from the element
-             * @param {View} view
-             * @param {Object} rte The instance of already defined RTE
-             * @private
-             * */
-            focus(view, rte) {
-                var customRte = this.customRte;
-                var el = view.getChildrenContainer();
-                if (customRte) {
-                    if (customRte.focus)
-                        customRte.focus(el, rte);
-                } else {
-                    this.attach(view);
-                }
-            },
-
-            /**
-             * Show the toolbar
-             * @private
-             * */
-            show() {
-                var toolbarStyle = toolbar.el.style;
-                toolbarStyle.display = "block";
-            },
-
-            /**
-             * Hide the toolbar
-             * @private
-             * */
-            hide() {
-                toolbar.el.style.display = "none";
-            },
-
-            /**
-             * Isolate the disable propagation method
-             * @private
-             * */
-            disableProp(e) {
-                e.stopPropagation();
-            },
-
-            /**
-             * Return toolbar element
-             * @return {HTMLElement}
-             * @private
-             */
-            getToolbarEl() {
-                return toolbar.el;
-            },
-
-            /**
-             * Render toolbar
-             * @return {HTMLElement}
-             * @private
-             */
-            render() {
-                return toolbar.render().el;
+                hideToolbar();
+                em && em.trigger('rte:disable', view, rte);
             }
-
         };
     };
 });

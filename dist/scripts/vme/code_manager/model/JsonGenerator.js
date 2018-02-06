@@ -1,10 +1,11 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.Model.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.Model.extend({
         /** @inheritdoc */
-        build(model) {
+        build: function build(model) {
             var json = model.toJSON();
             this.beforeEach(json);
 
@@ -30,9 +31,8 @@ define([
          * Execute on each object
          * @param {Object} obj
          */
-        beforeEach(obj) {
+        beforeEach: function beforeEach(obj) {
             delete obj.status;
         }
-
     });
 });

@@ -1,35 +1,27 @@
-define([
-    "./Component"
-], function(Component) {
-    return Component.extend({
+define(['exports', 'module', './Component'], function(exports, module, Component) {
+    'use strict';
 
-        defaults: _.extend({}, Component.prototype.defaults, {
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = Component.extend({
+        defaults: _extends({}, Component.prototype.defaults, {
             type: 'cell',
             tagName: 'td',
-            draggable: ['tr'],
-        }),
-
+            draggable: ['tr']
+        })
     }, {
-
-        /**
-         * Detect if the passed element is a valid component.
-         * In case the element is valid an object abstracted
-         * from the element will be returned
-         * @param {HTMLElement}
-         * @return {Object}
-         * @private
-         */
-        isComponent(el) {
+        isComponent: function isComponent(el) {
             var result = '';
             var tag = el.tagName;
+
             if (tag == 'TD' || tag == 'TH') {
                 result = {
                     type: 'cell',
                     tagName: tag.toLowerCase()
                 };
             }
-            return result;
-        },
 
+            return result;
+        }
     });
 });

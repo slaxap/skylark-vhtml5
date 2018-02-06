@@ -1,27 +1,23 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        template: _.template(`
-  <div class="<%= pfx %>editor" id="<%= pfx %><%= codeName %>">
-  	<div id="<%= pfx %>title"><%= label %></div>
-  	<div id="<%= pfx %>code"></div>
-  </div>`),
+    var Backbone = require('backbone');
 
-        initialize(o) {
+    module.exports = Backbone.View.extend({
+        template: _.template('\n  <div class="<%= pfx %>editor" id="<%= pfx %><%= codeName %>">\n  \t<div id="<%= pfx %>title"><%= label %></div>\n  \t<div id="<%= pfx %>code"></div>\n  </div>'),
+
+        initialize: function initialize(o) {
             this.config = o.config || {};
             this.pfx = this.config.stylePrefix;
         },
 
-        render() {
+        render: function render() {
             var obj = this.model.toJSON();
             obj.pfx = this.pfx;
             this.$el.html(this.template(obj));
             this.$el.attr('class', this.pfx + 'editor-c');
-            this.$el.find('#' + this.pfx + 'code').html(this.model.get('input'));
+            this.$el.find('#' + this.pfx + 'code').append(this.model.get('input'));
             return this;
-        },
-
+        }
     });
 });

@@ -1,13 +1,13 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        run(ed) {
+    module.exports = {
+        run: function run(ed) {
             ed.Canvas.getBody().className = this.ppfx + 'dashed';
         },
 
-        stop(ed) {
-            ed.Canvas.getBody().className = "";
+        stop: function stop(ed) {
+            ed.Canvas.getBody().className = '';
         }
-
     };
 });

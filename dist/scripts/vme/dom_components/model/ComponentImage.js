@@ -1,26 +1,35 @@
-define([
-    "./Component"
-], function(Component) {
-    return Component.extend({
+define(['exports', 'module', './Component'], function(exports, module, Component) {
+    'use strict';
 
-        defaults: _.extend({}, Component.prototype.defaults, {
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = Component.extend({
+        defaults: _extends({}, Component.prototype.defaults, {
             type: 'image',
             tagName: 'img',
             src: '',
-            void: 1,
-            droppable: false,
-            resizable: true,
-            traits: ['alt']
+            'void': 1,
+            droppable: 0,
+            editable: 1,
+            highlightable: 0,
+            resizable: 1,
+            traits: ['alt'],
+
+            // File to load asynchronously once the model is rendered
+            file: ''
         }),
 
-        initialize(o, opt) {
+        initialize: function initialize(o, opt) {
             Component.prototype.initialize.apply(this, arguments);
             var attr = this.get('attributes');
-            if (attr.src)
-                this.set('src', attr.src);
+            if (attr.src) this.set('src', attr.src);
         },
 
-        initToolbar(...args) {
+        initToolbar: function initToolbar() {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             Component.prototype.initToolbar.apply(this, args);
 
             if (this.sm && this.sm.get) {
@@ -31,10 +40,8 @@ define([
                 if (cmd.has(cmdName)) {
                     var tb = this.get('toolbar');
                     tb.push({
-                        attributes: {
-                            class: 'fa fa-pencil'
-                        },
-                        command: cmdName,
+                        attributes: { 'class': 'fa fa-pencil' },
+                        command: cmdName
                     });
                     this.set('toolbar', tb);
                 }
@@ -46,12 +53,15 @@ define([
          * @return {Object}
          * @private
          */
-        getAttrToHTML(...args) {
+        getAttrToHTML: function getAttrToHTML() {
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
+            }
+
             var attr = Component.prototype.getAttrToHTML.apply(this, args);
             delete attr.onmousedown;
             var src = this.get('src');
-            if (src)
-                attr.src = src;
+            if (src) attr.src = src;
             return attr;
         },
 
@@ -61,7 +71,7 @@ define([
          * @return {object}
          * @private
          */
-        parseUri(uri) {
+        parseUri: function parseUri(uri) {
             var el = document.createElement('a');
             el.href = uri;
             var query = {};
@@ -69,8 +79,7 @@ define([
             for (var i = 0; i < qrs.length; i++) {
                 var pair = qrs[i].split('=');
                 var name = decodeURIComponent(pair[0]);
-                if (name)
-                    query[name] = decodeURIComponent(pair[1]);
+                if (name) query[name] = decodeURIComponent(pair[1]);
             }
             return {
                 hostname: el.hostname,
@@ -79,12 +88,10 @@ define([
                 search: el.search,
                 hash: el.hash,
                 port: el.port,
-                query,
+                query: query
             };
-        },
-
+        }
     }, {
-
         /**
          * Detect if the passed element is a valid component.
          * In case the element is valid an object abstracted
@@ -93,15 +100,12 @@ define([
          * @return {Object}
          * @private
          */
-        isComponent(el) {
+        isComponent: function isComponent(el) {
             var result = '';
             if (el.tagName == 'IMG') {
-                result = {
-                    type: 'image'
-                };
+                result = { type: 'image' };
             }
             return result;
-        },
-
+        }
     });
 });

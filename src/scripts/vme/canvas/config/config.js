@@ -1,6 +1,7 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    module.exports = {
         stylePrefix: 'cv-',
 
         // Coming soon
@@ -25,5 +26,13 @@ define([], function() {
          */
         styles: [],
 
+        /**
+         * Add custom badge naming strategy
+         * @example
+         * customBadgeLabel: function(ComponentModel) {
+         *  return ComponentModel.getName();
+         * }
+         */
+        customBadgeLabel: ''
     };
 });

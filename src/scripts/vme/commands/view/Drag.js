@@ -1,7 +1,9 @@
-define([], function() {
-    return {
-        run(editor, sender, opts) {
-            var el = (opts && opts.el) || '';
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    module.exports = {
+        run: function run(editor, sender, opts) {
+            var el = opts && opts.el || '';
             var canvas = editor.Canvas;
             var dragger = this.dragger;
             var options = opts.options || {};
@@ -26,10 +28,8 @@ define([], function() {
             return dragger;
         },
 
-        stop() {
-            if (this.canvasResizer)
-                this.canvasResizer.blur();
-        },
-
+        stop: function stop() {
+            if (this.canvasResizer) this.canvasResizer.blur();
+        }
     };
 });

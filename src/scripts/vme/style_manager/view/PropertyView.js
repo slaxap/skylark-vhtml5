@@ -1,89 +1,215 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
-        template: _.template(`
-  <div class="<%= ppfx %>field">
-    <span id='<%= pfx %>input-holder'></span>
-  </div>
-  <div style="clear:both"></div>`),
+define(['exports', 'module', 'underscore', '../../utils/mixins'], function(exports, module, underscore, utilsMixins) {
+    'use strict';
 
-        templateLabel: _.template(`
-  <div class="<%= pfx %>label">
-    <div class="<%= pfx %>icon <%= icon %>" title="<%= info %>">
-      <%= label %>
-    </div>
-  </div>`),
+    function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-        events: {
-            'change': 'valueUpdated'
+    var clearProp = 'data-clear-style';
+
+    module.exports = Backbone.View.extend({
+        template: function template(model) {
+            var pfx = this.pfx;
+            return '\n      <div class="' + pfx + 'label">\n        ' + this.templateLabel(model) + '\n      </div>\n      <div class="' + this.ppfx + 'fields">\n        ' + this.templateInput(model) + '\n      </div>\n    ';
         },
 
-        initialize(o) {
+        templateLabel: function templateLabel(model) {
+            var pfx = this.pfx;
+            var icon = model.get('icon');
+            var info = model.get('info');
+            return '\n      <span class="' + pfx + 'icon ' + icon + '" title="' + info + '">\n        ' + model.get('name') + '\n      </span>\n      <b class="' + pfx + 'clear" ' + clearProp + '>&Cross;</b>\n    ';
+        },
+
+        templateInput: function templateInput(model) {
+            return '\n      <div class="' + this.ppfx + 'field">\n        <input placeholder="' + model.getDefaultValue() + '"/>\n      </div>\n    ';
+        },
+
+        events: _defineProperty({
+            change: 'inputValueChanged'
+        }, 'click [' + clearProp + ']', 'clear'),
+
+        initialize: function initialize() {
+            var o = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+            (0, underscore.bindAll)(this, 'targetUpdated');
             this.config = o.config || {};
-            this.em = this.config.em;
+            var em = this.config.em;
+            this.em = em;
             this.pfx = this.config.stylePrefix || '';
             this.ppfx = this.config.pStylePrefix || '';
             this.target = o.target || {};
             this.propTarget = o.propTarget || {};
-            this.onChange = o.onChange || {};
+            this.onChange = o.onChange;
             this.onInputRender = o.onInputRender || {};
             this.customValue = o.customValue || {};
-            this.defaultValue = this.model.get('defaults');
-            this.property = this.model.get('property');
-            this.input = this.$input = null;
-            this.className = this.pfx + 'property';
-            this.inputHolderId = '#' + this.pfx + 'input-holder';
-            this.sector = this.model.collection && this.model.collection.sector;
+            var model = this.model;
+            this.property = model.get('property');
+            this.input = null;
+            var pfx = this.pfx;
+            this.inputHolderId = '#' + pfx + 'input-holder';
+            this.sector = model.collection && model.collection.sector;
+            model.view = this;
 
-            if (!this.model.get('value'))
-                this.model.set('value', this.model.get('defaults'));
+            if (!model.get('value')) {
+                model.set('value', model.getDefaultValue());
+            }
 
+            em && em.on('update:component:style:' + this.property, this.targetUpdated);
             this.listenTo(this.propTarget, 'update', this.targetUpdated);
-            this.listenTo(this.model, 'destroy remove', this.remove);
-            this.listenTo(this.model, 'change:value', this.valueChanged);
-            this.listenTo(this.model, 'targetUpdated', this.targetUpdated);
-            this.listenTo(this.model, 'change:visible', this.updateVisibility);
+            this.listenTo(model, 'destroy remove', this.remove);
+            this.listenTo(model, 'change:value', this.modelValueChanged);
+            this.listenTo(model, 'targetUpdated', this.targetUpdated);
+            this.listenTo(model, 'change:visible', this.updateVisibility);
+            this.listenTo(model, 'change:status', this.updateStatus);
+
+            var init = this.init && this.init.bind(this);
+            init && init();
+        },
+
+        /**
+         * Triggers when the status changes. The status indicates if the value of
+         * the proprerty is changed or inherited
+         * @private
+         */
+        updateStatus: function updateStatus() {
+            var status = this.model.get('status');
+            var pfx = this.pfx;
+            var ppfx = this.ppfx;
+            var config = this.config;
+            var updatedCls = ppfx + 'four-color';
+            var computedCls = ppfx + 'color-warn';
+            var labelEl = this.$el.children('.' + pfx + 'label');
+            var clearStyle = this.getClearEl().style;
+            labelEl.removeClass(updatedCls + ' ' + computedCls);
+            clearStyle.display = 'none';
+
+            switch (status) {
+                case 'updated':
+                    labelEl.addClass(updatedCls);
+
+                    if (config.clearProperties) {
+                        clearStyle.display = 'inline';
+                    }
+                    break;
+                case 'computed':
+                    labelEl.addClass(computedCls);
+                    break;
+            }
+        },
+
+        /**
+         * Clear the property from the target
+         */
+        clear: function clear() {
+            var target = this.getTargetModel();
+            target.removeStyle(this.model.get('property'));
+            this.targetUpdated();
+        },
+
+        /**
+         * Get clear element
+         * @return {HTMLElement}
+         */
+        getClearEl: function getClearEl() {
+            return this.el.querySelector('[' + clearProp + ']');
         },
 
         /**
          * Returns selected target which should have 'style' property
          * @return {Model|null}
          */
-        getTarget() {
-            if (this.selectedComponent)
-                return this.selectedComponent;
-            return this.propTarget ? this.propTarget.model : null;
+        getTarget: function getTarget() {
+            return this.getTargetModel();
         },
 
         /**
-         * Fired when the input value is updated
+         * Returns Styleable model
+         * @return {Model|null}
          */
-        valueUpdated() {
-            if (this.$input)
-                this.model.set('value', this.getInputValue());
+        getTargetModel: function getTargetModel() {
+            return this.propTarget && this.propTarget.model;
         },
 
         /**
-         * Fired when the target is updated
-         * */
-        targetUpdated() {
-            this.selectedComponent = this.propTarget.model;
-            this.helperComponent = this.propTarget.helper;
-            this.checkVisibility();
+         * Returns helper Styleable model
+         * @return {Model|null}
+         */
+        getHelperModel: function getHelperModel() {
+            return this.propTarget && this.propTarget.helper;
+        },
 
-            if (this.getTarget()) {
-                if (!this.sameValue()) {
-                    this.renderInputRequest();
+        /**
+         * Triggers when the value of element input/s is changed, so have to update
+         * the value of the model which will propogate those changes to the target
+         */
+        inputValueChanged: function inputValueChanged(e) {
+            e && e.stopPropagation();
+            this.model.setValue(this.getInputValue(), 1, { fromInput: 1 });
+            this.elementUpdated();
+        },
+
+        /**
+         * Fired when the element of the property is updated
+         */
+        elementUpdated: function elementUpdated() {
+            this.setStatus('updated');
+        },
+
+        setStatus: function setStatus(value) {
+            this.model.set('status', value);
+            var parent = this.model.parent;
+            parent && parent.set('status', value);
+        },
+
+        /**
+         * Fired when the target is changed
+         * */
+        targetUpdated: function targetUpdated() {
+            if (!this.checkVisibility()) {
+                return;
+            }
+
+            var config = this.config;
+            var em = config.em;
+            var model = this.model;
+            var value = '';
+            var status = '';
+            var targetValue = this.getTargetValue({ ignoreDefault: 1 });
+            var defaultValue = model.getDefaultValue();
+            var computedValue = this.getComputedValue();
+
+            if (targetValue) {
+                value = targetValue;
+
+                if (config.highlightChanged) {
+                    status = 'updated';
                 }
+            } else if (computedValue && config.showComputed && computedValue != defaultValue) {
+                value = computedValue;
+
+                if (config.highlightComputed) {
+                    status = 'computed';
+                }
+            } else {
+                value = defaultValue;
+                status = '';
+            }
+
+            model.setValue(value, 0, { fromTarget: 1 });
+            this.setStatus(status);
+
+            if (em) {
+                em.trigger('styleManager:change', this);
+                em.trigger('styleManager:change:' + model.get('property'), this);
             }
         },
 
-        checkVisibility() {
+        checkVisibility: function checkVisibility() {
+            var result = 1;
+
             // Check if need to hide the property
             if (this.config.hideNotStylable) {
                 if (!this.isTargetStylable() || !this.isComponentStylable()) {
                     this.hide();
+                    result = 0;
                 } else {
                     this.show();
                 }
@@ -92,197 +218,143 @@ define([
                     this.sector.trigger('updateVisibility');
                 }
             }
+
+            return result;
         },
 
         /**
-         * Checks if the value from selected component is the
-         * same of the value of the model
-         *
-         * @return {Boolean}
-         * */
-        sameValue() {
-            return this.getComponentValue() == this.getValueForTarget();
-        },
-
-
-        /**
-         * Get the value from the selected component of this property
-         *
-         * @return {String}
-         * */
-        getComponentValue() {
-            var propModel = this.model;
-            var target = this.getTarget();
-
-            if (!target)
-                return;
-
-            var targetProp = target.get('style')[this.property];
-            if (targetProp)
-                this.componentValue = targetProp;
-            else
-                this.componentValue = this.defaultValue + (this.unit || ''); // todo model
-
-            // Check if wrap inside function is required
-            if (propModel.get('functionName')) {
-                var v = this.fetchFromFunction(this.componentValue);
-                if (v)
-                    this.componentValue = v;
-            }
-
-            // This allow to ovveride the normal flow of selecting component value,
-            // useful in composite properties
-            if (this.customValue && typeof this.customValue === "function") {
-                var index = propModel.collection.indexOf(propModel);
-                var t = this.customValue(this, index);
-                if (t)
-                    this.componentValue = t;
-            }
-
-            return this.componentValue;
-        },
-
-        /**
-         * Refactor of getComponentValue
+         * Get the value of this property from the target (eg, Component, CSSRule)
          * @param {Object} [opts] Options
          * @param {Boolean} [options.fetchFromFunction]
          * @param {Boolean} [options.ignoreDefault]
          * @return string
          * @private
          */
-        getTargetValue(opts) {
+        getTargetValue: function getTargetValue() {
+            var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
             var result;
-            var opt = opts || {};
             var model = this.model;
-            var target = this.getTarget();
+            var target = this.getTargetModel();
+            var customFetchValue = this.customValue;
 
             if (!target) {
                 return result;
             }
 
-            result = target.get('style')[model.get('property')];
+            result = target.getStyle()[model.get('property')];
 
-            if (!result && !opt.ignoreDefault) {
-                result = this.getDefaultValue();
+            if (!result && !opts.ignoreDefault) {
+                result = model.getDefaultValue();
+            }
+
+            if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
+                var index = model.collection.indexOf(model);
+                var customValue = customFetchValue(this, index);
+
+                if (customValue) {
+                    result = customValue;
+                }
             }
 
             return result;
         },
 
         /**
-         * Returns default value
+         * Returns computed value
          * @return {String}
          * @private
          */
-        getDefaultValue() {
-            return this.model.get('defaults');
-        },
-
-        /**
-         * Fetch the string from function type value
-         * @param {String} v Function type value
-         *
-         * @return {String}
-         * */
-        fetchFromFunction(v) {
-            return v.substring(v.indexOf("(") + 1, v.lastIndexOf(")"));
-        },
-
-        tryFetchFromFunction(value) {
-            if (!this.model.get('functionName')) {
-                return value;
-            }
-
-            var start = value.indexOf("(") + 1;
-            var end = value.lastIndexOf(")");
-            return value.substring(start, end);
-        },
-
-        /**
-         * Returns value from inputs
-         * @return {string}
-         */
-        getValueForTarget() {
-            return this.model.get('value');
+        getComputedValue: function getComputedValue() {
+            var target = this.propTarget;
+            var computed = target.computed || {};
+            var computedDef = target.computedDefault || {};
+            var avoid = this.config.avoidComputed || [];
+            var property = this.model.get('property');
+            var notToSkip = avoid.indexOf(property) < 0;
+            var value = computed[property];
+            var valueDef = computedDef[(0, utilsMixins.camelCase)(property)];
+            return computed && notToSkip && valueDef !== value && value;
         },
 
         /**
          * Returns value from input
          * @return {string}
          */
-        getInputValue() {
-            return this.$input ? this.$input.val() : '';
+        getInputValue: function getInputValue() {
+            var input = this.getInputEl();
+            return input ? input.value : '';
         },
 
         /**
-         * Property was changed, so I need to update the component too
-         * @param   {Object}  e  Events
-         * @param    {Mixed}    val  Value
-         * @param    {Object}  opt  Options
+         * Triggers when the `value` of the model changes, so the target and
+         * the input element should be updated
+         * @param {Object} e  Event
+         * @param {Mixed} val  Value
+         * @param {Object} opt  Options
          * */
-        valueChanged(e, val, opt) {
-            var mVal = this.getValueForTarget();
+        modelValueChanged: function modelValueChanged(e, val) {
+            var opt = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
             var em = this.config.em;
             var model = this.model;
-
-            if (this.$input)
-                this.setValue(mVal);
-
-            if (!this.getTarget())
-                return;
-
-            // Check if component is allowed to be styled
-            if (!this.isTargetStylable() || !this.isComponentStylable()) {
-                return;
-            }
-
-            var value = this.getValueForTarget();
-
-            var func = model.get('functionName');
-            if (func)
-                value = func + '(' + value + ')';
-
+            var value = model.getFullValue();
             var target = this.getTarget();
             var onChange = this.onChange;
 
-            if (onChange && typeof onChange === "function") {
-                onChange(target, this, opt);
-            } else
-                this.updateTargetStyle(value, null, opt);
+            // Avoid element update if the change comes from it
+            if (!opt.fromInput) {
+                this.setValue(value);
+            }
+
+            // Check if component is allowed to be styled
+            if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
+                return;
+            }
+
+            // Avoid target update if the changes comes from it
+            if (!opt.fromTarget) {
+                // The onChange is used by Composite/Stack properties, so I'd avoid sending
+                // it back if the change comes from one of those
+                if (onChange && !opt.fromParent) {
+                    onChange(target, this, opt);
+                } else {
+                    this.updateTargetStyle(value, null, opt);
+                }
+            }
 
             if (em) {
-                em.trigger('component:update', model);
-                em.trigger('component:styleUpdate', model);
-                em.trigger('component:styleUpdate:' + model.get('property'), model);
+                em.trigger('component:update', target);
+                em.trigger('component:styleUpdate', target);
+                em.trigger('component:styleUpdate:' + model.get('property'), target);
             }
         },
 
         /**
          * Update target style
-         * @param  {string} propertyValue
-         * @param  {string} propertyName
+         * @param  {string} value
+         * @param  {string} name
          * @param  {Object} opts
          */
-        updateTargetStyle(propertyValue, propertyName, opts) {
-            var propName = propertyName || this.property;
-            var value = propertyValue || '';
-            var avSt = opts ? opts.avoidStore : 0;
+        updateTargetStyle: function updateTargetStyle(value) {
+            var name = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
+            var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+            var property = name || this.model.get('property');
             var target = this.getTarget();
-            var targetStyle = _.clone(target.get('style'));
+            var style = target.getStyle();
 
-            if (value)
-                targetStyle[propName] = value;
-            else
-                delete targetStyle[propName];
+            if (value) {
+                style[property] = value;
+            } else {
+                delete style[property];
+            }
 
-            target.set('style', targetStyle, {
-                avoidStore: avSt
-            });
+            target.setStyle(style, opts);
 
-            if (this.helperComponent)
-                this.helperComponent.set('style', targetStyle, {
-                    avoidStore: avSt
-                });
+            // Helper is used by `states` like ':hover' to show its preview
+            var helper = this.getHelperModel();
+            helper && helper.setStyle(style, opts);
         },
 
         /**
@@ -290,12 +362,34 @@ define([
          * The target could be the Component as the CSS Rule
          * @return {Boolean}
          */
-        isTargetStylable() {
-            var stylable = this.getTarget().get('stylable');
+        isTargetStylable: function isTargetStylable(target) {
+            if (this.model.get('id') == 'flex-width') {
+                //debugger;
+            }
+            var trg = target || this.getTarget();
+            var model = this.model;
+            var property = model.get('property');
+            var toRequire = model.get('toRequire');
+            var unstylable = trg.get('unstylable');
+            var stylableReq = trg.get('stylable-require');
+            var stylable = trg.get('stylable');
+
             // Stylable could also be an array indicating with which property
             // the target could be styled
-            if (stylable instanceof Array)
-                stylable = _.indexOf(stylable, this.property) >= 0;
+            if ((0, underscore.isArray)(stylable)) {
+                stylable = stylable.indexOf(property) >= 0;
+            }
+
+            // Check if the property was signed as unstylable
+            if ((0, underscore.isArray)(unstylable)) {
+                stylable = unstylable.indexOf(property) < 0;
+            }
+
+            // Check if the property is available only if requested
+            if (toRequire) {
+                stylable = stylableReq && stylableReq.indexOf(property) >= 0 || !target;
+            }
+
             return stylable;
         },
 
@@ -304,7 +398,7 @@ define([
          * The target could be the Component as the CSS Rule
          * @return {Boolean}
          */
-        isComponentStylable() {
+        isComponentStylable: function isComponentStylable() {
             var em = this.em;
             var component = em && em.get('selectedComponent');
 
@@ -312,116 +406,71 @@ define([
                 return true;
             }
 
-            var stylable = component.get('stylable');
-            // Stylable could also be an array indicating with which property
-            // the target could be styled
-            if (stylable instanceof Array) {
-                stylable = _.indexOf(stylable, this.property) >= 0;
-            }
-
-            return stylable;
+            return this.isTargetStylable(component);
         },
 
         /**
-         * Set value to the input
-         * @param   {String}  value
-         * @param   {Boolean}  force
+         * Passed a raw value you have to update the input element, generally
+         * is the value fetched from targets, so you can receive values with
+         * functions, units, etc. (eg. `rotateY(45deg)`)
+         * get also
+         * @param {string} value
+         * @private
+         */
+        setRawValue: function setRawValue(value) {
+            this.setValue(this.model.parseValue(value));
+        },
+
+        /**
+         * Update the element input.
+         * Usually the value is a result of `model.getFullValue()`
+         * @param {String} value The value from the model
          * */
-        setValue(value, force) {
-            var f = force === 0 ? 0 : 1;
-            var def = this.model.get('defaults');
-            var v = this.model.get('value') || def;
-            if (value || f) {
-                v = value;
+        setValue: function setValue(value) {
+            var model = this.model;
+            var val = value || model.getDefaultValue();
+            var input = this.getInputEl();
+            input && (input.value = val);
+        },
+
+        getInputEl: function getInputEl() {
+            if (!this.input) {
+                this.input = this.el.querySelector('input');
             }
-            if (this.$input)
-                this.$input.val(v);
-            this.model.set({
-                value: v
-            }, {
-                silent: true
-            });
+
+            return this.input;
         },
 
-        updateVisibility() {
-            this.el.style.display = this.model.get('visible') ?
-                'block' : 'none';
+        updateVisibility: function updateVisibility() {
+            this.el.style.display = this.model.get('visible') ? 'block' : 'none';
         },
 
-        show() {
+        show: function show() {
             this.model.set('visible', 1);
         },
 
-        hide() {
+        hide: function hide() {
             this.model.set('visible', 0);
-        },
-
-        renderLabel() {
-            this.$el.html(this.templateLabel({
-                pfx: this.pfx,
-                ppfx: this.ppfx,
-                icon: this.model.get('icon'),
-                info: this.model.get('info'),
-                label: this.model.get('name'),
-            }));
-        },
-
-        /**
-         * Render field property
-         * */
-        renderField() {
-            this.renderTemplate();
-            this.renderInput();
-            delete this.componentValue;
-        },
-
-        /**
-         * Render loaded template
-         * */
-        renderTemplate() {
-            this.$el.append(this.template({
-                pfx: this.pfx,
-                ppfx: this.ppfx,
-                icon: this.model.get('icon'),
-                info: this.model.get('info'),
-                label: this.model.get('name'),
-            }));
-        },
-
-        /**
-         * Renders input, to override
-         * */
-        renderInput() {
-            if (!this.$input) {
-                this.$input = $('<input>', {
-                    placeholder: this.model.get('defaults'),
-                    type: 'text'
-                });
-                this.$el.find(this.inputHolderId).html(this.$input);
-            }
-            this.setValue(this.componentValue, 0);
-        },
-
-        /**
-         * Request to render input of the property
-         * */
-        renderInputRequest() {
-            this.renderInput();
         },
 
         /**
          * Clean input
          * */
-        cleanValue() {
+        cleanValue: function cleanValue() {
             this.setValue('');
         },
 
-        render() {
-            this.renderLabel();
-            this.renderField();
-            this.$el.attr('class', this.className);
-            return this;
-        },
+        render: function render() {
+            var pfx = this.pfx;
+            var model = this.model;
+            var el = this.el;
+            el.innerHTML = this.template(model);
+            el.className = pfx + 'property ' + pfx + model.get('type');
+            this.updateStatus();
 
+            var onRender = this.onRender && this.onRender.bind(this);
+            onRender && onRender();
+            this.setValue(model.get('value'), { targetUpdate: 1 });
+        }
     });
 });

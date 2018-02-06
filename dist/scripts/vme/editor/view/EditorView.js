@@ -1,56 +1,43 @@
-define([
-    "backbone"
-], function(Backbone) {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-    return Backbone.View.extend({
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
 
-        initialize() {
-            this.pn = this.model.get('Panels');
-            this.conf = this.model.config;
-            this.className = this.conf.stylePrefix + 'editor';
-            this.model.on('loaded', function() {
-                this.pn.active();
-                this.model.runDefault();
-                this.model.trigger('load');
-            }, this);
+    module.exports = Backbone.View.extend({
+        initialize: function initialize() {
+            var _this = this;
+
+            var model = this.model;
+            model.view = this;
+            this.conf = model.config;
+            this.pn = model.get('Panels');
+            model.on('loaded', function() {
+                _this.pn.active();
+                _this.pn.disableButtons();
+                model.runDefault();
+                setTimeout(function() {
+                    return model.trigger('load');
+                }, 0);
+            });
         },
 
-        render() {
+        render: function render() {
             var model = this.model;
-            var um = model.get('UndoManager');
-            var dComps = model.get('DomComponents');
-            var config = model.get('Config');
-
-            if (config.loadCompsOnRender) {
-                if (config.clearOnRender) {
-                    dComps.clear();
-                }
-                dComps.getComponents().reset(config.components);
-                model.loadOnStart();
-                um.clear();
-                // This will init loaded components
-                dComps.onLoad();
-            }
-
+            var el = this.$el;
             var conf = this.conf;
-            var contEl = $(conf.el || ('body ' + conf.container));
-            this.$el.empty();
+            var contEl = $(conf.el || 'body ' + conf.container);
+            var pfx = conf.stylePrefix;
+            el.empty();
 
-            if (conf.width)
-                contEl.css('width', conf.width);
+            if (conf.width) contEl.css('width', conf.width);
 
-            if (conf.height)
-                contEl.css('height', conf.height);
+            if (conf.height) contEl.css('height', conf.height);
 
-            // Canvas
-            this.$el.append(model.get('Canvas').render());
-
-            // Panels
-            this.$el.append(this.pn.render());
-            this.$el.attr('class', this.className);
-
-            contEl.addClass(conf.stylePrefix + 'editor-cont');
-            contEl.html(this.$el);
+            el.append(model.get('Canvas').render());
+            el.append(this.pn.render());
+            el.attr('class', pfx + 'editor ' + pfx + 'one-bg ' + pfx + 'two-color');
+            contEl.addClass(pfx + 'editor-cont').empty().append(el);
 
             return this;
         }

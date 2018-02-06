@@ -1,103 +1,97 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.Model.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        initialize() {
+    module.exports = require('backbone').Model.extend({
+        initialize: function initialize() {
             this.compCls = [];
+            this.ids = [];
         },
 
         /**
-         * Get CSS from component
+         * Get CSS from a component
          * @param {Model} model
          * @return {String}
          */
-        buildFromModel(model) {
+        buildFromModel: function buildFromModel(model) {
+            var _this = this;
+
+            var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
             var code = '';
-            var style = model.get('style');
+            var em = this.em;
+            var avoidInline = em && em.getConfig('avoidInlineStyle');
+            var style = model.styleToString();
             var classes = model.get('classes');
+            var wrappesIsBody = opts.wrappesIsBody;
+            var isWrapper = model.get('wrapper');
+            this.ids.push('#' + model.getId());
 
             // Let's know what classes I've found
-            if (classes) {
-                classes.each(function(model) {
-                    this.compCls.push(model.get('name'));
-                }, this);
+            classes.each(function(model) {
+                return _this.compCls.push(model.getFullName());
+            });
+
+            if ((!avoidInline || isWrapper) && style) {
+                var selector = '#' + model.getId();
+                selector = wrappesIsBody && isWrapper ? 'body' : selector;
+                code = selector + '{' + style + '}';
             }
 
-            if (style && Object.keys(style).length !== 0) {
-                code += '#' + model.cid + '{';
-                for (var prop in style) {
-                    if (style.hasOwnProperty(prop))
-                        code += prop + ':' + style[prop] + ';';
-                }
-                code += '}';
-            }
-
+            var components = model.components();
+            components.each(function(model) {
+                return code += _this.buildFromModel(model, opts);
+            });
             return code;
         },
 
-        /**
-         * Get CSS from components
-         * @param {Model} model
-         * @return {String}
-         */
-        buildFromComp(model) {
-            var coll = model.get('components') || model,
-                code = '';
+        build: function build(model) {
+            var _this2 = this;
 
-            coll.each(function(m) {
-                var cln = m.get('components');
-                code += this.buildFromModel(m);
+            var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-                if (cln.length) {
-                    code += this.buildFromComp(cln);
-                }
-
-            }, this);
-
-            return code;
-        },
-
-        /** @inheritdoc */
-        build(model, cssc) {
+            var cssc = opts.cssc;
+            this.em = opts.em || '';
             this.compCls = [];
-            var code = this.buildFromModel(model);
-            code += this.buildFromComp(model);
-            var compCls = this.compCls;
+            this.ids = [];
+            var code = this.buildFromModel(model, opts);
 
             if (cssc) {
-                var rules = cssc.getAll();
-                var mediaRules = {};
-                rules.each(function(rule) {
-                    var width = rule.get('mediaText');
+                (function() {
+                    var rules = cssc.getAll();
+                    var mediaRules = {};
 
-                    // If width setted will render it later
-                    if (width) {
-                        var mRule = mediaRules[width];
-                        if (mRule)
-                            mRule.push(rule);
-                        else
-                            mediaRules[width] = [rule];
-                        return;
+                    rules.each(function(rule) {
+                        var media = rule.get('mediaText');
+
+                        // If media is setted, I'll render it later
+                        if (media) {
+                            var mRules = mediaRules[media];
+                            if (mRules) {
+                                mRules.push(rule);
+                            } else {
+                                mediaRules[media] = [rule];
+                            }
+                            return;
+                        }
+
+                        code += _this2.buildFromRule(rule);
+                    });
+
+                    // Get media rules
+                    for (var media in mediaRules) {
+                        var rulesStr = '';
+                        var mRules = mediaRules[media];
+                        mRules.forEach(function(rule) {
+                            return rulesStr += _this2.buildFromRule(rule);
+                        });
+
+                        if (rulesStr) {
+                            code += '@media ' + media + '{' + rulesStr + '}';
+                        }
                     }
-
-                    code += this.buildFromRule(rule);
-                }, this);
-
-                // Get media rules
-                for (var ruleW in mediaRules) {
-                    var meRules = mediaRules[ruleW];
-                    var ruleC = '';
-                    for (var i = 0, len = meRules.length; i < len; i++) {
-                        ruleC += this.buildFromRule(meRules[i]);
-                    }
-
-                    if (ruleC) {
-                        code += '@media ' + ruleW + '{' + ruleC + '}';
-                    }
-                }
-
+                })();
             }
+
             return code;
         },
 
@@ -106,44 +100,31 @@ define([
          * @param {Model} rule
          * @return {string} CSS string
          */
-        buildFromRule(rule) {
-            var result = '';
-            var selectorsAdd = rule.get('selectorsAdd');
-            var selectors = rule.get('selectors');
-            var ruleStyle = rule.get('style');
-            var state = rule.get('state');
-            var strSel = '';
-            var found = 0;
-            var compCls = this.compCls;
+        buildFromRule: function buildFromRule(rule) {
+            var _this3 = this;
 
-            // Get string of selectors
-            selectors.each(selector => {
-                strSel += '.' + selector.get('name');
-                if (compCls.indexOf(selector.get('name')) > -1)
+            var result = '';
+            var selectorStr = rule.selectorsToString();
+            var selectorStrNoAdd = rule.selectorsToString({ skipAdd: 1 });
+            var found = undefined;
+
+            // This will not render a rule if there is no its component
+            rule.get('selectors').each(function(selector) {
+                var name = selector.getFullName();
+                if (_this3.compCls.indexOf(name) >= 0 || _this3.ids.indexOf(name) >= 0) {
                     found = 1;
+                }
             });
 
-            // With 'found' will skip rules which selectors are not found in
-            // canvas components.
-            if ((strSel && found) || selectorsAdd) {
-                strSel += state ? ':' + state : '';
-                strSel += selectorsAdd ? (strSel ? ', ' : '') + selectorsAdd : '';
-                var strStyle = '';
+            if (selectorStrNoAdd && found || rule.get('selectorsAdd')) {
+                var style = rule.styleToString();
 
-                // Get string of style properties
-                if (ruleStyle && Object.keys(ruleStyle).length !== 0) {
-                    for (var prop2 in ruleStyle) {
-                        if (ruleStyle.hasOwnProperty(prop2))
-                            strStyle += prop2 + ':' + ruleStyle[prop2] + ';';
-                    }
+                if (style) {
+                    result += selectorStr + '{' + style + '}';
                 }
-
-                if (strStyle)
-                    result += strSel + '{' + strStyle + '}';
             }
 
             return result;
-        },
-
+        }
     });
 });

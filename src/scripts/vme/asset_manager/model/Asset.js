@@ -1,13 +1,12 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.Model.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    module.exports = require('backbone').Model.extend({
         idAttribute: 'src',
 
         defaults: {
             type: '',
-            src: '',
+            src: ''
         },
 
         /**
@@ -15,7 +14,7 @@ define([
          * @return  {string}
          * @private
          * */
-        getFilename() {
+        getFilename: function getFilename() {
             return this.get('src').split('/').pop();
         },
 
@@ -24,9 +23,8 @@ define([
          * @return  {string}
          * @private
          * */
-        getExtension() {
+        getExtension: function getExtension() {
             return this.getFilename().split('.').pop();
-        },
-
+        }
     });
 });

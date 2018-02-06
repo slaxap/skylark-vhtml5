@@ -1,44 +1,30 @@
-define([
-    "backbone",
-    "./PropertyView"
-], function(Backbone, PropertyView) {
-    return PropertyView.extend({
-        template: _.template(`<div class="<%= pfx %>field <%= pfx %>file">
-    <div id='<%= pfx %>input-holder'>
-      <div class="<%= pfx %>btn-c">
-        <button class="<%= pfx %>btn" id="<%= pfx %>images" type="button"><%= assets %></button>
-      </div>
-      <div style="clear:both;"></div>
-    </div>
-    <div id="<%= pfx %>preview-box">
-      <div id="<%= pfx %>preview-file"></div>
-      <div id="<%= pfx %>close">&Cross;</div>
-    </div>
-  </div>
-  <div style="clear:both"></div>`),
+define(['exports', 'module', './PropertyView'], function(exports, module, PropertyView) {
+    'use strict';
 
-        initialize(options) {
-            PropertyView.prototype.initialize.apply(this, arguments);
-            this.assets = this.target.get('assets');
-            this.modal = this.target.get('Modal');
-            this.am = this.target.get('AssetManager');
-            this.className = this.className + ' ' + this.pfx + 'file';
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
 
-            this.events = {};
-
-            this.events['click #' + this.pfx + 'close'] = 'removeFile';
-            this.events['click #' + this.pfx + 'images'] = 'openAssetManager';
-            
-            //this.delegateEvents();
+    module.exports = PropertyView.extend({
+        templateInput: function templateInput() {
+            var pfx = this.pfx;
+            var ppfx = this.ppfx;
+            var assetsLabel = this.config.assetsLabel || 'Images';
+            return '\n    <div class="' + pfx + 'field ' + pfx + 'file">\n      <div id=\'' + pfx + 'input-holder\'>\n        <div class="' + pfx + 'btn-c">\n          <button class="' + pfx + 'btn" id="' + pfx + 'images" type="button">\n            ' + assetsLabel + '\n          </button>\n        </div>\n        <div style="clear:both;"></div>\n      </div>\n      <div id="' + pfx + 'preview-box">\n        <div id="' + pfx + 'preview-file"></div>\n        <div id="' + pfx + 'close">&Cross;</div>\n      </div>\n    </div>\n    ';
         },
 
-        /** @inheritdoc */
-        renderInput() {
+        init: function init() {
+            var em = this.em;
+            this.modal = em.get('Modal');
+            this.am = em.get('AssetManager');
+            this.events['click #' + this.pfx + 'close'] = 'removeFile';
+            this.events['click #' + this.pfx + 'images'] = 'openAssetManager';
+            // this.delegateEvents();
+        },
+
+        onRender: function onRender() {
             if (!this.$input) {
-                this.$input = $('<input>', {
-                    placeholder: this.defaultValue,
-                    type: 'text'
-                });
+                var plh = this.model.getDefaultValue();
+                this.$input = $('<input placeholder="' + plh + '">');
             }
 
             if (!this.$preview) {
@@ -49,12 +35,13 @@ define([
                 this.$previewBox = this.$el.find('#' + this.pfx + 'preview-box');
             }
 
-            if (!this.componentValue || this.componentValue == this.defaultValue)
-                this.setPreviewView(0);
-            else
-                this.setPreviewView(1);
-
             this.setValue(this.componentValue, 0);
+        },
+
+        setValue: function setValue(value, f) {
+            PropertyView.prototype.setValue.apply(this, arguments);
+            this.setPreviewView(value && value != this.model.getDefaultValue());
+            this.setPreview(value);
         },
 
         /**
@@ -63,13 +50,9 @@ define([
          *
          * @return void
          * */
-        setPreviewView(v) {
-            if (!this.$previewBox)
-                return;
-            if (v)
-                this.$previewBox.addClass(this.pfx + 'show');
-            else
-                this.$previewBox.removeClass(this.pfx + 'show');
+        setPreviewView: function setPreviewView(v) {
+            var pv = this.$previewBox;
+            pv && pv[v ? 'addClass' : 'removeClass'](this.pfx + 'show');
         },
 
         /**
@@ -78,8 +61,8 @@ define([
          *
          * @return void
          * */
-        spreadUrl(url) {
-            this.setValue(url);
+        spreadUrl: function spreadUrl(url) {
+            this.model.set('value', url);
             this.setPreviewView(1);
         },
 
@@ -87,34 +70,16 @@ define([
          * Shows file preview
          * @param string Value
          * */
-        setPreview(url) {
-            if (this.$preview)
-                this.$preview.css('background-image', "url(" + url + ")");
+        setPreview: function setPreview(value) {
+            var preview = this.$preview;
+            value = value && value.indexOf('url(') < 0 ? 'url(' + value + ')' : value;
+            preview && preview.css('background-image', value);
         },
 
         /** @inheritdoc */
-        setValue(value, f) {
-            PropertyView.prototype.setValue.apply(this, arguments);
-            this.setPreview(value);
-        },
-
-        /** @inheritdoc */
-        renderTemplate() {
-            this.$el.append(this.template({
-                upload: 'Upload',
-                assets: 'Images',
-                pfx: this.pfx
-            }));
-        },
-
-        /** @inheritdoc */
-        cleanValue() {
+        cleanValue: function cleanValue() {
             this.setPreviewView(0);
-            this.model.set({
-                value: ''
-            }, {
-                silent: true
-            });
+            this.model.set({ value: '' }, { silent: true });
         },
 
         /**
@@ -122,8 +87,13 @@ define([
          *
          * @return void
          * */
-        removeFile(...args) {
-            this.model.set('value', this.defaultValue);
+        removeFile: function removeFile() {
+            this.model.set('value', this.model.getDefaultValue());
+
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             PropertyView.prototype.cleanValue.apply(this, args);
             this.setPreviewView(0);
         },
@@ -134,19 +104,23 @@ define([
          *
          * @return void
          * */
-        openAssetManager(e) {
+        openAssetManager: function openAssetManager(e) {
             var that = this;
-            if (this.modal && this.am) {
+            var em = this.em;
+            var editor = em ? em.get('Editor') : '';
+
+            if (editor) {
                 this.modal.setTitle('Select image');
-                this.modal.setContent(this.am.render());
+                this.modal.setContent(this.am.getContainer());
                 this.am.setTarget(null);
-                this.modal.open();
-                this.am.onSelect(model => {
-                    that.modal.close();
-                    that.spreadUrl(model.get('src'));
-                    that.valueChanged(e);
+                editor.runCommand('open-assets', {
+                    target: this.model,
+                    onSelect: function onSelect(target) {
+                        that.modal.close();
+                        that.spreadUrl(target.get('src'));
+                    }
                 });
             }
-        },
+        }
     });
 });

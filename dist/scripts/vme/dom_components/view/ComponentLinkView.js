@@ -1,14 +1,14 @@
-define([
-    "backbone",
-    "./ComponentTextView"
-], function(Backbone, ComponentView) {
-    return ComponentView.extend({
+define(['exports', 'module', './ComponentTextView'], function(exports, module, ComponentView) {
+    'use strict';
 
-        events: {
-            'dblclick': 'enableEditing',
-        },
+    var Backbone = require('backbone');
 
-        render(...args) {
+    module.exports = ComponentView.extend({
+        render: function render() {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             ComponentView.prototype.render.apply(this, args);
 
             // I need capturing instead of bubbling as bubbled clicks from other
@@ -16,7 +16,6 @@ define([
             this.el.addEventListener('click', this.prevDef, true);
 
             return this;
-        },
-
+        }
     });
 });

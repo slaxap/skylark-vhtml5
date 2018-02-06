@@ -1,59 +1,46 @@
-define([
-    "./ComponentImage",
-    "./Component"
-], function(Component, OComponent) {
-    return Component.extend({
+define(['exports', 'module', './ComponentImage', './Component'], function(exports, module, Component, OComponent) {
+    'use strict';
 
+    module.exports = Component.extend({
         defaults: _.extend({}, Component.prototype.defaults, {
             type: 'map',
-            void: 0,
+            'void': 0,
             mapUrl: 'https://maps.google.com/maps',
             tagName: 'iframe',
             mapType: 'q',
             address: '',
             zoom: '1',
-            attributes: {
-                frameborder: 0
-            },
+            attributes: { frameborder: 0 },
             toolbar: OComponent.prototype.defaults.toolbar,
             traits: [{
                 label: 'Address',
                 name: 'address',
                 placeholder: 'eg. London, UK',
-                changeProp: 1,
+                changeProp: 1
             }, {
                 type: 'select',
                 label: 'Map type',
                 name: 'mapType',
                 changeProp: 1,
-                options: [{
-                    value: 'q',
-                    name: 'Roadmap'
-                }, {
-                    value: 'w',
-                    name: 'Satellite'
-                }]
+                options: [{ value: 'q', name: 'Roadmap' }, { value: 'w', name: 'Satellite' }]
             }, {
                 label: 'Zoom',
                 name: 'zoom',
                 type: 'range',
                 min: '1',
                 max: '20',
-                changeProp: 1,
-            }],
+                changeProp: 1
+            }]
         }),
 
-
-        initialize(o, opt) {
-            if (this.get('src'))
-                this.parseFromSrc();
-            else
-                this.updateSrc();
+        initialize: function initialize(o, opt) {
+            if (this.get('src')) this.parseFromSrc();
+            else this.updateSrc();
             Component.prototype.initialize.apply(this, arguments);
             this.listenTo(this, 'change:address change:zoom change:mapType', this.updateSrc);
         },
 
-        updateSrc() {
+        updateSrc: function updateSrc() {
             this.set('src', this.getMapUrl());
         },
 
@@ -62,7 +49,7 @@ define([
          * @return {string}
          * @private
          */
-        getMapUrl() {
+        getMapUrl: function getMapUrl() {
             var md = this;
             var addr = md.get('address');
             var zoom = md.get('zoom');
@@ -80,19 +67,14 @@ define([
          * Set attributes by src string
          * @private
          */
-        parseFromSrc() {
+        parseFromSrc: function parseFromSrc() {
             var uri = this.parseUri(this.get('src'));
             var qr = uri.query;
-            if (qr.q)
-                this.set('address', qr.q);
-            if (qr.z)
-                this.set('zoom', qr.z);
-            if (qr.t)
-                this.set('mapType', qr.t);
-        },
-
+            if (qr.q) this.set('address', qr.q);
+            if (qr.z) this.set('zoom', qr.z);
+            if (qr.t) this.set('mapType', qr.t);
+        }
     }, {
-
         /**
          * Detect if the passed element is a valid component.
          * In case the element is valid an object abstracted
@@ -101,17 +83,12 @@ define([
          * @return {Object}
          * @private
          */
-        isComponent(el) {
+        isComponent: function isComponent(el) {
             var result = '';
-            if (el.tagName == 'IFRAME' &&
-                /maps\.google\.com/.test(el.src)) {
-                result = {
-                    type: 'map',
-                    src: el.src
-                };
+            if (el.tagName == 'IFRAME' && /maps\.google\.com/.test(el.src)) {
+                result = { type: 'map', src: el.src };
             }
             return result;
-        },
-
+        }
     });
 });

@@ -1,89 +1,72 @@
-define([
-    "./AssetView"
-], function(AssetView) {
-    var assetTemplate = `
-<div id="<%= pfx %>preview-cont">
-  <div id="<%= pfx %>preview" style="background-image: url(<%= src %>);"></div>
-  <div id="<%= pfx %>preview-bg" class="<%= ppfx %>checker-bg"></div>
-</div>
-<div id="<%= pfx %>meta">
-	<div id="<%= pfx %>name"><%= name %></div>
-	<div id="<%= pfx %>dimensions"><%= dim %></div>
-</div>
-<div id="<%= pfx %>close">&Cross;</div>
-<div style="clear:both"></div>
-`;
+define(['exports', 'module', './AssetView'], function(exports, module, AssetView) {
+    'use strict';
 
-    return AssetView.extend({
-
+    module.exports = AssetView.extend({
         events: {
-            'click': 'handleClick',
-            'dblclick': 'handleDblClick',
+            'click [data-toggle=asset-remove]': 'onRemove',
+            click: 'onClick',
+            dblclick: 'onDblClick'
         },
 
-        template: _.template(assetTemplate),
+        getPreview: function getPreview() {
+            var pfx = this.pfx;
+            var src = this.model.get('src');
+            return '\n      <div class="' + pfx + 'preview" style="background-image: url(' + src + ');"></div>\n      <div class="' + pfx + 'preview-bg ' + this.ppfx + 'checker-bg"></div>\n    ';
+        },
 
-        initialize(o) {
-            AssetView.prototype.initialize.apply(this, arguments);
-            this.className += ' ' + this.pfx + 'asset-image';
+        getInfo: function getInfo() {
+            var pfx = this.pfx;
+            var model = this.model;
+            var name = model.get('name');
+            var width = model.get('width');
+            var height = model.get('height');
+            var unit = model.get('unitDim');
+            var dim = width && height ? width + 'x' + height + unit : '';
+            name = name || model.getFilename();
+            return '\n      <div class="' + pfx + 'name">' + name + '</div>\n      <div class="' + pfx + 'dimensions">' + dim + '</div>\n    ';
+        },
 
-            this.events = {
-                'click': 'handleClick',
-                'dblclick': 'handleDblClick',
-            };
-
-            this.events['click #' + this.pfx + 'close'] = 'removeItem';
-            //this.delegateEvents();
+        init: function init(o) {
+            var pfx = this.pfx;
+            this.className += ' ' + pfx + 'asset-image';
         },
 
         /**
-         * Trigger when the asset is clicked
+         * Triggered when the asset is clicked
          * @private
          * */
-        handleClick() {
+        onClick: function onClick() {
             var onClick = this.config.onClick;
             var model = this.model;
-            model.collection.trigger('deselectAll');
+            this.collection.trigger('deselectAll');
             this.$el.addClass(this.pfx + 'highlight');
 
             if (typeof onClick === 'function') {
                 onClick(model);
             } else {
-                this.updateTarget(model.get('src'));
+                this.updateTarget(this.collection.target);
             }
         },
 
         /**
-         * Trigger when the asset is double clicked
+         * Triggered when the asset is double clicked
          * @private
          * */
-        handleDblClick() {
+        onDblClick: function onDblClick() {
+            var em = this.em;
             var onDblClick = this.config.onDblClick;
             var model = this.model;
 
             if (typeof onDblClick === 'function') {
                 onDblClick(model);
             } else {
-                this.updateTarget(model.get('src'));
+                this.updateTarget(this.collection.target);
+                em && em.get('Modal').close();
             }
 
-            var onSelect = model.collection.onSelect;
+            var onSelect = this.collection.onSelect;
             if (typeof onSelect == 'function') {
                 onSelect(this.model);
-            }
-        },
-
-        /**
-         * Update target if exists
-         * @param  {String}  v   Value
-         * @private
-         * */
-        updateTarget(v) {
-            var target = this.model.collection.target;
-            if (target && target.set) {
-                var attr = _.clone(target.get('attributes'));
-                target.set('attributes', attr);
-                target.set('src', v);
             }
         },
 
@@ -91,27 +74,9 @@ define([
          * Remove asset from collection
          * @private
          * */
-        removeItem(e) {
-            e.stopPropagation();
+        onRemove: function onRemove(e) {
+            e.stopImmediatePropagation();
             this.model.collection.remove(this.model);
-        },
-
-        render() {
-            var name = this.model.get('name'),
-                dim = this.model.get('width') && this.model.get('height') ?
-                this.model.get('width') + ' x ' + this.model.get('height') : '';
-            name = name ? name : this.model.get('src').split("/").pop();
-            name = name && name.length > 30 ? name.substring(0, 30) + '...' : name;
-            dim = dim ? dim + (this.model.get('unitDim') ? this.model.get('unitDim') : ' px') : '';
-            this.$el.html(this.template({
-                name,
-                src: this.model.get('src'),
-                dim,
-                pfx: this.pfx,
-                ppfx: this.ppfx
-            }));
-            this.$el.attr('class', this.className);
-            return this;
-        },
+        }
     });
 });

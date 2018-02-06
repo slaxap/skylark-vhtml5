@@ -1,7 +1,7 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        textTags: ['br', 'b', 'i', 'u'],
-
+    module.exports = {
+        textTags: ['br', 'b', 'i', 'u', 'a', 'ul', 'ol']
     };
 });

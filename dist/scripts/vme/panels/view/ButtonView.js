@@ -1,50 +1,51 @@
-define([
-    "backbone"
-], function(Backbone, ) {
-    return Backbone.View.extend({
+define(['exports', 'module', 'underscore', './ButtonsView'], function(exports, module, underscore, btnsView) {
+    'use strict';
 
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = Backbone.View.extend({
         tagName: 'span',
 
-        initialize(o) {
+        initialize: function initialize(o) {
             _.bindAll(this, 'startTimer', 'stopTimer', 'showButtons', 'hideButtons', 'closeOnKeyPress', 'onDrop', 'initSorter', 'stopDrag');
             var cls = this.model.get('className');
             this.config = o.config || {};
             this.em = this.config.em || {};
-            this.pfx = this.config.stylePrefix || '';
+            var pfx = this.config.stylePrefix || '';
+            var ppfx = this.config.pStylePrefix || '';
+            this.pfx = pfx;
             this.ppfx = this.config.pStylePrefix || '';
-            this.id = this.pfx + this.model.get('id');
-            this.activeCls = this.pfx + 'active';
-            this.btnsVisCls = this.pfx + 'visible';
+            this.id = pfx + this.model.get('id');
+            this.activeCls = pfx + 'active ' + ppfx + 'four-color';
+            this.disableCls = pfx + 'active';
+            this.btnsVisCls = pfx + 'visible';
             this.parentM = o.parentM || null;
-            this.className = this.pfx + 'btn' + (cls ? ' ' + cls : '');
+            this.className = pfx + 'btn' + (cls ? ' ' + cls : '');
             this.listenTo(this.model, 'change:active updateActive', this.updateActive);
             this.listenTo(this.model, 'checkActive', this.checkActive);
             this.listenTo(this.model, 'change:bntsVis', this.updateBtnsVis);
             this.listenTo(this.model, 'change:attributes', this.updateAttributes);
             this.listenTo(this.model, 'change:className', this.updateClassName);
+            this.listenTo(this.model, 'change:disable', this.updateDisable);
 
             if (this.model.get('buttons').length) {
                 this.$el.on('mousedown', this.startTimer);
-                this.$el.append($('<div>', {
-                    class: this.pfx + 'arrow-rd'
-                }));
+                this.$el.append($('<div>', { 'class': pfx + 'arrow-rd' }));
             }
 
-            if (this.em && this.em.get)
-                this.commands = this.em.get('Commands');
+            if (this.em && this.em.get) this.commands = this.em.get('Commands');
 
             this.events = {};
 
             if (this.model.get('dragDrop')) {
                 this.events.mousedown = 'initDrag';
                 this.em.on('loaded', this.initSorter);
-            } else
-                this.events.click = 'clicked';
-
-            //this.delegateEvents();
+            } else this.events.click = 'clicked';
+            // this.delegateEvents();
         },
 
-        initSorter() {
+        initSorter: function initSorter() {
             if (this.em.Canvas) {
                 var canvas = this.em.Canvas;
                 this.canvasEl = canvas.getBody();
@@ -59,7 +60,7 @@ define([
                     document: canvas.getFrameEl().contentDocument,
                     direction: 'a',
                     wmargin: 1,
-                    nested: 1,
+                    nested: 1
                 });
                 var offDim = canvas.getOffset();
                 this.sorter.offTop = offDim.top;
@@ -71,7 +72,7 @@ define([
          * Init dragging element
          * @private
          */
-        initDrag() {
+        initDrag: function initDrag() {
             this.model.collection.deactivateAll(this.model.get('context'));
             this.sorter.startSort(this.el);
             this.sorter.setDropContent(this.model.get('options').content);
@@ -83,7 +84,7 @@ define([
          * Stop dragging
          * @private
          */
-        stopDrag() {
+        stopDrag: function stopDrag() {
             $(document).off('mouseup', this.stopDrag);
             this.sorter.endMove();
         },
@@ -92,13 +93,13 @@ define([
          * During drag method
          * @private
          */
-        onDrag(e) {},
+        onDrag: function onDrag(e) {},
 
         /**
          * During drag method
          * @private
          */
-        onDrop(e) {
+        onDrop: function onDrop(e) {
             this.canvasEl.style.cursor = 'default';
         },
 
@@ -107,7 +108,7 @@ define([
          *
          * @return   void
          * */
-        updateClassName() {
+        updateClassName: function updateClassName() {
             var cls = this.model.get('className');
             this.$el.attr('class', this.pfx + 'btn' + (cls ? ' ' + cls : ''));
         },
@@ -117,8 +118,8 @@ define([
          *
          * @return   void
          * */
-        updateAttributes() {
-            this.$el.attr(this.model.get("attributes"));
+        updateAttributes: function updateAttributes() {
+            this.$el.attr(this.model.get('attributes'));
         },
 
         /**
@@ -126,14 +127,11 @@ define([
          *
          * @return  void
          * */
-        updateBtnsVis() {
-            if (!this.$buttons)
-                return;
+        updateBtnsVis: function updateBtnsVis() {
+            if (!this.$buttons) return;
 
-            if (this.model.get('bntsVis'))
-                this.$buttons.addClass(this.btnsVisCls);
-            else
-                this.$buttons.removeClass(this.btnsVisCls);
+            if (this.model.get('bntsVis')) this.$buttons.addClass(this.btnsVisCls);
+            else this.$buttons.removeClass(this.btnsVisCls);
         },
 
         /**
@@ -141,7 +139,7 @@ define([
          *
          * @return  void
          * */
-        startTimer() {
+        startTimer: function startTimer() {
             this.timeout = setTimeout(this.showButtons, this.config.delayBtnsShow);
             $(document).on('mouseup', this.stopTimer);
         },
@@ -151,10 +149,9 @@ define([
          *
          * @return  void
          * */
-        stopTimer() {
+        stopTimer: function stopTimer() {
             $(document).off('mouseup', this.stopTimer);
-            if (this.timeout)
-                clearTimeout(this.timeout);
+            if (this.timeout) clearTimeout(this.timeout);
         },
 
         /**
@@ -162,7 +159,7 @@ define([
          *
          * @return   void
          * */
-        showButtons() {
+        showButtons: function showButtons() {
             clearTimeout(this.timeout);
             this.model.set('bntsVis', true);
             $(document).on('mousedown', this.hideButtons);
@@ -174,7 +171,7 @@ define([
          *
          * @return   void
          * */
-        hideButtons(e) {
+        hideButtons: function hideButtons(e) {
             if (e) {
                 $(e.target).trigger('click');
             }
@@ -189,10 +186,9 @@ define([
          *
          * @return   void
          * */
-        closeOnKeyPress(e) {
+        closeOnKeyPress: function closeOnKeyPress(e) {
             var key = e.which || e.keyCode;
-            if (key == 27)
-                this.hideButtons();
+            if (key == 27) this.hideButtons();
         },
 
         /**
@@ -200,51 +196,51 @@ define([
          *
          * @return   void
          * */
-        updateActive() {
-            var command = null;
+        updateActive: function updateActive() {
+            var model = this.model;
+            var context = model.get('context');
+            var parent = this.parentM;
+            var command = {};
             var editor = this.em && this.em.get ? this.em.get('Editor') : null;
-            var commandName = this.model.get('command');
+            var commandName = model.get('command');
 
-            if (this.commands && typeof commandName === 'string') {
-                command = this.commands.get(commandName);
-            } else if (commandName !== null && typeof commandName === 'object') {
+            if (this.commands && (0, underscore.isString)(commandName)) {
+                command = this.commands.get(commandName) || {};
+            } else if ((0, underscore.isFunction)(commandName)) {
+                command = { run: commandName };
+            } else if (commandName !== null && (0, underscore.isObject)(commandName)) {
                 command = commandName;
-            } else if (typeof commandName === 'function') {
-                command = {
-                    run: commandName
-                };
             }
 
-            if (this.model.get('active')) {
+            if (model.get('active')) {
+                model.collection.deactivateAll(context);
+                model.set('active', true, { silent: true }).trigger('checkActive');
+                parent && parent.set('active', true, { silent: true }).trigger('checkActive');
 
-                this.model.collection.deactivateAll(this.model.get('context'));
-                this.model.set('active', true, {
-                    silent: true
-                }).trigger('checkActive');
-
-                if (this.parentM)
-                    this.parentM.set('active', true, {
-                        silent: true
-                    }).trigger('checkActive');
-
-                if (command && command.run) {
-                    command.run(editor, this.model, this.model.get('options'));
+                if (command.run) {
+                    command.run(editor, model, model.get('options'));
                     editor.trigger('run:' + commandName);
                 }
+
+                // Disable button if there is no stop method
+                !command.stop && model.set('active', false);
             } else {
                 this.$el.removeClass(this.activeCls);
+                model.collection.deactivateAll(context);
+                parent && parent.set('active', false, { silent: true }).trigger('checkActive');
 
-                this.model.collection.deactivateAll(this.model.get('context'));
-
-                if (this.parentM)
-                    this.parentM.set('active', false, {
-                        silent: true
-                    }).trigger('checkActive');
-
-                if (command && command.stop) {
-                    command.stop(editor, this.model, this.model.get('options'));
+                if (command.stop) {
+                    command.stop(editor, model, model.get('options'));
                     editor.trigger('stop:' + commandName);
                 }
+            }
+        },
+
+        updateDisable: function updateDisable() {
+            if (this.model.get('disable')) {
+                this.$el.addClass(this.disableCls);
+            } else {
+                this.$el.removeClass(this.disableCls);
             }
         },
 
@@ -253,11 +249,9 @@ define([
          *
          * @return   void
          * */
-        checkActive() {
-            if (this.model.get('active'))
-                this.$el.addClass(this.activeCls);
-            else
-                this.$el.removeClass(this.activeCls);
+        checkActive: function checkActive() {
+            if (this.model.get('active')) this.$el.addClass(this.activeCls);
+            else this.$el.removeClass(this.activeCls);
         },
 
         /**
@@ -266,12 +260,17 @@ define([
          *
          * @return   void
          * */
-        clicked(e) {
-            if (this.model.get('bntsVis'))
-                return;
+        clicked: function clicked(e) {
+            if (this.model.get('bntsVis')) return;
 
-            if (this.parentM)
-                this.swapParent();
+            if (this.model.get('disable')) return;
+
+            this.toogleActive();
+        },
+
+        toogleActive: function toogleActive() {
+            if (this.parentM) this.swapParent();
+
             var active = this.model.get('active');
             this.model.set('active', !active);
 
@@ -279,11 +278,9 @@ define([
             var command = this.em.get('Commands').get('select-comp');
 
             if (active) {
-                if (this.model.get('runDefaultCommand'))
-                    this.em.runDefault();
+                if (this.model.get('runDefaultCommand')) this.em.runDefault();
             } else {
-                if (this.model.get('stopDefaultCommand'))
-                    this.em.stopDefault();
+                if (this.model.get('stopDefaultCommand')) this.em.stopDefault();
             }
         },
 
@@ -292,37 +289,31 @@ define([
          *
          * @return  void
          * */
-        swapParent() {
+        swapParent: function swapParent() {
             this.parentM.collection.deactivateAll(this.model.get('context'));
             this.parentM.set('attributes', this.model.get('attributes'));
             this.parentM.set('options', this.model.get('options'));
             this.parentM.set('command', this.model.get('command'));
             this.parentM.set('className', this.model.get('className'));
-            this.parentM.set('active', true, {
-                silent: true
-            }).trigger('checkActive');
+            this.parentM.set('active', true, { silent: true }).trigger('checkActive');
         },
 
-        render() {
+        render: function render() {
             this.updateAttributes();
             this.$el.attr('class', this.className);
 
             if (this.model.get('buttons').length) {
-                var btnsView = require('./ButtonsView'); //Avoid Circular Dependencies
                 var view = new btnsView({
                     collection: this.model.get('buttons'),
                     config: this.config,
                     parentM: this.model
                 });
                 this.$buttons = view.render().$el;
-                this.$buttons.append($('<div>', {
-                    class: this.pfx + 'arrow-l'
-                }));
+                this.$buttons.append($('<div>', { 'class': this.pfx + 'arrow-l' }));
                 this.$el.append(this.$buttons); //childNodes avoids wrapping 'div'
             }
 
             return this;
-        },
-
+        }
     });
 });

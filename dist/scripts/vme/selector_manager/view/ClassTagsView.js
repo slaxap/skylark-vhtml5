@@ -1,40 +1,16 @@
-define([
-    "backbone",
-    "./ClassTagView"
-], function(Backbone, ClassTagView) {
-    return Backbone.View.extend({
-        template: _.template(`
-  <div id="<%= pfx %>up">
-    <div id="<%= pfx %>label"><%= label %></div>
-    <div id="<%= pfx %>status-c">
-      <span id="<%= pfx %>input-c">
-        <div class="<%= ppfx %>field <%= ppfx %>select">
-          <span id="<%= ppfx %>input-holder">
-            <select id="<%= pfx %>states">
-              <option value=""><%= statesLabel %></option>
-            </select>
-          </span>
-          <div class="<%= ppfx %>sel-arrow">
-            <div class="<%= ppfx %>d-s-arrow"></div>
-          </div>
-        </div>
-      </span>
-    </div>
-  </div>
-  <div id="<%= pfx %>tags-field" class="<%= ppfx %>field">
-    <div id="<%= pfx %>tags-c"></div>
-    <input id="<%= pfx %>new" />
-    <span id="<%= pfx %>add-tag" class="fa fa-plus"></span>
-  </div>
-  <div id="<%= pfx %>sel-help">
-    <div id="<%= pfx %>label">Selected</div>
-    <div id="<%= pfx %>sel"></div>
-    <div style="clear:both"></div>
-  </div>`),
+define(['exports', 'module', './ClassTagView'], function(exports, module, ClassTagView) {
+    'use strict';
+
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        template: _.template('\n  <div id="<%= pfx %>up">\n    <div id="<%= pfx %>label"><%= label %></div>\n    <div id="<%= pfx %>status-c">\n      <span id="<%= pfx %>input-c">\n        <div class="<%= ppfx %>field <%= ppfx %>select">\n          <span id="<%= ppfx %>input-holder">\n            <select id="<%= pfx %>states">\n              <option value=""><%= statesLabel %></option>\n            </select>\n          </span>\n          <div class="<%= ppfx %>sel-arrow">\n            <div class="<%= ppfx %>d-s-arrow"></div>\n          </div>\n        </div>\n      </span>\n    </div>\n  </div>\n  <div id="<%= pfx %>tags-field" class="<%= ppfx %>field">\n    <div id="<%= pfx %>tags-c"></div>\n    <input id="<%= pfx %>new" />\n    <span id="<%= pfx %>add-tag" class="fa fa-plus"></span>\n  </div>\n  <div id="<%= pfx %>sel-help">\n    <div id="<%= pfx %>label"><%= selectedLabel %></div>\n    <div id="<%= pfx %>sel"></div>\n    <div style="clear:both"></div>\n  </div>'),
 
         events: {},
 
-        initialize(o) {
+        initialize: function initialize() {
+            var o = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
             this.config = o.config || {};
             this.pfx = this.config.stylePrefix || '';
             this.ppfx = this.config.pStylePrefix || '';
@@ -44,24 +20,22 @@ define([
             this.stateInputId = this.pfx + 'states';
             this.stateInputC = this.pfx + 'input-c';
             this.states = this.config.states || [];
-
-            this.events = {};
-
             this.events['click #' + this.addBtnId] = 'startNewTag';
             this.events['blur #' + this.newInputId] = 'endNewTag';
             this.events['keyup #' + this.newInputId] = 'onInputKeyUp';
             this.events['change #' + this.stateInputId] = 'stateChanged';
 
             this.target = this.config.em;
+            this.em = this.target;
 
             this.listenTo(this.target, 'change:selectedComponent', this.componentChanged);
-            this.listenTo(this.target, 'targetClassUpdated', this.updateSelector);
+            this.listenTo(this.target, 'component:update:classes', this.updateSelector);
 
             this.listenTo(this.collection, 'add', this.addNew);
             this.listenTo(this.collection, 'reset', this.renderClasses);
             this.listenTo(this.collection, 'remove', this.tagRemoved);
 
-            //this.delegateEvents();
+            // this.delegateEvents();
         },
 
         /**
@@ -69,7 +43,7 @@ define([
          * @param {Object} model Removed model
          * @private
          */
-        tagRemoved(model) {
+        tagRemoved: function tagRemoved(model) {
             this.updateStateVis();
         },
 
@@ -78,7 +52,7 @@ define([
          * @return {string} String of options
          * @private
          */
-        getStateOptions() {
+        getStateOptions: function getStateOptions() {
             var strInput = '';
             for (var i = 0; i < this.states.length; i++) {
                 strInput += '<option value="' + this.states[i].name + '">' + this.states[i].label + '</option>';
@@ -91,7 +65,7 @@ define([
          * @param {Object} model
          * @private
          */
-        addNew(model) {
+        addNew: function addNew(model) {
             this.addToClasses(model);
         },
 
@@ -100,8 +74,8 @@ define([
          * @param {Object} e
          * @private
          */
-        startNewTag(e) {
-            this.$addBtn.hide();
+        startNewTag: function startNewTag(e) {
+            this.$addBtn.get(0).style.display = 'none';
             this.$input.show().focus();
         },
 
@@ -110,8 +84,8 @@ define([
          * @param {Object} e
          * @private
          */
-        endNewTag(e) {
-            this.$addBtn.show();
+        endNewTag: function endNewTag(e) {
+            this.$addBtn.get(0).style.display = '';
             this.$input.hide().val('');
         },
 
@@ -120,11 +94,9 @@ define([
          * @param  {Object} e
          * @private
          */
-        onInputKeyUp(e) {
-            if (e.keyCode === 13)
-                this.addNewTag(this.$input.val());
-            else if (e.keyCode === 27)
-                this.endNewTag();
+        onInputKeyUp: function onInputKeyUp(e) {
+            if (e.keyCode === 13) this.addNewTag(this.$input.val());
+            else if (e.keyCode === 27) this.endNewTag();
         },
 
         /**
@@ -132,12 +104,17 @@ define([
          * @param  {Object} e
          * @private
          */
-        componentChanged(e) {
+        componentChanged: function componentChanged(e) {
             this.compTarget = this.target.get('selectedComponent');
-            if (this.compTarget)
-                this.getStates().val(this.compTarget.get('state'));
-            var models = this.compTarget ? this.compTarget.get('classes').models : [];
-            this.collection.reset(models);
+            var target = this.compTarget;
+            var validSelectors = [];
+
+            if (target) {
+                this.getStates().val(target.get('state'));
+                validSelectors = target.get('classes').getValid();
+            }
+
+            this.collection.reset(validSelectors);
             this.updateStateVis();
         },
 
@@ -146,11 +123,12 @@ define([
          * inside collection
          * @private
          */
-        updateStateVis() {
-            if (this.collection.length)
-                this.getStatesC().css('display', 'block');
-            else
-                this.getStatesC().css('display', 'none');
+        updateStateVis: function updateStateVis() {
+            var em = this.em;
+            var avoidInline = em && em.getConfig('avoidInlineStyle');
+
+            if (this.collection.length || avoidInline) this.getStatesC().css('display', 'block');
+            else this.getStatesC().css('display', 'none');
             this.updateSelector();
         },
 
@@ -159,21 +137,21 @@ define([
          * @return {this}
          * @private
          */
-        updateSelector() {
-            this.compTarget = this.target.get('selectedComponent');
-            if (!this.compTarget || !this.compTarget.get)
+        updateSelector: function updateSelector() {
+            var selected = this.target.getSelected();
+            this.compTarget = selected;
+
+            if (!selected || !selected.get) {
                 return;
-            var result = '';
-            var models = this.compTarget.get('classes');
-            models.each(model => {
-                if (model.get('active'))
-                    result += '.' + model.get('name');
-            });
-            var state = this.compTarget.get('state');
-            result = state ? result + ':' + state : result;
+            }
+
+            var state = selected.get('state');
+            var coll = this.collection;
+            var result = coll.getFullString(coll.getStyleable());
+            result = result || '#' + selected.getId();
+            result += state ? ':' + state : '';
             var el = this.el.querySelector('#' + this.pfx + 'sel');
-            if (el)
-                el.innerHTML = result;
+            el && (el.innerHTML = result);
         },
 
         /**
@@ -181,11 +159,9 @@ define([
          * @param  {Object} e
          * @private
          */
-        stateChanged(e) {
+        stateChanged: function stateChanged(e) {
             if (this.compTarget) {
                 this.compTarget.set('state', this.$states.val());
-                if (this.target)
-                    this.target.trigger('targetStateUpdated');
                 this.updateSelector();
             }
         },
@@ -195,24 +171,24 @@ define([
          * @param  {Object} e
          * @private
          */
-        addNewTag(name) {
-            if (!name)
+        addNewTag: function addNewTag(label) {
+            var target = this.target;
+            var component = this.compTarget;
+
+            if (!label.trim()) {
                 return;
+            }
 
-            if (this.target) {
-                var cm = this.target.get('SelectorManager');
-                var model = cm.add(name);
+            if (target) {
+                var sm = target.get('SelectorManager');
+                var model = sm.add({ label: label });
 
-                if (this.compTarget) {
-                    var targetCls = this.compTarget.get('classes');
-                    var lenB = targetCls.length;
-                    targetCls.add(model);
-                    var lenA = targetCls.length;
+                if (component) {
+                    var compCls = component.get('classes');
+                    var lenB = compCls.length;
+                    compCls.add(model);
+                    var lenA = compCls.length;
                     this.collection.add(model);
-
-                    if (lenA > lenB)
-                        this.target.trigger('targetClassAdded');
-
                     this.updateStateVis();
                 }
             }
@@ -226,20 +202,18 @@ define([
          * @return {Object} Object created
          * @private
          * */
-        addToClasses(model, fragmentEl) {
+        addToClasses: function addToClasses(model, fragmentEl) {
             var fragment = fragmentEl || null;
 
             var view = new ClassTagView({
-                model,
+                model: model,
                 config: this.config,
-                coll: this.collection,
+                coll: this.collection
             });
             var rendered = view.render().el;
 
-            if (fragment)
-                fragment.appendChild(rendered);
-            else
-                this.getClasses().append(rendered);
+            if (fragment) fragment.appendChild(rendered);
+            else this.getClasses().append(rendered);
 
             return rendered;
         },
@@ -249,15 +223,14 @@ define([
          * @return {this}
          * @private
          */
-        renderClasses() {
+        renderClasses: function renderClasses() {
             var fragment = document.createDocumentFragment();
 
             this.collection.each(function(model) {
                 this.addToClasses(model, fragment);
             }, this);
 
-            if (this.getClasses())
-                this.getClasses().empty().append(fragment);
+            if (this.getClasses()) this.getClasses().empty().append(fragment);
 
             return this;
         },
@@ -267,9 +240,8 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getClasses() {
-            if (!this.$classes)
-                this.$classes = this.$el.find('#' + this.pfx + 'tags-c');
+        getClasses: function getClasses() {
+            if (!this.$classes) this.$classes = this.$el.find('#' + this.pfx + 'tags-c');
             return this.$classes;
         },
 
@@ -278,9 +250,8 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getStates() {
-            if (!this.$states)
-                this.$states = this.$el.find('#' + this.stateInputId);
+        getStates: function getStates() {
+            if (!this.$states) this.$states = this.$el.find('#' + this.stateInputId);
             return this.$states;
         },
 
@@ -289,16 +260,17 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getStatesC() {
-            if (!this.$statesC)
-                this.$statesC = this.$el.find('#' + this.stateInputC);
+        getStatesC: function getStatesC() {
+            if (!this.$statesC) this.$statesC = this.$el.find('#' + this.stateInputC);
             return this.$statesC;
         },
 
-        render() {
+        render: function render() {
+            var config = this.config;
             this.$el.html(this.template({
-                label: this.config.label,
-                statesLabel: this.config.statesLabel,
+                selectedLabel: config.selectedLabel,
+                statesLabel: config.statesLabel,
+                label: config.label,
                 pfx: this.pfx,
                 ppfx: this.ppfx
             }));
@@ -311,7 +283,6 @@ define([
             this.renderClasses();
             this.$el.attr('class', this.className);
             return this;
-        },
-
+        }
     });
 });

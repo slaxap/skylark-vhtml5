@@ -1,22 +1,28 @@
-define([
-    "backbone",
-    "./SectorView"
-], function(Backbone, SectorView) {
-    return Backbone.View.extend({
+define(['exports', 'module', 'underscore', './SectorView'], function(exports, module, underscore, SectorView) {
+    'use strict';
 
-        initialize(o) {
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
             this.config = o.config || {};
             this.pfx = this.config.stylePrefix || '';
             this.target = o.target || {};
 
-            // The taget that will emit events for properties
-            this.propTarget = {};
-            _.extend(this.propTarget, Backbone.Events);
-            this.listenTo(this.collection, 'add', this.addTo);
-            this.listenTo(this.collection, 'reset', this.render);
-            this.listenTo(this.target, 'change:selectedComponent targetClassAdded targetClassRemoved targetClassUpdated ' +
-                'targetStateUpdated targetStyleUpdated change:device', this.targetUpdated);
-
+            // The target that will emit events for properties
+            var target = {};
+            (0, underscore.extend)(target, Backbone.Events);
+            var body = document.body;
+            var dummy = document.createElement('el-' + new Date().getTime());
+            body.appendChild(dummy);
+            target.computedDefault = _extends({}, window.getComputedStyle(dummy));
+            body.removeChild(dummy);
+            this.propTarget = target;
+            var coll = this.collection;
+            var events = 'change:selectedComponent component:update:classes change:device';
+            this.listenTo(coll, 'add', this.addTo);
+            this.listenTo(coll, 'reset', this.render);
+            this.listenTo(this.target, events, this.targetUpdated);
         },
 
         /**
@@ -25,7 +31,7 @@ define([
          * @return {Object}
          * @private
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             this.addToCollection(model);
         },
 
@@ -33,67 +39,104 @@ define([
          * Fired when target is updated
          * @private
          */
-        targetUpdated() {
+        targetUpdated: function targetUpdated() {
             var em = this.target;
-            var el = em.get('selectedComponent');
+            var model = em.getSelected();
+            var um = em.get('UndoManager');
+            var cc = em.get('CssComposer');
+            var avoidInline = em.getConfig('avoidInlineStyle');
 
-            if (!el)
+            if (!model) {
                 return;
+            }
 
-            const config = em.get('Config');
-            var previewMode = config.devicePreviewMode;
-            var classes = el.get('classes');
+            var id = model.getId();
+            var config = em.get('Config');
+            var classes = model.get('classes');
             var pt = this.propTarget;
-            var device = em.getDeviceModel();
-            var state = !previewMode ? el.get('state') : '';
-            var widthMedia = device && device.get('widthMedia');
-            var mediaText = device && !previewMode && widthMedia ?
-                `(${config.mediaCondition}: ${widthMedia})` : '';
+            var state = !config.devicePreviewMode ? model.get('state') : '';
+            var opts = { state: state };
+            var stateStr = state ? ':' + state : null;
+            var view = model.view;
+            var media = em.getCurrentMedia();
             pt.helper = null;
 
+            if (view) {
+                pt.computed = window.getComputedStyle(view.el, state ? ':' + state : null);
+            }
+
+            var appendStateRule = function appendStateRule() {
+                var style = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+                var sm = em.get('SelectorManager');
+                var helperClass = sm.add('hc-state');
+                var helperRule = cc.get([helperClass]);
+
+                if (!helperRule) {
+                    helperRule = cc.add([helperClass]);
+                } else {
+                    // I will make it last again, otherwise it could be overridden
+                    var rules = cc.getAll();
+                    rules.remove(helperRule);
+                    rules.add(helperRule);
+                }
+
+                helperRule.set('important', 1);
+                helperRule.setStyle(style);
+                pt.helper = helperRule;
+            };
+
+            // If true the model will be always a rule
+            if (avoidInline) {
+                var ruleId = cc.getIdRule(id, opts);
+
+                if (!ruleId) {
+                    model = cc.setIdRule(id, {}, opts);
+                } else {
+                    model = ruleId;
+                }
+            }
+
             if (classes.length) {
-                var cssC = em.get('CssComposer');
-                var valid = _.filter(classes.models, item => item.get('active'));
-                var iContainer = cssC.get(valid, state, mediaText);
+                var valid = classes.getStyleable();
+                var iContainer = cc.get(valid, state, media);
+
+                if (!iContainer && valid.length) {
+                    // I stop undo manager here as after adding the CSSRule (generally after
+                    // selecting the component) and calling undo() it will remove the rule from
+                    // the collection, therefore updating it in style manager will not affect it
+                    // #268
+                    um.stop();
+                    iContainer = cc.add(valid, state, media);
+                    iContainer.setStyle(model.getStyle());
+                    model.setStyle({});
+                    um.start();
+                }
 
                 if (!iContainer) {
-                    iContainer = cssC.add(valid, state, mediaText);
-                    // Get styles from the component
-                    iContainer.set('style', el.get('style'));
-                    //cssC.addRule(iContainer);
-                    el.set('style', {});
-                } else {
-                    // Ensure to clean element
-                    //if(classes.length == 1)
-                    //el.set('style', {});
+                    // In this case it's just a Component without any valid selector
+                    pt.model = model;
+                    pt.trigger('update');
+                    return;
                 }
 
                 // If the state is not empty, there should be a helper rule in play
                 // The helper rule will get the same style of the iContainer
-                if (state) {
-                    var clm = em.get('SelectorManager');
-                    var helperClass = clm.add('hc-state');
-                    var helperRule = cssC.get([helperClass]);
-                    if (!helperRule)
-                        helperRule = cssC.add([helperClass]);
-                    else {
-                        // I will make it last again, otherwise it could be overridden
-                        cssC.getAll().remove(helperRule);
-                        cssC.getAll().add(helperRule);
-                    }
-                    helperRule.set('style', iContainer.get('style'));
-                    pt.helper = helperRule;
-                }
+                state && appendStateRule(iContainer.getStyle());
 
                 pt.model = iContainer;
                 pt.trigger('update');
                 return;
             }
 
-            pt.model = el;
+            if (state) {
+                var ruleState = cc.getIdRule(id, opts);
+                state && appendStateRule(ruleState && ruleState.getStyle());
+            }
+
+            pt.model = model;
             pt.trigger('update');
         },
-
 
         /**
          * Add new object to collection
@@ -102,18 +145,16 @@ define([
          * @return {Object} Object created
          * @private
          * */
-        addToCollection(model, fragmentEl) {
+        addToCollection: function addToCollection(model, fragmentEl) {
             var fragment = fragmentEl || null;
-            var viewObject = SectorView;
-
-            var view = new viewObject({
-                model,
+            var view = new SectorView({
+                model: model,
                 id: this.pfx + model.get('name').replace(' ', '_').toLowerCase(),
                 name: model.get('name'),
                 properties: model.get('properties'),
                 target: this.target,
                 propTarget: this.propTarget,
-                config: this.config,
+                config: this.config
             });
             var rendered = view.render().el;
 
@@ -126,7 +167,7 @@ define([
             return rendered;
         },
 
-        render() {
+        render: function render() {
             var fragment = document.createDocumentFragment();
             this.$el.empty();
 

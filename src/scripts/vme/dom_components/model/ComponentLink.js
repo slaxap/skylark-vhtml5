@@ -1,12 +1,13 @@
-define([
-    "./ComponentText"
-], function(Component) {
-    return Component.extend({
+define(['exports', 'module', './ComponentText'], function(exports, module, Component) {
+    'use strict';
 
-        defaults: _.extend({}, Component.prototype.defaults, {
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = Component.extend({
+        defaults: _extends({}, Component.prototype.defaults, {
             type: 'link',
             tagName: 'a',
-            traits: ['title', 'href', 'target'],
+            traits: ['title', 'href', 'target']
         }),
 
         /**
@@ -14,31 +15,43 @@ define([
          * @return {Object}
          * @private
          */
-        getAttrToHTML(...args) {
+        getAttrToHTML: function getAttrToHTML() {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             var attr = Component.prototype.getAttrToHTML.apply(this, args);
             delete attr.onmousedown;
             return attr;
-        },
-
+        }
     }, {
+        isComponent: function isComponent(el) {
+            var result = undefined;
+            var avoidEdit = undefined;
 
-        /**
-         * Detect if the passed element is a valid component.
-         * In case the element is valid an object abstracted
-         * from the element will be returned
-         * @param {HTMLElement}
-         * @return {Object}
-         * @private
-         */
-        isComponent(el) {
-            var result = '';
             if (el.tagName == 'A') {
                 result = {
-                    type: 'link'
+                    type: 'link',
+                    editable: 0
                 };
-            }
-            return result;
-        },
 
+                // The link is editable only if, at least, one of its
+                // children is a text node (not empty one)
+                var children = el.childNodes;
+                var len = children.length;
+                if (!len) delete result.editable;
+
+                for (var i = 0; i < len; i++) {
+                    var child = children[i];
+
+                    if (child.nodeType == 3 && child.textContent.trim() != '') {
+                        delete result.editable;
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
     });
 });

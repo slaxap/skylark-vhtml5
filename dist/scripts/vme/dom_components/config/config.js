@@ -1,24 +1,25 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    module.exports = {
         stylePrefix: 'comp-',
 
         wrapperId: 'wrapper',
 
+        wrapperName: 'Body',
+
         // Default wrapper configuration
         wrapper: {
-            //classes: ['body'],
             removable: false,
             copyable: false,
-            stylable: ['background', 'background-color', 'background-image', 'background-repeat', 'background-attachment', 'background-position'],
             draggable: false,
-            badgable: false,
             components: [],
+            traits: [],
+            stylable: ['background', 'background-color', 'background-image', 'background-repeat', 'background-attachment', 'background-position', 'background-size']
         },
 
         // Could be used for default components
         components: [],
-
-        rte: {},
 
         // Class for new image component
         imageCompClass: 'fa fa-picture-o',
@@ -26,7 +27,12 @@ define([], function() {
         // Open assets manager on create of image component
         oAssetsOnCreate: true,
 
+        // TODO to remove
+        // Editor should also store the wrapper informations, but as this change might
+        // break stuff I set ii as an opt-in option, for now.
+        storeWrapper: 0,
+
         // List of void elements
-        voidElements: ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'menuitem', 'meta', 'param', 'source', 'track', 'wbr'],
+        voidElements: ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'menuitem', 'meta', 'param', 'source', 'track', 'wbr']
     };
 });

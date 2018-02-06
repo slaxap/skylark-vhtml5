@@ -1,22 +1,17 @@
-define([
-    "./Component"
-], function(Component) {
-    return Component.extend({
+define(['exports', 'module', './Component'], function(exports, module, Component) {
+    'use strict';
 
+    module.exports = Component.extend({
         defaults: _.extend({}, Component.prototype.defaults, {
             type: 'script',
             droppable: false,
             draggable: false,
-            hiddenLayer: true,
-        }),
-
+            layerable: false
+        })
     }, {
-
-        isComponent(el) {
+        isComponent: function isComponent(el) {
             if (el.tagName == 'SCRIPT') {
-                var result = {
-                    type: 'script'
-                };
+                var result = { type: 'script' };
 
                 if (el.src) {
                     result.src = el.src;
@@ -25,7 +20,6 @@ define([
 
                 return result;
             }
-        },
-
+        }
     });
 });

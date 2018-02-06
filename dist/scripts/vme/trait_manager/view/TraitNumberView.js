@@ -1,14 +1,15 @@
-define([
-    "./TraitView",
-    "../../domain_abstract/ui/InputNumber"
-], function(TraitView, InputNumber) {
-    return TraitView.extend({
+define(['exports', 'module', './TraitView', '../../domain_abstract/ui/InputNumber'], function(exports, module, TraitView, InputNumber) {
+    'use strict';
 
-        getValueForTarget() {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = TraitView.extend({
+        getValueForTarget: function getValueForTarget() {
             var model = this.model;
             var value = model.get('value');
             var unit = model.get('unit');
-            return value ? (value + unit) : '';
+            return value ? value + unit : '';
         },
 
         /**
@@ -16,7 +17,7 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getInputEl() {
+        getInputEl: function getInputEl() {
             if (!this.$input) {
                 var value = this.getModelValue();
                 var inputNumber = new InputNumber({
@@ -37,13 +38,12 @@ define([
          * Renders input
          * @private
          * */
-        renderField() {
+        renderField: function renderField() {
             if (!this.$input) {
                 this.$el.append(this.tmpl);
                 this.getInputEl();
                 this.$el.find('.' + this.inputhClass).prepend(this.input.el);
             }
-        },
-
+        }
     });
 });

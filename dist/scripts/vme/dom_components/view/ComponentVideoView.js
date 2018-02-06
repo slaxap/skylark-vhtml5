@@ -1,18 +1,16 @@
-define([
-    "backbone",
-    "./ComponentImageView"
-], function(Backbone, ComponentView) {
-    return ComponentView.extend({
+define(['exports', 'module', './ComponentImageView', './ComponentView'], function(exports, module, ComponentView, OComponentView) {
+    'use strict';
 
+    var Backbone = require('backbone');
+
+    module.exports = ComponentView.extend({
         tagName: 'div',
 
         events: {},
 
-        initialize(o) {
-            ComponentView.prototype.initialize.apply(this, arguments);
-
-            this.events = {};
-
+        initialize: function initialize(o) {
+            OComponentView.prototype.initialize.apply(this, arguments);
+            this.listenTo(this.model, 'change:src', this.updateSrc);
             this.listenTo(this.model, 'change:loop change:autoplay change:controls change:color', this.updateVideo);
             this.listenTo(this.model, 'change:provider', this.updateProvider);
         },
@@ -21,7 +19,7 @@ define([
          * Rerender on update of the provider
          * @private
          */
-        updateProvider() {
+        updateProvider: function updateProvider() {
             var prov = this.model.get('provider');
             this.el.innerHTML = '';
             this.el.appendChild(this.renderByProvider(prov));
@@ -31,7 +29,7 @@ define([
          * Update the source of the video
          * @private
          */
-        updateSrc() {
+        updateSrc: function updateSrc() {
             var prov = this.model.get('provider');
             var src = this.model.get('src');
             switch (prov) {
@@ -49,7 +47,7 @@ define([
          * Update video parameters
          * @private
          */
-        updateVideo() {
+        updateVideo: function updateVideo() {
             var prov = this.model.get('provider');
             var videoEl = this.videoEl;
             var md = this.model;
@@ -65,7 +63,7 @@ define([
             }
         },
 
-        renderByProvider(prov) {
+        renderByProvider: function renderByProvider(prov) {
             var videoEl;
             switch (prov) {
                 case 'yt':
@@ -81,14 +79,14 @@ define([
             return videoEl;
         },
 
-        renderSource() {
+        renderSource: function renderSource() {
             var el = document.createElement('video');
             el.src = this.model.get('src');
             this.initVideoEl(el);
             return el;
         },
 
-        renderYoutube() {
+        renderYoutube: function renderYoutube() {
             var el = document.createElement('iframe');
             el.src = this.model.getYoutubeSrc();
             el.frameBorder = 0;
@@ -97,7 +95,7 @@ define([
             return el;
         },
 
-        renderVimeo() {
+        renderVimeo: function renderVimeo() {
             var el = document.createElement('iframe');
             el.src = this.model.getVimeoSrc();
             el.frameBorder = 0;
@@ -106,19 +104,22 @@ define([
             return el;
         },
 
-        initVideoEl(el) {
+        initVideoEl: function initVideoEl(el) {
             el.className = this.ppfx + 'no-pointer';
             el.style.height = '100%';
             el.style.width = '100%';
         },
 
-        render(...args) {
+        render: function render() {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             ComponentView.prototype.render.apply(this, args);
             this.updateClasses();
             var prov = this.model.get('provider');
             this.el.appendChild(this.renderByProvider(prov));
             return this;
-        },
-
+        }
     });
 });

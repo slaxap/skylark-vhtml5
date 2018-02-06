@@ -1,12 +1,14 @@
-define([
-    "backbone",
-    "./ButtonsView"
-], function(Backbone, ButtonsView) {
-    return Backbone.View.extend({
+define(['exports', 'module', './ButtonsView'], function(exports, module, ButtonsView) {
+    'use strict';
 
-        initialize(o) {
-            this.config = o.config || {};
-            this.pfx = this.config.stylePrefix || '';
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
+            var config = o.config || {};
+            this.config = config;
+            this.pfx = config.stylePrefix || '';
+            this.ppfx = config.pStylePrefix || '';
             this.buttons = this.model.get('buttons');
             this.className = this.pfx + 'panel';
             this.id = this.pfx + this.model.get('id');
@@ -17,26 +19,33 @@ define([
         /**
          * Append content of the panel
          * */
-        appendContent() {
+        appendContent: function appendContent() {
             this.$el.append(this.model.get('appendContent'));
         },
 
         /**
          * Update content
          * */
-        updateContent() {
+        updateContent: function updateContent() {
             this.$el.html(this.model.get('content'));
         },
 
-        initResize() {
-            const em = this.config.em;
-            const editor = em ? em.get('Editor') : '';
-            const resizable = this.model.get('resizable');
+        attributes: function attributes() {
+            return this.model.get('attributes');
+        },
+
+        initResize: function initResize() {
+            var em = this.config.em;
+            var editor = em ? em.get('Editor') : '';
+            var resizable = this.model.get('resizable');
 
             if (editor && resizable) {
                 var resz = resizable === true ? [1, 1, 1, 1] : resizable;
                 var resLen = resz.length;
-                var tc, cr, bc, cl = 0;
+                var tc,
+                    cr,
+                    bc,
+                    cl = 0;
 
                 // Choose which sides of the panel are resizable
                 if (resLen == 2) {
@@ -52,17 +61,17 @@ define([
                 }
 
                 var resizer = editor.Utils.Resizer.init({
-                    tc,
-                    cr,
-                    bc,
-                    cl,
+                    tc: tc,
+                    cr: cr,
+                    bc: bc,
+                    cl: cl,
                     tl: 0,
                     tr: 0,
                     bl: 0,
                     br: 0,
                     appendTo: this.el,
                     prefix: editor.getConfig().stylePrefix,
-                    posFetcher: (el) => {
+                    posFetcher: function posFetcher(el) {
                         var rect = el.getBoundingClientRect();
                         return {
                             left: 0,
@@ -72,28 +81,27 @@ define([
                         };
                     }
                 });
-                resizer.blur = () => {};
+                resizer.blur = function() {};
                 resizer.focus(this.el);
             }
         },
 
-        render() {
-            this.$el.attr('class', this.className);
-
-            if (this.id)
-                this.$el.attr('id', this.id);
+        render: function render() {
+            var el = this.$el;
+            var pfx = this.ppfx;
+            el.attr('class', this.className + ' ' + pfx + 'one-bg');
+            this.id && el.attr('id', this.id);
 
             if (this.buttons.length) {
                 var buttons = new ButtonsView({
                     collection: this.buttons,
-                    config: this.config,
+                    config: this.config
                 });
-                this.$el.append(buttons.render().el);
+                el.append(buttons.render().el);
             }
 
-            this.$el.append(this.model.get('content'));
+            el.append(this.model.get('content'));
             return this;
-        },
-
+        }
     });
 });

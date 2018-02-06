@@ -1,39 +1,47 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
-        events: {
-            'mousedown': 'handleClick',
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        events: function events() {
+            return this.model.get('events') || {
+                mousedown: 'handleClick'
+            };
         },
 
-        attributes() {
+        attributes: function attributes() {
             return this.model.get('attributes');
         },
 
-        initialize(opts) {
+        initialize: function initialize(opts) {
             this.editor = opts.config.editor;
         },
 
-        handleClick(event) {
-            var opts = {
-                event
-            };
+        handleClick: function handleClick(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.execCommand(event);
+        },
+
+        execCommand: function execCommand(event) {
+            var opts = { event: event };
             var command = this.model.get('command');
+            var editor = this.editor;
 
             if (typeof command === 'function') {
-                command(this.editor, null, opts);
+                command(editor, null, opts);
             }
 
             if (typeof command === 'string') {
-                this.editor.runCommand(command, opts);
+                editor.runCommand(command, opts);
             }
         },
 
-        render() {
+        render: function render() {
             var config = this.editor.getConfig();
             this.el.className += ' ' + config.stylePrefix + 'toolbar-item';
             return this;
-        },
-
+        }
     });
 });

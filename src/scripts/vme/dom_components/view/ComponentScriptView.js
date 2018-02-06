@@ -1,35 +1,26 @@
-define([
-    "backbone",
-    "./ComponentImageView"
-], function(Backbone, ComponentView) {
-    return ComponentView.extend({
+define(['exports', 'module', './ComponentImageView'], function(exports, module, ComponentView) {
+    'use strict';
 
+    var Backbone = require('backbone');
+
+    module.exports = ComponentView.extend({
         tagName: 'script',
 
-//        events: {},
+        events: {},
 
-        render() {
+        render: function render() {
             var model = this.model;
             var src = model.get('src');
             var em = this.em;
             var scriptCount = em && em.get('scriptCount') ? em.get('scriptCount') : 0;
             var content = '';
 
-            this.events = {};
-
             // If it's an external script
             if (src) {
                 var onload = model.get('onload');
                 var svar = 'script' + scriptCount;
                 var svarNext = 'script' + (scriptCount + 1);
-                content = "var " + svar + " = document.createElement('script');\n" +
-                    svar + ".onload = function(){\n" +
-                    (onload ? onload + "();\n" : '') +
-                    "typeof " + svarNext + "Start == 'function' && " + svarNext + "Start();\n" +
-                    "};\n" +
-                    svar + ".src = '" + src + "';\n" +
-                    "function " + svar + "Start() { document.body.appendChild(" + svar + "); };\n" +
-                    (!scriptCount ? svar + "Start();" : '');
+                content = 'var ' + svar + " = document.createElement('script');\n" + svar + '.onload = function(){\n' + (onload ? onload + '();\n' : '') + 'typeof ' + svarNext + "Start == 'function' && " + svarNext + 'Start();\n' + '};\n' + svar + ".src = '" + src + "';\n" + 'function ' + svar + 'Start() { document.body.appendChild(' + svar + '); };\n' + (!scriptCount ? svar + 'Start();' : '');
                 if (em) {
                     em.set('scriptCount', scriptCount + 1);
                 }
@@ -39,7 +30,6 @@ define([
 
             this.el.innerHTML = content;
             return this;
-        },
-
+        }
     });
 });

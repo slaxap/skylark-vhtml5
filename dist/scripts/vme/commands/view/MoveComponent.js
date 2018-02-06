@@ -1,11 +1,11 @@
-define([
-    "backbone",
-    "./SelectComponent",
-    "./SelectPosition"
-], function(Backbone, SelectComponent, SelectPosition) {
-    return _.extend({}, SelectPosition, SelectComponent, {
+define(['exports', 'module', '../../utils/mixins', './SelectComponent', './SelectPosition'], function(exports, module, utilsMixins, SelectComponent, SelectPosition) {
+    'use strict';
 
-        init(o) {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = _.extend({}, SelectPosition, SelectComponent, {
+        init: function init(o) {
             SelectComponent.init.apply(this, arguments);
             _.bindAll(this, 'initSorter', 'rollback', 'onEndMove');
             this.opt = o;
@@ -14,7 +14,11 @@ define([
             this.noSelClass = this.ppfx + 'no-select';
         },
 
-        enable(...args) {
+        enable: function enable() {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             SelectComponent.enable.apply(this, args);
             this.getBadgeEl().addClass(this.badgeClass);
             this.getHighlighterEl().addClass(this.hoverClass);
@@ -30,18 +34,17 @@ define([
          * Overwrite for doing nothing
          * @private
          */
-        toggleClipboard() {},
+        toggleClipboard: function toggleClipboard() {},
 
         /**
          * Delegate sorting
          * @param  {Event} e
          * @private
          * */
-        initSorter(e) {
+        initSorter: function initSorter(e) {
             var el = $(e.target).data('model');
             var drag = el.get('draggable');
-            if (!drag)
-                return;
+            if (!drag) return;
 
             // Avoid badge showing on move
             this.cacheEl = null;
@@ -50,7 +53,7 @@ define([
             this.sorter.onEndMove = this.onEndMove.bind(this);
             this.stopSelectComponent();
             this.$wrapper.off('mousedown', this.initSorter);
-            this.getContentWindow().on('keydown', this.rollback);
+            (0, utilsMixins.on)(this.getContentWindow(), 'keydown', this.rollback);
         },
 
         /**
@@ -58,10 +61,9 @@ define([
          * @param  {Object} model
          * @private
          */
-        initSorterFromModel(model) {
+        initSorterFromModel: function initSorterFromModel(model) {
             var drag = model.get('draggable');
-            if (!drag)
-                return;
+            if (!drag) return;
             // Avoid badge showing on move
             this.cacheEl = null;
             var el = model.view.el;
@@ -70,28 +72,28 @@ define([
             this.sorter.onEndMove = this.onEndMoveFromModel.bind(this);
 
             /*
-    this.sorter.setDragHelper(el);
-    var dragHelper = this.sorter.dragHelper;
-    dragHelper.className = this.ppfx + 'drag-helper';
-    dragHelper.innerHTML = '';
-    dragHelper.backgroundColor = 'white';
-    */
+            this.sorter.setDragHelper(el);
+            var dragHelper = this.sorter.dragHelper;
+            dragHelper.className = this.ppfx + 'drag-helper';
+            dragHelper.innerHTML = '';
+            dragHelper.backgroundColor = 'white';
+            */
 
             this.stopSelectComponent();
-            this.getContentWindow().on('keydown', this.rollback);
+            (0, utilsMixins.on)(this.getContentWindow(), 'keydown', this.rollback);
         },
 
-        onEndMoveFromModel() {
-            this.getContentWindow().off('keydown', this.rollback);
+        onEndMoveFromModel: function onEndMoveFromModel() {
+            (0, utilsMixins.off)(this.getContentWindow(), 'keydown', this.rollback);
         },
 
         /**
          * Callback after sorting
          * @private
          */
-        onEndMove() {
+        onEndMove: function onEndMove() {
             this.enable();
-            this.getContentWindow().off('keydown', this.rollback);
+            (0, utilsMixins.off)(this.getContentWindow(), 'keydown', this.rollback);
         },
 
         /**
@@ -100,7 +102,7 @@ define([
          * @param {Object} Selected element
          * @private
          * */
-        onSelect(e, el) {},
+        onSelect: function onSelect(e, el) {},
 
         /**
          * Used to bring the previous situation before start moving the component
@@ -108,7 +110,7 @@ define([
          * @param {Boolean} Indicates if rollback in anycase
          * @private
          * */
-        rollback(e, force) {
+        rollback: function rollback(e, force) {
             var key = e.which || e.keyCode;
             if (key == this.opt.ESCAPE_KEY || force) {
                 this.sorter.moved = false;
@@ -122,9 +124,8 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getBadgeEl() {
-            if (!this.$badge)
-                this.$badge = $(this.getBadge());
+        getBadgeEl: function getBadgeEl() {
+            if (!this.$badge) this.$badge = $(this.getBadge());
             return this.$badge;
         },
 
@@ -133,13 +134,16 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getHighlighterEl() {
-            if (!this.$hl)
-                this.$hl = $(this.canvas.getHighlighter());
+        getHighlighterEl: function getHighlighterEl() {
+            if (!this.$hl) this.$hl = $(this.canvas.getHighlighter());
             return this.$hl;
         },
 
-        stop(...args) {
+        stop: function stop() {
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
+            }
+
             SelectComponent.stop.apply(this, args);
             this.getBadgeEl().removeClass(this.badgeClass);
             this.getHighlighterEl().removeClass(this.hoverClass);

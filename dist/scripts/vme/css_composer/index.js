@@ -1,40 +1,45 @@
-/**
- * * [add](#add)
- * * [get](#get)
- * * [getAll](#getall)
- * * [load](#load)
- * * [store](#store)
- *
- * This module contains and manage CSS rules for the template inside the canvas
- * Before using the methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var cssComposer = editor.CssComposer;
- * ```
- *
- * @module CssComposer
- * @param {Object} config Configurations
- * @param {string|Array<Object>} [config.rules=[]] CSS string or an array of rule objects
- * @example
- * ...
- * CssComposer: {
- *    rules: '.myClass{ color: red}',
- * }
- */
 define([
+    'exports',
+    'module',
     './config/config',
     './model/CssRule',
     './model/CssRules',
-    './model/Selectors',
-    './view/CssRulesView'
-], function(defaults, CssRule, CssRules, Selectors, CssRulesView) {
-    return function() {
-        var c = {},
-            rules, rulesView;
+    './view/CssRulesView',
+    '../selector_manager/model/Selectors',
+    '../selector_manager/model/Selector'
+], function(exports, module, defaults, CssRule, CssRules, CssRulesView, Selectors, Selector) {
+
+
+    /**
+     * This module contains and manage CSS rules for the template inside the canvas
+     * Before using the methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var cssComposer = editor.CssComposer;
+     * ```
+     *
+     * @module CssComposer
+     * @param {Object} config Configurations
+     * @param {string|Array<Object>} [config.rules=[]] CSS string or an array of rule objects
+     * @example
+     * ...
+     * CssComposer: {
+     *    rules: '.myClass{ color: red}',
+     * }
+     */
+
+    'use strict';
+
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = function() {
+        var em = undefined;
+        var c = {};
+
+        var rules, rulesView;
 
         return {
-
-            Selectors,
+            Selectors: Selectors,
 
             /**
              * Name of the module
@@ -48,13 +53,11 @@ define([
              * @type {String}
              * @private
              */
-            storageKey() {
+            storageKey: function storageKey() {
                 var keys = [];
-                var smc = (c.stm && c.stm.getConfig()) || {};
-                if (smc.storeCss)
-                    keys.push('css');
-                if (smc.storeStyles)
-                    keys.push('styles');
+                var smc = c.stm && c.stm.getConfig() || {};
+                if (smc.storeCss) keys.push('css');
+                if (smc.storeStyles) keys.push('styles');
                 return keys;
             },
 
@@ -63,27 +66,24 @@ define([
              * @param {Object} config Configurations
              * @private
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
-                var elStyle = (c.em && c.em.config.style) || '';
+                var elStyle = c.em && c.em.config.style || '';
                 c.rules = elStyle || c.rules;
 
-                c.sm = c.em; // TODO Refactor
+                c.sm = c.em;
+                em = c.em;
                 rules = new CssRules([], c);
-                rules.add(c.rules);
-
                 rulesView = new CssRulesView({
                     collection: rules,
-                    config: c,
+                    config: c
                 });
                 return this;
             },
@@ -92,9 +92,38 @@ define([
              * On load callback
              * @private
              */
-            onLoad() {
-                if (c.stm && c.stm.isAutosave())
-                    c.em.listenRules(this.getAll());
+            onLoad: function onLoad() {
+                rules.add(c.rules);
+            },
+
+            /**
+             * Do stuff after load
+             * @param  {Editor} em
+             * @private
+             */
+            postLoad: function postLoad(em) {
+                var _this = this;
+
+                var ev = 'add remove';
+                var rules = this.getAll();
+                em.stopListening(rules, ev, this.handleChange);
+                em.listenTo(rules, ev, this.handleChange);
+                rules.each(function(rule) {
+                    return _this.handleChange(rule);
+                });
+            },
+
+            /**
+             * Handle rule changes
+             * @private
+             */
+            handleChange: function handleChange(model) {
+                var ev = 'change:style';
+                var um = em.get('UndoManager');
+                um && um.add(model);
+                var handleUpdates = em.handleUpdates.bind(em);
+                em.stopListening(model, ev, handleUpdates);
+                em.listenTo(model, ev, handleUpdates);
             },
 
             /**
@@ -104,11 +133,15 @@ define([
              * @param {Object} data Object of data to load
              * @return {Object} Loaded rules
              */
-            load(data) {
+            load: function load(data) {
                 var d = data || '';
-                if (!d && c.stm)
+
+                if (!d && c.stm) {
                     d = c.em.getCacheLoad();
-                var obj = '';
+                }
+
+                var obj = d.styles || '';
+
                 if (d.styles) {
                     try {
                         obj = JSON.parse(d.styles);
@@ -117,8 +150,10 @@ define([
                     obj = c.em.get('Parser').parseCss(d.css);
                 }
 
-                if (obj)
+                if (obj) {
                     rules.reset(obj);
+                }
+
                 return obj;
             },
 
@@ -127,17 +162,13 @@ define([
              * @param {Boolean} noStore If true, won't store
              * @return {Object} Data to store
              */
-            store(noStore) {
-                if (!c.stm)
-                    return;
+            store: function store(noStore) {
+                if (!c.stm) return;
                 var obj = {};
                 var keys = this.storageKey();
-                if (keys.indexOf('css') >= 0)
-                    obj.css = c.em.getCss();
-                if (keys.indexOf('styles') >= 0)
-                    obj.styles = JSON.stringify(rules);
-                if (!noStore)
-                    c.stm.store(obj);
+                if (keys.indexOf('css') >= 0) obj.css = c.em.getCss();
+                if (keys.indexOf('styles') >= 0) obj.styles = JSON.stringify(rules);
+                if (!noStore) c.stm.store(obj);
                 return obj;
             },
 
@@ -158,18 +189,17 @@ define([
              *   color: '#fff',
              * });
              * */
-            add(selectors, state, width, opts) {
+            add: function add(selectors, state, width, opts) {
                 var s = state || '';
                 var w = width || '';
                 var opt = opts || {};
                 var rule = this.get(selectors, s, w, opt);
-                if (rule)
-                    return rule;
+                if (rule) return rule;
                 else {
                     opt.state = s;
                     opt.mediaText = w;
                     opt.selectors = '';
-                    rule = new CssRule(opt);
+                    rule = new CssRule(opt, c);
                     rule.get('selectors').add(selectors);
                     rules.add(rule);
                     return rule;
@@ -194,13 +224,11 @@ define([
              *   color: '#000',
              * });
              * */
-            get(selectors, state, width, ruleProps) {
+            get: function get(selectors, state, width, ruleProps) {
                 var rule = null;
-                rules.each(m => {
-                    if (rule)
-                        return;
-                    if (m.compare(selectors, state, width, ruleProps))
-                        rule = m;
+                rules.each(function(m) {
+                    if (rule) return;
+                    if (m.compare(selectors, state, width, ruleProps)) rule = m;
                 });
                 return rule;
             },
@@ -209,8 +237,17 @@ define([
              * Get the collection of rules
              * @return {Collection}
              * */
-            getAll() {
+            getAll: function getAll() {
                 return rules;
+            },
+
+            /**
+             * Remove all rules
+             * @return {this}
+             */
+            clear: function clear() {
+                this.getAll().reset();
+                return this;
             },
 
             /**
@@ -221,18 +258,17 @@ define([
              * @return {Array<Model>}
              * @private
              */
-            addCollection(data, opts) {
-                var opt = opts || {};
+            addCollection: function addCollection(data) {
+                var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
                 var result = [];
                 var d = data instanceof Array ? data : [data];
 
                 for (var i = 0, l = d.length; i < l; i++) {
                     var rule = d[i] || {};
-                    if (!rule.selectors)
-                        continue;
+                    if (!rule.selectors) continue;
                     var sm = c.em && c.em.get('SelectorManager');
-                    if (!sm)
-                        console.warn('Selector Manager not found');
+                    if (!sm) console.warn('Selector Manager not found');
                     var sl = rule.selectors;
                     var sels = sl instanceof Array ? sl : [sl];
                     var newSels = [];
@@ -242,12 +278,14 @@ define([
                         newSels.push(selec);
                     }
 
+                    var modelExists = this.get(newSels, rule.state, rule.mediaText, rule);
                     var model = this.add(newSels, rule.state, rule.mediaText, rule);
-                    if (opt.extend) {
-                        var newStyle = _.extend({}, model.get('style'), rule.style || {});
-                        model.set('style', newStyle);
-                    } else {
-                        model.set('style', rule.style || {});
+                    var updateStyle = !modelExists || !opts.avoidUpdateStyle;
+                    var style = rule.style || {};
+
+                    if (updateStyle) {
+                        var styleUpdate = opts.extend ? _extends({}, model.get('style'), style) : style;
+                        model.set('style', styleUpdate);
                     }
 
                     result.push(model);
@@ -257,14 +295,101 @@ define([
             },
 
             /**
+             * Add/update the CSS rule with id selector
+             * @param {string} name Id selector name, eg. 'my-id'
+             * @param {Object} style  Style properties and values
+             * @param {Object} [opts={}]  Custom options, like `state` and `mediaText`
+             * @return {CssRule} The new/updated rule
+             * @example
+             * const rule = cc.setIdRule('myid', { color: 'red' });
+             * const ruleHover = cc.setIdRule('myid', { color: 'blue' }, { state: 'hover' });
+             * // This will add current CSS:
+             * // #myid { color: red }
+             * // #myid:hover { color: blue }
+             */
+            setIdRule: function setIdRule(name) {
+                var style = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                var state = opts.state || '';
+                var media = opts.mediaText || em.getCurrentMedia();
+                var sm = em.get('SelectorManager');
+                var selector = sm.add({ name: name, type: Selector.TYPE_ID });
+                var rule = this.add(selector, state, media);
+                rule.setStyle(style, opts);
+                return rule;
+            },
+
+            /**
+             * Get the CSS rule by id selector
+             * @param {string} name Id selector name, eg. 'my-id'
+             * @param  {Object} [opts={}]  Custom options, like `state` and `mediaText`
+             * @return {CssRule}
+             * @example
+             * const rule = cc.getIdRule('myid');
+             * const ruleHover = cc.setIdRule('myid', { state: 'hover' });
+             */
+            getIdRule: function getIdRule(name) {
+                var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+                var state = opts.state || '';
+                var media = opts.mediaText || em.getCurrentMedia();
+                var selector = em.get('SelectorManager').get(name, Selector.TYPE_ID);
+                return selector && this.get(selector, state, media);
+            },
+
+            /**
+             * Add/update the CSS rule with class selector
+             * @param {string} name Class selector name, eg. 'my-class'
+             * @param {Object} style  Style properties and values
+             * @param {Object} [opts={}]  Custom options, like `state` and `mediaText`
+             * @return {CssRule} The new/updated rule
+             * @example
+             * const rule = cc.setClassRule('myclass', { color: 'red' });
+             * const ruleHover = cc.setClassRule('myclass', { color: 'blue' }, { state: 'hover' });
+             * // This will add current CSS:
+             * // .myclass { color: red }
+             * // .myclass:hover { color: blue }
+             */
+            setClassRule: function setClassRule(name) {
+                var style = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                var state = opts.state || '';
+                var media = opts.mediaText || em.getCurrentMedia();
+                var sm = em.get('SelectorManager');
+                var selector = sm.add({ name: name, type: Selector.TYPE_CLASS });
+                var rule = this.add(selector, state, media);
+                rule.setStyle(style, opts);
+                return rule;
+            },
+
+            /**
+             * Get the CSS rule by class selector
+             * @param {string} name Class selector name, eg. 'my-class'
+             * @param  {Object} [opts={}]  Custom options, like `state` and `mediaText`
+             * @return {CssRule}
+             * @example
+             * const rule = cc.getClassRule('myclass');
+             * const ruleHover = cc.getClassRule('myclass', { state: 'hover' });
+             */
+            getClassRule: function getClassRule(name) {
+                var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+                var state = opts.state || '';
+                var media = opts.mediaText || em.getCurrentMedia();
+                var selector = em.get('SelectorManager').get(name, Selector.TYPE_CLASS);
+                return selector && this.get(selector, state, media);
+            },
+
+            /**
              * Render the block of CSS rules
              * @return {HTMLElement}
              * @private
              */
-            render() {
+            render: function render() {
                 return rulesView.render().el;
             }
-
         };
     };
 });

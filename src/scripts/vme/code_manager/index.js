@@ -1,23 +1,6 @@
-/**
- * - [addGenerator](#addgenerator)
- * - [getGenerator](#getgenerator)
- * - [getGenerators](#getgenerators)
- * - [addViewer](#addviewer)
- * - [getViewer](#getviewer)
- * - [getViewers](#getviewers)
- * - [updateViewer](#updateviewer)
- * - [getCode](#getcode)
- *
- *
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var codeManager = editor.CodeManager;
- * ```
- *
- * @module CodeManager
- */
 define([
+    'exports',
+    'module',
     './config/config',
     './model/HtmlGenerator',
     './model/CssGenerator',
@@ -25,19 +8,38 @@ define([
     './model/JsGenerator',
     './model/CodeMirrorEditor',
     './view/EditorView'
-], function(defaults, gHtml, gCss, gJson, gJs, eCM, editorView) {
+], function(exports, module, defaults, gHtml, gCss, gJson, gJs, eCM, editorView) {
+    /**
+     * - [addGenerator](#addgenerator)
+     * - [getGenerator](#getgenerator)
+     * - [getGenerators](#getgenerators)
+     * - [addViewer](#addviewer)
+     * - [getViewer](#getviewer)
+     * - [getViewers](#getviewers)
+     * - [updateViewer](#updateviewer)
+     * - [getCode](#getcode)
+     *
+     *
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var codeManager = editor.CodeManager;
+     * ```
+     *
+     * @module CodeManager
+     */
+    'use strict';
 
-    return function() {
+    module.exports = function() {
+        var c = {};
 
-        var c = {},
-            generators = {},
+        var generators = {},
             defGenerators = {},
             viewers = {},
             defViewers = {};
 
         return {
-
-            getConfig() {
+            getConfig: function getConfig() {
                 return c;
             },
 
@@ -56,31 +58,23 @@ define([
              * Initialize module. Automatically called with a new instance of the editor
              * @param {Object} config Configurations
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
                 defGenerators.html = new gHtml();
                 defGenerators.css = new gCss();
                 defGenerators.json = new gJson();
                 defGenerators.js = new gJs();
-
                 defViewers.CodeMirror = new eCM();
-                return this;
-            },
-
-            /**
-             * Callback on load
-             */
-            onLoad() {
                 this.loadDefaultGenerators().loadDefaultViewers();
+
+                return this;
             },
 
             /**
@@ -96,7 +90,7 @@ define([
              *   }
              * });
              * */
-            addGenerator(id, generator) {
+            addGenerator: function addGenerator(id, generator) {
                 generators[id] = generator;
                 return this;
             },
@@ -111,7 +105,7 @@ define([
              *   //extend
              * };
              * */
-            getGenerator(id) {
+            getGenerator: function getGenerator(id) {
                 return generators[id] || null;
             },
 
@@ -119,7 +113,7 @@ define([
              * Returns all code generators
              * @return {Array<Object>}
              * */
-            getGenerators() {
+            getGenerators: function getGenerators() {
                 return generators;
             },
 
@@ -141,7 +135,7 @@ define([
              *   }
              * });
              * */
-            addViewer(id, viewer) {
+            addViewer: function addViewer(id, viewer) {
                 viewers[id] = viewer;
                 return this;
             },
@@ -153,7 +147,7 @@ define([
              * @example
              * var viewer = codeManager.getViewer('ace');
              * */
-            getViewer(id) {
+            getViewer: function getViewer(id) {
                 return viewers[id] || null;
             },
 
@@ -161,7 +155,7 @@ define([
              * Returns all code viewers
              * @return {Array<Object>}
              * */
-            getViewers() {
+            getViewers: function getViewers() {
                 return viewers;
             },
 
@@ -176,7 +170,7 @@ define([
              * // ...
              * codeManager.updateViewer(AceViewer, 'code');
              * */
-            updateViewer(viewer, code) {
+            updateViewer: function updateViewer(viewer, code) {
                 viewer.setContent(code);
             },
 
@@ -189,7 +183,10 @@ define([
              * @example
              * var codeStr = codeManager.getCode(model, 'html');
              * */
-            getCode(model, genId, opt) {
+            getCode: function getCode(model, genId) {
+                var opt = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                opt.em = c.em;
                 var generator = this.getGenerator(genId);
                 return generator ? generator.build(model, opt) : '';
             },
@@ -199,9 +196,8 @@ define([
              * @return {this}
              * @private
              * */
-            loadDefaultGenerators() {
-                for (var id in defGenerators)
-                    this.addGenerator(id, defGenerators[id]);
+            loadDefaultGenerators: function loadDefaultGenerators() {
+                for (var id in defGenerators) this.addGenerator(id, defGenerators[id]);
 
                 return this;
             },
@@ -211,14 +207,11 @@ define([
              * @return {this}
              * @private
              * */
-            loadDefaultViewers() {
-                for (var id in defViewers)
-                    this.addViewer(id, defViewers[id]);
+            loadDefaultViewers: function loadDefaultViewers() {
+                for (var id in defViewers) this.addViewer(id, defViewers[id]);
 
                 return this;
-            },
-
+            }
         };
-
     };
 });

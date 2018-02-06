@@ -1,23 +1,30 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        run(editor, sender, opts) {
-            var opt = opts || {};
-            var config = editor.getConfig();
+    module.exports = {
+        run: function run(editor, sender) {
+            var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
             var modal = editor.Modal;
-            var assetManager = editor.AssetManager;
+            var am = editor.AssetManager;
+            var config = am.getConfig();
+            var title = opts.modalTitle || config.modalTitle || '';
 
-            assetManager.onClick(opt.onClick);
-            assetManager.onDblClick(opt.onDblClick);
+            am.setTarget(opts.target);
+            am.onClick(opts.onClick);
+            am.onDblClick(opts.onDblClick);
+            am.onSelect(opts.onSelect);
 
-            // old API
-            assetManager.setTarget(opt.target);
-            assetManager.onSelect(opt.onSelect);
+            if (!this.rendered) {
+                am.render(am.getAll().filter(function(asset) {
+                    return asset.get('type') == 'image';
+                }));
+                this.rendered = 1;
+            }
 
-            modal.setTitle(opt.modalTitle || 'Select image');
-            modal.setContent(assetManager.render());
+            modal.setTitle(title);
+            modal.setContent(am.getContainer());
             modal.open();
-        },
-
+        }
     };
 });

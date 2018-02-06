@@ -1,63 +1,61 @@
-/**
- *
- * - [addSector](#addsector)
- * - [getSector](#getsector)
- * - [getSectors](#getsectors)
- * - [addProperty](#addproperty)
- * - [getProperty](#getproperty)
- * - [getProperties](#getproperties)
- * - [render](#render)
- *
- * With Style Manager you basically build categories (called sectors) of CSS properties which could
- * be used to custom components and classes.
- * You can init the editor with all sectors and properties via configuration
- *
- * ```js
- * var editor = grapesjs.init({
- *   ...
- *  styleManager: {...} // Check below for the possible properties
- *   ...
- * });
- * ```
- *
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var styleManager = editor.StyleManager;
- * ```
- *
- * @module StyleManager
- * @param {Object} config Configurations
- * @param {Array<Object>} [config.sectors=[]] Array of possible sectors
- * @example
- * ...
- * styleManager: {
- *    sectors: [{
- *      id: 'dim',
- *      name: 'Dimension',
- *      properties: [{
- *        name: 'Width',
- *        property: 'width',
- *        type: 'integer',
- *        units: ['px', '%'],
- *        defaults: 'auto',
- *        min: 0,
-          }],
- *     }],
- * }
- * ...
- */
 define([
+    'exports',
+    'module',
     './config/config',
     './model/Sectors',
+    './model/Properties',
     './view/SectorsView'
-], function(defaults, Sectors, SectorsView) {
-    return function() {
+], function(exports, module, defaults, Sectors, Properties, SectorsView) {
+    /**
+     * With Style Manager you basically build categories (called sectors) of CSS properties which could
+     * be used to custom components and classes.
+     * You can init the editor with all sectors and properties via configuration
+     *
+     * ```js
+     * var editor = grapesjs.init({
+     *   ...
+     *  styleManager: {...} // Check below for the possible properties
+     *   ...
+     * });
+     * ```
+     *
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var styleManager = editor.StyleManager;
+     * ```
+     *
+     * @module StyleManager
+     * @param {Object} config Configurations
+     * @param {Array<Object>} [config.sectors=[]] Array of possible sectors
+     * @example
+     * ...
+     * styleManager: {
+     *    sectors: [{
+     *      id: 'dim',
+     *      name: 'Dimension',
+     *      properties: [{
+     *        name: 'Width',
+     *        property: 'width',
+     *        type: 'integer',
+     *        units: ['px', '%'],
+     *        defaults: 'auto',
+     *        min: 0,
+              }],
+     *     }],
+     * }
+     * ...
+     */
+    'use strict';
+
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = function() {
         var c = {};
+        var properties = undefined;
         var sectors, SectView;
 
         return {
-
             /**
              * Name of the module
              * @type {String}
@@ -70,7 +68,7 @@ define([
              * @return {Object}
              * @private
              */
-            getConfig() {
+            getConfig: function getConfig() {
                 return c;
             },
 
@@ -78,22 +76,21 @@ define([
              * Initialize module. Automatically called with a new instance of the editor
              * @param {Object} config Configurations
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
-                sectors = new Sectors(c.sectors);
+                properties = new Properties();
+                sectors = new Sectors(c.sectors, c);
                 SectView = new SectorsView({
                     collection: sectors,
                     target: c.em,
-                    config: c,
+                    config: c
                 });
                 return this;
             },
@@ -114,7 +111,7 @@ define([
              *   properties: [{ name: 'My property'}]
              * });
              * */
-            addSector(id, sector) {
+            addSector: function addSector(id, sector) {
                 var result = this.getSector(id);
                 if (!result) {
                     sector.id = id;
@@ -130,18 +127,27 @@ define([
              * @example
              * var sector = styleManager.getSector('mySector');
              * */
-            getSector(id) {
-                var res = sectors.where({
-                    id
-                });
+            getSector: function getSector(id) {
+                var res = sectors.where({ id: id });
                 return res.length ? res[0] : null;
+            },
+
+            /**
+             * Remove a sector by id
+             * @param  {string} id Sector id
+             * @return {Sector} Removed sector
+             * @example
+             * const removed = styleManager.removeSector('mySector');
+             */
+            removeSector: function removeSector(id) {
+                return this.getSectors().remove(this.getSector(id));
             },
 
             /**
              * Get all sectors
              * @return {Sectors} Collection of sectors
              * */
-            getSectors() {
+            getSectors: function getSectors() {
                 return sectors;
             },
 
@@ -180,12 +186,11 @@ define([
              *    }],
              * });
              */
-            addProperty(sectorId, property) {
+            addProperty: function addProperty(sectorId, property) {
                 var prop = null;
                 var sector = this.getSector(sectorId);
 
-                if (sector)
-                    prop = sector.get('properties').add(property);
+                if (sector) prop = sector.get('properties').add(property);
 
                 return prop;
             },
@@ -198,18 +203,29 @@ define([
              * @example
              * var property = styleManager.getProperty('mySector','min-height');
              */
-            getProperty(sectorId, name) {
+            getProperty: function getProperty(sectorId, name) {
                 var prop = null;
                 var sector = this.getSector(sectorId);
 
                 if (sector) {
-                    prop = sector.get('properties').where({
-                        property: name
-                    });
+                    prop = sector.get('properties').where({ property: name });
                     prop = prop.length == 1 ? prop[0] : prop;
                 }
 
                 return prop;
+            },
+
+            /**
+             * Remove a property from the sector
+             * @param  {string} sectorId Sector id
+             * @param  {string} name CSS property name, eg. 'min-height'
+             * @return {Property} Removed property
+             * @example
+             * const property = styleManager.removeProperty('mySector', 'min-height');
+             */
+            removeProperty: function removeProperty(sectorId, name) {
+                var props = this.getProperties(sectorId);
+                return props && props.remove(this.getProperty(sectorId, name));
             },
 
             /**
@@ -219,12 +235,11 @@ define([
              * @example
              * var properties = styleManager.getProperties('mySector');
              */
-            getProperties(sectorId) {
+            getProperties: function getProperties(sectorId) {
                 var props = null;
                 var sector = this.getSector(sectorId);
 
-                if (sector)
-                    props = sector.get('properties');
+                if (sector) props = sector.get('properties');
 
                 return props;
             },
@@ -237,22 +252,26 @@ define([
              * @param  {Model} model
              * @return {Model}
              */
-            getModelToStyle(model) {
+            getModelToStyle: function getModelToStyle(model) {
+                var em = c.em;
                 var classes = model.get('classes');
+                var id = model.getId();
 
-                if (c.em && classes && classes.length) {
-                    var previewMode = c.em.get('Config').devicePreviewMode;
-                    var device = c.em.getDeviceModel();
-                    var state = !previewMode ? model.get('state') : '';
-                    var deviceW = device && !previewMode ? device.get('width') : '';
-                    var cssC = c.em.get('CssComposer');
+                if (em) {
+                    var config = em.getConfig();
+                    var cssC = em.get('CssComposer');
+                    var state = !config.devicePreviewMode ? model.get('state') : '';
+                    var valid = classes.getStyleable();
+                    var hasClasses = valid.length;
+                    var opts = { state: state };
 
-                    var valid = _.filter(classes.models, item => item.get('active'));
-
-                    var CssRule = cssC.get(valid, state, deviceW);
-
-                    if (CssRule) {
-                        return CssRule;
+                    if (hasClasses) {
+                        var deviceW = em.getCurrentMedia();
+                        var CssRule = cssC.get(valid, state, deviceW);
+                        if (CssRule) return CssRule;
+                    } else if (config.avoidInlineStyle) {
+                        var rule = cssC.getIdRule(id, opts);
+                        return rule ? rule : cssC.setIdRule(id, {}, opts);
                     }
                 }
 
@@ -260,13 +279,83 @@ define([
             },
 
             /**
+             * Add new property type
+             * @param {string} id Type ID
+             * @param {Object} definition Definition of the type. Each definition contains
+             *                            `model` (business logic), `view` (presentation logic)
+             *                            and `isType` function which recognize the type of the
+             *                            passed entity
+             * addType('my-type', {
+             *  model: {},
+             *  view: {},
+             *  isType: (value) => {
+             *    if (value && value.type == 'my-type') {
+             *      return value;
+             *    }
+             *  },
+             * })
+             */
+            addType: function addType(id, definition) {
+                properties.addType(id, definition);
+            },
+
+            /**
+             * Get type
+             * @param {string} id Type ID
+             * @return {Object} Type definition
+             */
+            getType: function getType(id) {
+                return properties.getType(id);
+            },
+
+            /**
+             * Get all types
+             * @return {Array}
+             */
+            getTypes: function getTypes() {
+                return properties.getTypes();
+            },
+
+            /**
+             * Create new property from type
+             * @param {string} id Type ID
+             * @param  {Object} [options={}] Options
+             * @param  {Object} [options.model={}] Custom model object
+             * @param  {Object} [options.view={}] Custom view object
+             * @return {PropertyView}
+             * @example
+             * const propView = styleManager.createType('integer', {
+             *  model: {units: ['px', 'rem']}
+             * });
+             * propView.render();
+             * propView.model.on('change:value', ...);
+             * someContainer.appendChild(propView.el);
+             */
+            createType: function createType(id) {
+                var _ref = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+                var _ref$model = _ref.model;
+                var model = _ref$model === undefined ? {} : _ref$model;
+                var _ref$view = _ref.view;
+                var view = _ref$view === undefined ? {} : _ref$view;
+
+                var type = this.getType(id);
+
+                if (type) {
+                    return new type.view(_extends({
+                        model: new type.model(model),
+                        config: c
+                    }, view));
+                }
+            },
+
+            /**
              * Render sectors and properties
              * @return  {HTMLElement}
              * */
-            render() {
+            render: function render() {
                 return SectView.render().el;
-            },
-
+            }
         };
     };
 });

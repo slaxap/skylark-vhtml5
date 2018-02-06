@@ -1,10 +1,8 @@
-define([
-    "backbone",
-    "./TraitView"
-], function(Backbone, TraitView) {
-    return TraitView.extend({
+define(['exports', 'module', './TraitView'], function(exports, module, TraitView) {
+    'use strict';
 
-        initialize(o) {
+    module.exports = TraitView.extend({
+        initialize: function initialize(o) {
             TraitView.prototype.initialize.apply(this, arguments);
             var iconCls = this.ppfx + 'chk-icon';
             this.tmpl = '<div class="' + this.fieldClass + '"><label class="' + this.inputhClass + '"><i class="' + iconCls + '"></i></label></div>';
@@ -14,7 +12,7 @@ define([
          * Fires when the input is changed
          * @private
          */
-        onChange() {
+        onChange: function onChange() {
             this.model.set('value', this.getInputEl().checked);
         },
 
@@ -23,10 +21,14 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getInputEl(...args) {
+        getInputEl: function getInputEl() {
             var first;
-            if (!this.$input)
-                first = 1;
+            if (!this.$input) first = 1;
+
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             var el = TraitView.prototype.getInputEl.apply(this, args);
             if (first) {
                 var md = this.model;
@@ -40,7 +42,6 @@ define([
                 }
             }
             return el;
-        },
-
+        }
     });
 });

@@ -1,21 +1,19 @@
-define([
-    "backbone",
-    "./SelectComponent"
-], function(Backbone, SelectComponent) {
-    return _.extend({}, SelectComponent, {
+define(['exports', 'module', './SelectComponent'], function(exports, module, SelectComponent) {
+    'use strict';
 
-        init(o) {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = _.extend({}, SelectComponent, {
+        init: function init(o) {
             _.bindAll(this, 'startDelete', 'stopDelete', 'onDelete');
             this.hoverClass = this.pfx + 'hover-delete';
             this.badgeClass = this.pfx + 'badge-red';
         },
 
-        enable() {
+        enable: function enable() {
             var that = this;
-            this.$el.find('*')
-                .mouseover(this.startDelete)
-                .mouseout(this.stopDelete)
-                .click(this.onDelete);
+            this.$el.find('*').mouseover(this.startDelete).mouseout(this.stopDelete).click(this.onDelete);
         },
 
         /**
@@ -23,7 +21,7 @@ define([
          * @param {Object}  e
          * @private
          */
-        startDelete(e) {
+        startDelete: function startDelete(e) {
             e.stopPropagation();
             var $this = $(e.target);
 
@@ -32,7 +30,6 @@ define([
                 $this.addClass(this.hoverClass);
                 this.attachBadge($this.get(0));
             }
-
         },
 
         /**
@@ -40,17 +37,13 @@ define([
          * @param {Object}  e
          * @private
          */
-        stopDelete(e) {
+        stopDelete: function stopDelete(e) {
             e.stopPropagation();
             var $this = $(e.target);
             $this.removeClass(this.hoverClass);
 
             // Hide badge if possible
-            if (this.badge)
-                this.badge.css({
-                    left: -1000,
-                    top: -1000
-                });
+            if (this.badge) this.badge.css({ left: -1000, top: -1000 });
         },
 
         /**
@@ -58,13 +51,12 @@ define([
          * @param {Object}  e
          * @private
          */
-        onDelete(e) {
+        onDelete: function onDelete(e) {
             e.stopPropagation();
             var $this = $(e.target);
 
             // Do nothing in case can't remove
-            if (!$this.data('model').get('removable'))
-                return;
+            if (!$this.data('model').get('removable')) return;
 
             $this.data('model').destroy();
             this.removeBadge();
@@ -76,9 +68,8 @@ define([
          * @param   {Object}  model
          * @private
          * */
-        updateBadgeLabel(model) {
+        updateBadgeLabel: function updateBadgeLabel(model) {
             this.badge.html('Remove ' + model.getName());
-        },
-
+        }
     });
 });

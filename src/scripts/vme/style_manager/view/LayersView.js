@@ -1,19 +1,20 @@
-define([
-    "backbone",
-    "./LayerView"
-], function(Backbone, LayerView) {
-    return Backbone.View.extend({
+define(['exports', 'module', './LayerView'], function(exports, module, LayerView) {
+    'use strict';
 
-        initialize(o) {
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
             this.config = o.config || {};
             this.stackModel = o.stackModel;
             this.preview = o.preview;
             this.pfx = this.config.stylePrefix || '';
             this.ppfx = this.config.pStylePrefix || '';
-            let pfx = this.pfx;
-            let ppfx = this.ppfx;
-            let collection = this.collection;
-            this.className = `${pfx}layers ${ppfx}field`;
+            this.propsConfig = o.propsConfig;
+            var pfx = this.pfx;
+            var ppfx = this.ppfx;
+            var collection = this.collection;
+            this.className = pfx + 'layers ' + ppfx + 'field';
             this.listenTo(collection, 'add', this.addTo);
             this.listenTo(collection, 'deselectAll', this.deselectAll);
             this.listenTo(collection, 'reset', this.render);
@@ -24,9 +25,9 @@ define([
             this.sorter = utils ? new utils.Sorter({
                 container: this.el,
                 ignoreViewChildren: 1,
-                containerSel: `.${pfx}layers`,
-                itemSel: `.${pfx}layer`,
-                pfx: this.config.pStylePrefix,
+                containerSel: '.' + pfx + 'layers',
+                itemSel: '.' + pfx + 'layer',
+                pfx: this.config.pStylePrefix
             }) : '';
 
             // For the Sorter
@@ -41,7 +42,7 @@ define([
          *
          * @return Object
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             var i = this.collection.indexOf(model);
             this.addToCollection(model, null, i);
         },
@@ -54,19 +55,23 @@ define([
          *
          * @return Object Object created
          * */
-        addToCollection(model, fragmentEl, index) {
+        addToCollection: function addToCollection(model, fragmentEl, index) {
             var fragment = fragmentEl || null;
-            var viewObject = LayerView;
+            var stackModel = this.stackModel;
+            var config = this.config;
+            var sorter = this.sorter;
+            var propsConfig = this.propsConfig;
 
             if (typeof this.preview !== 'undefined') {
                 model.set('preview', this.preview);
             }
 
-            var view = new viewObject({
-                model,
-                stackModel: this.stackModel,
-                config: this.config,
-                sorter: this.sorter
+            var view = new LayerView({
+                model: model,
+                config: config,
+                sorter: sorter,
+                stackModel: stackModel,
+                propsConfig: propsConfig
             });
             var rendered = view.render().el;
 
@@ -84,10 +89,8 @@ define([
                     // In case the added is new in the collection index will be -1
                     if (index < 0) {
                         this.$el.append(rendered);
-                    } else
-                        this.$el.children().eq(index)[method](rendered);
-                } else
-                    this.$el.append(rendered);
+                    } else this.$el.children().eq(index)[method](rendered);
+                } else this.$el.append(rendered);
             }
 
             return rendered;
@@ -98,11 +101,11 @@ define([
          *
          * @return void
          * */
-        deselectAll() {
+        deselectAll: function deselectAll() {
             this.$el.find('.' + this.pfx + 'layer').removeClass(this.pfx + 'active');
         },
 
-        render() {
+        render: function render() {
             var fragment = document.createDocumentFragment();
             this.$el.empty();
 
@@ -113,8 +116,7 @@ define([
             this.$el.append(fragment);
             this.$el.attr('class', this.className);
 
-            if (this.sorter)
-                this.sorter.plh = null;
+            if (this.sorter) this.sorter.plh = null;
 
             return this;
         }

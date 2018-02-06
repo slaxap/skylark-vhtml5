@@ -1,20 +1,17 @@
-define([
-    "./Component"
-], function(Component) {
-    return Component.extend({
+define(['exports', 'module', './Component'], function(exports, module, Component) {
+    'use strict';
 
+    module.exports = Component.extend({
         defaults: _.extend({}, Component.prototype.defaults, {
             droppable: false,
-            editable: true,
+            editable: true
         }),
 
-        toHTML() {
+        toHTML: function toHTML() {
             return this.get('content');
-        },
-
+        }
     }, {
-
-        isComponent(el) {
+        isComponent: function isComponent(el) {
             var result = '';
             if (el.nodeType === 3) {
                 result = {
@@ -23,7 +20,6 @@ define([
                 };
             }
             return result;
-        },
-
+        }
     });
 });

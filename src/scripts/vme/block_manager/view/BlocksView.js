@@ -1,21 +1,20 @@
-define([
-    "backbone",
-    "./BlockView",
-    "./CategoryView"
-], function(Backbone, BlockView, CategoryView) {
-    return Backbone.View.extend({
+define(['exports', 'module', 'underscore', './BlockView', './CategoryView'], function(exports, module, underscore, BlockView, CategoryView) {
+    'use strict';
 
-        initialize(opts, config) {
+    module.exports = require('backbone').View.extend({
+        initialize: function initialize(opts, config) {
             _.bindAll(this, 'getSorter', 'onDrag', 'onDrop');
             this.config = config || {};
             this.categories = opts.categories || '';
             this.renderedCategories = [];
             var ppfx = this.config.pStylePrefix || '';
             this.ppfx = ppfx;
-            this.noCatClass = `${ppfx}blocks-no-cat`;
-            this.blockContClass = `${ppfx}blocks-c`;
-            this.catsClass = `${ppfx}block-categories`;
-            this.listenTo(this.collection, 'add', this.addTo);
+            this.noCatClass = ppfx + 'blocks-no-cat';
+            this.blockContClass = ppfx + 'blocks-c';
+            this.catsClass = ppfx + 'block-categories';
+            var coll = this.collection;
+            this.listenTo(coll, 'add', this.addTo);
+            this.listenTo(coll, 'reset', this.render);
             this.em = this.config.em;
             this.tac = 'test-tac';
             this.grabbingCls = this.ppfx + 'grabbing';
@@ -30,9 +29,8 @@ define([
          * Get sorter
          * @private
          */
-        getSorter() {
-            if (!this.em)
-                return;
+        getSorter: function getSorter() {
+            if (!this.em) return;
             if (!this.sorter) {
                 var utils = this.em.get('Utils');
                 var canvas = this.canvas;
@@ -50,7 +48,7 @@ define([
                     wmargin: 1,
                     nested: 1,
                     em: this.em,
-                    canvasRelative: 1,
+                    canvasRelative: 1
                 });
             }
             return this.sorter;
@@ -60,12 +58,12 @@ define([
          * Callback when block is on drag
          * @private
          */
-        onDrag(e) {
+        onDrag: function onDrag(e) {
             this.em.stopDefault();
             this.em.trigger('block:drag:start', e);
         },
 
-        onMove(e) {
+        onMove: function onMove(e) {
             this.em.trigger('block:drag:move', e);
         },
 
@@ -73,8 +71,9 @@ define([
          * Callback when block is dropped
          * @private
          */
-        onDrop(model) {
-            this.em.runDefault();
+        onDrop: function onDrop(model) {
+            var em = this.em;
+            em.runDefault();
 
             if (model && model.get) {
                 if (model.get('activeOnRender')) {
@@ -82,10 +81,8 @@ define([
                     model.set('activeOnRender', 0);
                 }
 
-                // Register all its components (eg. for the Undo Manager)
-                this.em.initChildrenComp(model);
+                em.trigger('block:drag:stop', model);
             }
-            this.em.trigger('block:drag:stop', model);
         },
 
         /**
@@ -93,7 +90,7 @@ define([
          * @param {Model} model
          * @private
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             this.add(model);
         },
 
@@ -103,22 +100,24 @@ define([
          * @param {Object} fragment Fragment collection
          * @private
          * */
-        add(model, fragment) {
+        add: function add(model, fragment) {
             var frag = fragment || null;
             var view = new BlockView({
-                model,
-                attributes: model.get('attributes'),
+                model: model,
+                attributes: model.get('attributes')
             }, this.config);
             var rendered = view.render().el;
             var category = model.get('category');
 
             // Check for categories
             if (category && this.categories) {
-                if (typeof category == 'string') {
+                if ((0, underscore.isString)(category)) {
                     category = {
                         id: category,
                         label: category
                     };
+                } else if ((0, underscore.isObject)(category) && !category.id) {
+                    category.id = category.label;
                 }
 
                 var catModel = this.categories.add(category);
@@ -139,54 +138,46 @@ define([
                 return;
             }
 
-            if (frag)
-                frag.appendChild(rendered);
-            else
-                this.append(rendered);
+            if (frag) frag.appendChild(rendered);
+            else this.append(rendered);
         },
 
-        getCategoriesEl() {
+        getCategoriesEl: function getCategoriesEl() {
             if (!this.catsEl) {
-                this.catsEl = this.el.querySelector(`.${this.catsClass}`);
+                this.catsEl = this.el.querySelector('.' + this.catsClass);
             }
 
             return this.catsEl;
         },
 
-        getBlocksEl() {
+        getBlocksEl: function getBlocksEl() {
             if (!this.blocksEl) {
-                this.blocksEl = this.el.querySelector(`.${this.noCatClass} .${this.blockContClass}`);
+                this.blocksEl = this.el.querySelector('.' + this.noCatClass + ' .' + this.blockContClass);
             }
 
             return this.blocksEl;
         },
 
-        append(el) {
-            let blocks = this.getBlocksEl();
+        append: function append(el) {
+            var blocks = this.getBlocksEl();
             blocks && blocks.appendChild(el);
         },
 
-        render() {
-            var ppfx = this.ppfx;
+        render: function render() {
+            var _this = this;
+
             var frag = document.createDocumentFragment();
             this.catsEl = null;
             this.blocksEl = null;
             this.renderedCategories = [];
-            this.el.innerHTML = `
-      <div class="${this.catsClass}"></div>
-      <div class="${this.noCatClass}">
-        <div class="${this.blockContClass}"></div>
-      </div>
-    `;
+            this.el.innerHTML = '\n      <div class="' + this.catsClass + '"></div>\n      <div class="' + this.noCatClass + '">\n        <div class="' + this.blockContClass + '"></div>\n      </div>\n    ';
 
             this.collection.each(function(model) {
-                this.add(model, frag);
-            }, this);
-
+                return _this.add(model, frag);
+            });
             this.append(frag);
-            this.$el.addClass(this.blockContClass + 's')
+            this.$el.addClass(this.blockContClass + 's');
             return this;
-        },
-
+        }
     });
 });

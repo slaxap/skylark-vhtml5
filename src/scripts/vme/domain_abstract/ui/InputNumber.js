@@ -1,39 +1,36 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
+define(['exports', 'module', 'underscore', '../../utils/mixins', './Input'], function(exports, module, underscore, utilsMixins, Input) {
+    'use strict';
 
-        events: {},
+    var Backbone = require('backbone');
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
 
-        template: _.template(`
-  <span class='<%= ppfx %>input-holder'></span>
-  <span class='<%= ppfx %>field-units'></span>
-  <div class="<%= ppfx %>field-arrows">
-    <div class="<%= ppfx %>field-arrow-u"></div>
-    <div class="<%= ppfx %>field-arrow-d"></div>
-  </div>`),
+    module.exports = Input.extend({
+        events: {
+            'change input': 'handleChange',
+            'change select': 'handleUnitChange',
+            'click [data-arrow-up]': 'upArrowClick',
+            'click [data-arrow-down]': 'downArrowClick',
+            'mousedown [data-arrows]': 'downIncrement'
+        },
 
-        initialize(opts) {
-            _.bindAll(this, 'moveIncrement', 'upIncrement');
-            var opt = opts || {};
-            var ppfx = opt.ppfx || '';
-            var contClass = opt.contClass || (ppfx + 'field');
-            this.ppfx = ppfx;
-            this.docEl = $(document);
-            this.inputCls = ppfx + 'input-number';
-            this.unitCls = ppfx + 'input-unit';
-            this.contClass = contClass;
- 
-            this.events = {};
+        template: function template() {
+            var ppfx = this.ppfx;
+            return '\n      <span class="' + ppfx + 'input-holder"></span>\n      <span class="' + ppfx + 'field-units"></span>\n      <div class="' + ppfx + 'field-arrows" data-arrows>\n        <div class="' + ppfx + 'field-arrow-u" data-arrow-up></div>\n        <div class="' + ppfx + 'field-arrow-d" data-arrow-down></div>\n      </div>\n    ';
+        },
 
-            this.events['click .' + ppfx + 'field-arrow-u'] = 'upArrowClick';
-            this.events['click .' + ppfx + 'field-arrow-d'] = 'downArrowClick';
-            this.events['mousedown .' + ppfx + 'field-arrows'] = 'downIncrement';
-            this.events['change .' + this.inputCls] = 'handleChange';
-            this.events['change .' + this.unitCls] = 'handleUnitChange';
+        inputClass: function inputClass() {
+            var ppfx = this.ppfx;
+            return this.opts.contClass || ppfx + 'field ' + ppfx + 'field-integer';
+        },
 
-            this.listenTo(this.model, 'change:unit change:value', this.handleModelChange);
-            //this.delegateEvents();
+        initialize: function initialize() {
+            var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+            Input.prototype.initialize.apply(this, arguments);
+            (0, underscore.bindAll)(this, 'moveIncrement', 'upIncrement');
+            this.doc = document;
+            this.listenTo(this.model, 'change:unit', this.handleModelChange);
         },
 
         /**
@@ -41,14 +38,10 @@ define([
          * @param {string} value
          * @param {Object} opts
          */
-        setValue(value, opts) {
+        setValue: function setValue(value, opts) {
             var opt = opts || {};
-            var valid = this.validateInputValue(value, {
-                deepCheck: 1
-            });
-            var validObj = {
-                value: valid.value
-            };
+            var valid = this.validateInputValue(value, { deepCheck: 1 });
+            var validObj = { value: valid.value };
 
             // If found some unit value
             if (valid.unit || valid.force) {
@@ -67,87 +60,95 @@ define([
         /**
          * Handled when the view is changed
          */
-        handleChange(e) {
+        handleChange: function handleChange(e) {
             e.stopPropagation();
             this.setValue(this.getInputEl().value);
+            this.elementUpdated();
         },
 
         /**
          * Handled when the view is changed
          */
-        handleUnitChange(e) {
+        handleUnitChange: function handleUnitChange(e) {
             e.stopPropagation();
             var value = this.getUnitEl().value;
             this.model.set('unit', value);
+            this.elementUpdated();
+        },
+
+        /**
+         * Fired when the element of the property is updated
+         */
+        elementUpdated: function elementUpdated() {
+            this.model.trigger('el:change');
         },
 
         /**
          * Updates the view when the model is changed
          * */
-        handleModelChange() {
-            var m = this.model;
-            this.getInputEl().value = m.get('value');
-            var unit = this.getUnitEl();
-
-            if (unit) {
-                unit.value = m.get('unit');
-            }
-        },
-
-        /**
-         * Get the input element
-         * @return {HTMLElement}
-         */
-        getInputEl() {
-            if (!this.inputEl) {
-                this.inputEl = $('<input>', {
-                    type: 'text',
-                    class: this.inputCls,
-                    placeholder: this.model.get('defaults')
-                });
-            }
-            return this.inputEl.get(0);
+        handleModelChange: function handleModelChange() {
+            var model = this.model;
+            this.getInputEl().value = model.get('value');
+            var unitEl = this.getUnitEl();
+            unitEl && (unitEl.value = model.get('unit') || '');
         },
 
         /**
          * Get the unit element
          * @return {HTMLElement}
          */
-        getUnitEl() {
+        getUnitEl: function getUnitEl() {
+            var _this = this;
+
             if (!this.unitEl) {
-                var model = this.model;
-                var units = model.get('units') || [];
-                if (units.length) {
-                    var unitStr = '<select class="' + this.unitCls + '">';
-                    _.each(units, unit => {
-                        var selected = unit == model.get('unit') ? 'selected' : '';
-                        unitStr += '<option ' + selected + ' >' + unit + '</option>';
-                    });
-                    unitStr += '</select>';
-                    this.unitEl = $(unitStr);
-                }
+                (function() {
+                    var model = _this.model;
+                    var units = model.get('units') || [];
+
+                    if (units.length) {
+                        (function() {
+                            var options = [];
+
+                            units.forEach(function(unit) {
+                                var selected = unit == model.get('unit') ? 'selected' : '';
+                                options.push('<option ' + selected + '>' + unit + '</option>');
+                            });
+
+                            var temp = document.createElement('div');
+                            temp.innerHTML = '<select class="' + _this.ppfx + 'input-unit">' + options.join('') + '</select>';
+                            _this.unitEl = temp.firstChild;
+                        })();
+                    }
+                })();
             }
-            return this.unitEl && this.unitEl.get(0);
+
+            return this.unitEl;
         },
 
         /**
          * Invoked when the up arrow is clicked
          * */
-        upArrowClick() {
-            var value = this.model.get('value');
-            value = isNaN(value) ? 1 : parseInt(value, 10) + 1;
+        upArrowClick: function upArrowClick() {
+            var model = this.model;
+            var step = model.get('step');
+            var value = parseInt(model.get('value'), 10);
+            value = this.normalizeValue(value + step);
             var valid = this.validateInputValue(value);
-            this.model.set('value', valid.value);
+            model.set('value', valid.value);
+            this.elementUpdated();
         },
 
         /**
          * Invoked when the down arrow is clicked
          * */
-        downArrowClick() {
-            var value = this.model.get('value');
-            value = isNaN(value) ? 0 : parseInt(value, 10) - 1;
-            var valid = this.validateInputValue(value);
-            this.model.set('value', valid.value);
+        downArrowClick: function downArrowClick() {
+            var model = this.model;
+            var step = model.get('step');
+            var value = parseInt(model.get('value'), 10);
+            var val = this.normalizeValue(value - step);
+            var valid = this.validateInputValue(val);
+            model.set('value', valid.value);
+            this.elementUpdated();
         },
 
         /**
@@ -156,17 +157,14 @@ define([
          *
          * @return void
          * */
-        downIncrement(e) {
+        downIncrement: function downIncrement(e) {
             e.preventDefault();
             this.moved = 0;
             var value = this.model.get('value');
-            value = isNaN(value) ? 0 : parseInt(value, 10);
-            var current = {
-                y: e.pageY,
-                val: value
-            };
-            this.docEl.mouseup(current, this.upIncrement);
-            this.docEl.mousemove(current, this.moveIncrement);
+            value = this.normalizeValue(value);
+            this.current = { y: e.pageY, val: value };
+            (0, utilsMixins.on)(this.doc, 'mousemove', this.moveIncrement);
+            (0, utilsMixins.on)(this.doc, 'mouseup', this.upIncrement);
         },
 
         /** While the increment is clicked, moving the mouse will update input value
@@ -174,33 +172,52 @@ define([
          *
          * @return bool
          * */
-        moveIncrement(ev) {
+        moveIncrement: function moveIncrement(ev) {
             this.moved = 1;
-            var pos = parseInt(ev.data.val - ev.pageY + ev.data.y, 10);
-            this.prValue = this.validateInputValue(pos).value; //Math.max(this.min, Math.min(this.max, pos) );
-            this.model.set('value', this.prValue, {
-                avoidStore: 1
-            });
+            var model = this.model;
+            var step = model.get('step');
+            var data = this.current;
+            var pos = this.normalizeValue(data.val + (data.y - ev.pageY) * step);
+            this.prValue = this.validateInputValue(pos).value;
+            model.set('value', this.prValue, { avoidStore: 1 });
             return false;
         },
 
         /**
          * Stop moveIncrement method
-         * @param Object
-         *
-         * @return void
          * */
-        upIncrement(e) {
-            this.docEl.off('mouseup', this.upIncrement);
-            this.docEl.off('mousemove', this.moveIncrement);
+        upIncrement: function upIncrement() {
+            var model = this.model;
+            var step = model.get('step');
+            (0, utilsMixins.off)(this.doc, 'mouseup', this.upIncrement);
+            (0, utilsMixins.off)(this.doc, 'mousemove', this.moveIncrement);
 
             if (this.prValue && this.moved) {
-                var value = this.prValue - 1;
-                this.model.set('value', value, {
-                    avoidStore: 1
-                })
-                    .set('value', value + 1);
+                var value = this.prValue - step;
+                model.set('value', value, { avoidStore: 1 }).set('value', value + step);
+                this.elementUpdated();
             }
+        },
+
+        normalizeValue: function normalizeValue(value) {
+            var defValue = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+
+            var model = this.model;
+            var step = model.get('step');
+            var stepDecimals = 0;
+
+            if (isNaN(value)) {
+                return defValue;
+            }
+
+            value = parseFloat(value);
+
+            if (Math.floor(value) !== value) {
+                var side = step.toString().split('.')[1];
+                stepDecimals = side ? side.length : 0;
+            }
+
+            return stepDecimals ? parseFloat(value.toFixed(stepDecimals)) : value;
         },
 
         /**
@@ -209,13 +226,13 @@ define([
          * @param {Object} opts Options
          * @return {Object} Validated string
          */
-        validateInputValue(value, opts) {
+        validateInputValue: function validateInputValue(value, opts) {
             var force = 0;
             var opt = opts || {};
             var model = this.model;
-            var val = value || model.get('defaults');
+            var val = value !== '' ? value : model.get('defaults');
             var units = model.get('units') || [];
-            var unit = model.get('unit') || (units.length && units[0]) || '';
+            var unit = model.get('unit') || units.length && units[0] || '';
             var max = model.get('max');
             var min = model.get('min');
 
@@ -236,35 +253,27 @@ define([
                         val = !isNaN(val) ? val : model.get('defaults');
                         var uN = valCopy.replace(val, '');
                         // Check if exists as unit
-                        if (_.indexOf(units, uN) >= 0)
-                            unit = uN;
+                        if (_.indexOf(units, uN) >= 0) unit = uN;
                     }
                 }
             }
 
-            if (typeof max !== 'undefined' && max !== '')
-                val = val > max ? max : val;
+            if (typeof max !== 'undefined' && max !== '') val = val > max ? max : val;
 
-            if (typeof min !== 'undefined' && min !== '')
-                val = val < min ? min : val;
+            if (typeof min !== 'undefined' && min !== '') val = val < min ? min : val;
 
             return {
-                force,
+                force: force,
                 value: val,
-                unit
+                unit: unit
             };
         },
 
-        render() {
-            var ppfx = this.ppfx;
-            this.$el.html(this.template({
-                ppfx
-            }));
-            this.$el.find('.' + ppfx + 'input-holder').html(this.getInputEl());
-            this.$el.find('.' + ppfx + 'field-units').html(this.getUnitEl());
-            this.$el.addClass(this.contClass);
+        render: function render() {
+            Input.prototype.render.call(this);
+            var unit = this.getUnitEl();
+            unit && this.$el.find('.' + this.ppfx + 'field-units').get(0).appendChild(unit);
             return this;
         }
-
     });
 });

@@ -1,14 +1,17 @@
 define([
+    'exports',
+    'module',
     './config/config',
     './model/ParserCss',
     './model/ParserHtml'
-], function(defaults, parserCss, parserHtml) {
-    return function() {
+], function(exports, module, defaults, parserCss, parserHtml) {
+    'use strict';
+
+    module.exports = function() {
         var c = {};
         var pHtml, pCss;
 
         return {
-
             compTypes: '',
 
             /**
@@ -33,11 +36,10 @@ define([
              * }
              * ...
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
                 pHtml = new parserHtml(c);
                 pCss = new parserCss(c);
@@ -49,15 +51,14 @@ define([
              * @param  {string} str HTML string
              * @return {Object}
              */
-            parseHtml(str) {
+            parseHtml: function parseHtml(str) {
                 pHtml.compTypes = this.compTypes;
                 return pHtml.parse(str, pCss);
             },
 
-            parseCss(str) {
+            parseCss: function parseCss(str) {
                 return pCss.parse(str);
-            },
-
+            }
         };
     };
 });

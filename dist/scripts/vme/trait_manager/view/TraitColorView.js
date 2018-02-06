@@ -1,25 +1,30 @@
 define([
-    "./TraitView",
-    "../../domain_abstract/ui/InputColor"
-], function(TraitView, InputColor) {
-    return TraitView.extend({
+    'exports',
+    'module',
+    './TraitView',
+    '../../domain_abstract/ui/InputColor'
+], function(exports, module, TraitView, InputColor) {
+    'use strict';
+    module.exports = TraitView.extend({
         /**
          * Returns input element
          * @return {HTMLElement}
          * @private
          */
-        getInputEl() {
+        getInputEl: function getInputEl() {
             if (!this.$input) {
                 var value = this.getModelValue();
-                var inputNumber = new InputColor({
+                var inputColor = new InputColor({
+                    target: this.config.em,
                     contClass: this.ppfx + 'field-color',
                     model: this.model,
                     ppfx: this.ppfx
                 });
-                this.input = inputNumber.render();
+                this.input = inputColor.render();
                 this.$input = this.input.colorEl;
                 value = value || '';
                 this.model.set('value', value).trigger('change:value');
+                this.input.setValue(value);
             }
             return this.$input.get(0);
         },
@@ -28,12 +33,11 @@ define([
          * Renders input
          * @private
          * */
-        renderField() {
+        renderField: function renderField() {
             if (!this.$input) {
                 this.getInputEl();
                 this.$el.append(this.input.el);
             }
-        },
-
+        }
     });
 });

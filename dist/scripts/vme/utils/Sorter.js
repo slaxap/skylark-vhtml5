@@ -1,9 +1,11 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
+define(['exports', 'module', 'underscore', '../utils/mixins'], function(exports, module, underscore, utilsMixins) {
+    'use strict';
 
-        initialize(opt) {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(opt) {
             this.opt = opt || {};
             _.bindAll(this, 'startSort', 'onMove', 'endMove', 'rollback', 'udpateOffset', 'moveDragHelper');
             var o = opt || {};
@@ -40,6 +42,7 @@ define([
             this.em = o.em || '';
             this.dragHelper = null;
             this.canvasRelative = o.canvasRelative || 0;
+            this.selectOnEnd = !o.avoidSelectOnEnd;
 
             if (this.em && this.em.on) {
                 this.em.on('change:canvasOffset', this.udpateOffset);
@@ -47,7 +50,7 @@ define([
             }
         },
 
-        getContainerEl() {
+        getContainerEl: function getContainerEl() {
             if (!this.el) {
                 var el = this.opt.container;
                 this.el = typeof el === 'string' ? document.querySelector(el) : el;
@@ -56,10 +59,18 @@ define([
             return this.el;
         },
 
+        getDocuments: function getDocuments() {
+            var em = this.em;
+            var canvasDoc = em && em.get('Canvas').getBody().ownerDocument;
+            var docs = [document];
+            canvasDoc && docs.push(canvasDoc);
+            return docs;
+        },
+
         /**
          * Triggered when the offset of the editro is changed
          */
-        udpateOffset() {
+        udpateOffset: function udpateOffset() {
             var offset = this.em.get('canvasOffset');
             this.offTop = offset.top;
             this.offLeft = offset.left;
@@ -69,7 +80,7 @@ define([
          * Set content to drop
          * @param {String|Object} content
          */
-        setDropContent(content) {
+        setDropContent: function setDropContent(content) {
             this.dropContent = content;
         },
 
@@ -77,24 +88,23 @@ define([
          * Toggle cursor while sorting
          * @param {Boolean} active
          */
-        toggleSortCursor(active) {
+        toggleSortCursor: function toggleSortCursor(active) {
             var em = this.em;
             var body = document.body;
             var pfx = this.ppfx || this.pfx;
             var sortCls = pfx + 'grabbing';
             var emBody = em ? em.get('Canvas').getBody() : '';
+
+            // Avoid updating body className as it causes a huge repaint
+            // Noticeable with "fast" drag of blocks
             if (active) {
                 em && em.get('Canvas').startAutoscroll();
-                body.className += ' ' + sortCls;
-                if (em) {
-                    emBody.className += ' ' + sortCls;
-                }
+                //body.className += ' ' + sortCls;
+                //if (em) emBody.className += ' ' + sortCls;
             } else {
                 em && em.get('Canvas').stopAutoscroll();
-                body.className = body.className.replace(sortCls, '').trim();
-                if (em) {
-                    emBody.className = emBody.className.replace(sortCls, '').trim();
-                }
+                //body.className = body.className.replace(sortCls, '').trim();
+                //if(em) emBody.className = emBody.className.replace(sortCls, '').trim();
             }
         },
 
@@ -103,60 +113,68 @@ define([
          * @param {HTMLElement} el
          * @param {Event} event
          */
-        setDragHelper(el, event) {
+        setDragHelper: function setDragHelper(el, event) {
             var ev = event || '';
             var clonedEl = el.cloneNode(1);
-
-            // Attach style
+            var rect = el.getBoundingClientRect();
+            var computed = getComputedStyle(el);
             var style = '';
-            var o = getComputedStyle(el);
-            for (var i = 0; i < o.length; i++) {
-                style += o[i] + ':' + o.getPropertyValue(o[i]) + ';';
-            }
-            clonedEl.setAttribute('style', style);
-            clonedEl.className += ' ' + this.pfx + 'bdrag';
-            document.body.appendChild(clonedEl);
-            this.dragHelper = clonedEl;
 
-            if (ev) {
-                this.moveDragHelper(ev);
+            for (var i = 0; i < computed.length; i++) {
+                var prop = computed[i];
+                style += prop + ':' + computed.getPropertyValue(prop) + ';';
             }
+
+            document.body.appendChild(clonedEl);
+            clonedEl.className += ' ' + this.pfx + 'bdrag';
+            clonedEl.setAttribute('style', style);
+            this.dragHelper = clonedEl;
+            clonedEl.style.width = rect.width + 'px';
+            clonedEl.style.height = rect.height + 'px';
+            ev && this.moveDragHelper(ev);
 
             // Listen mouse move events
             if (this.em) {
-                $(this.em.get('Canvas').getBody().ownerDocument)
-                    .off('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
+                $(this.em.get('Canvas').getBody().ownerDocument).off('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
             }
-            $(document)
-                .off('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
+            $(document).off('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
         },
 
         /**
-         * //TODO Refactor, use canvas.getMouseRelativePos to get mouse's X and Y
          * Update the position of the helper
          * @param  {Event} e
          */
-        moveDragHelper(e) {
+        moveDragHelper: function moveDragHelper(e) {
             var doc = e.target.ownerDocument;
 
             if (!this.dragHelper || !doc) {
                 return;
             }
 
-            var win = doc.defaultView || doc.parentWindow;
+            var posY = e.pageY;
+            var posX = e.pageX;
             var addTop = 0;
             var addLeft = 0;
-            var frame = win.frameElement;
-            if (frame) {
-                var frameRect = frame.getBoundingClientRect(); // maybe to cache ?!?
-                addTop = frameRect.top || 0;
-                addLeft = frameRect.left || 0;
-            }
-            var hStyle = this.dragHelper.style;
-            hStyle.left = (e.pageX - win.pageXOffset + addLeft) + 'px';
-            hStyle.top = (e.pageY - win.pageYOffset + addTop) + 'px';
-        },
+            var window = doc.defaultView || doc.parentWindow;
+            var frame = window.frameElement;
+            var dragHelperStyle = this.dragHelper.style;
 
+            // If frame is present that means mouse has moved over the editor's canvas,
+            // which is rendered inside the iframe and the mouse move event comes from
+            // the iframe, not the parent window. Mouse position relative to the frame's
+            // parent window needs to account for the frame's position relative to the
+            // parent window.
+            if (frame) {
+                var frameRect = frame.getBoundingClientRect();
+                addTop = frameRect.top + document.documentElement.scrollTop;
+                addLeft = frameRect.left + document.documentElement.scrollLeft;
+                posY = e.clientY;
+                posX = e.clientX;
+            }
+
+            dragHelperStyle.top = posY + addTop + 'px';
+            dragHelperStyle.left = posX + addLeft + 'px';
+        },
 
         /**
          * Returns true if the element matches with selector
@@ -164,14 +182,8 @@ define([
          * @param {String} selector
          * @return {Boolean}
          */
-        matches(el, selector, useBody) {
-            var startEl = el.parentNode || document.body;
-            //startEl = useBody ? startEl.ownerDocument.body : startEl;
-            var els = startEl.querySelectorAll(selector);
-            var i = 0;
-            while (els[i] && els[i] !== el)
-            ++i;
-            return !!els[i];
+        matches: function matches(el, selector, useBody) {
+            return utilsMixins.matches.call(el, selector);
         },
 
         /**
@@ -180,13 +192,11 @@ define([
          * @param {String} selector
          * @return {Element|null}
          */
-        closest(el, selector) {
-            if (!el)
-                return;
+        closest: function closest(el, selector) {
+            if (!el) return;
             var elem = el.parentNode;
             while (elem && elem.nodeType === 1) {
-                if (this.matches(elem, selector))
-                    return elem;
+                if (this.matches(elem, selector)) return elem;
                 elem = elem.parentNode;
             }
             return null;
@@ -197,7 +207,7 @@ define([
          * @param  {HTMLElement} el
          * @return {Object}
          */
-        offset(el) {
+        offset: function offset(el) {
             var rect = el.getBoundingClientRect();
             return {
                 top: rect.top + document.body.scrollTop,
@@ -209,14 +219,14 @@ define([
          * Create placeholder
          * @return {HTMLElement}
          */
-        createPlaceholder() {
+        createPlaceholder: function createPlaceholder() {
             var pfx = this.pfx;
             var el = document.createElement('div');
             var ins = document.createElement('div');
             el.className = pfx + 'placeholder';
             el.style.display = 'none';
             el.style['pointer-events'] = 'none';
-            ins.className = pfx + "placeholder-int";
+            ins.className = pfx + 'placeholder-int';
             el.appendChild(ins);
             return el;
         },
@@ -225,49 +235,56 @@ define([
          * Picking component to move
          * @param {HTMLElement} src
          * */
-        startSort(src) {
+        startSort: function startSort(src) {
+            var em = this.em;
+            var itemSel = this.itemSel;
+            var contSel = this.containerSel;
+            var container = this.getContainerEl();
+            var docs = this.getDocuments();
+            var onStart = this.onStart;
+            var srcModel = undefined;
+            var plh = this.plh;
             this.dropModel = null;
             this.moved = 0;
-            //this.$document = $([document, trg.ownerDocument]);
 
-            if (src && !this.matches(src, this.itemSel + ',' + this.containerSel))
-                src = this.closest(src, this.itemSel);
+            // Check if the start element is a valid one, if not get the
+            // closest valid one
+            if (src && !this.matches(src, itemSel + ', ' + contSel)) {
+                src = this.closest(src, itemSel);
+            }
 
             this.eV = src;
 
-            // Create placeholder if not exists
-            if (!this.plh) {
-                this.plh = this.createPlaceholder();
-                this.getContainerEl().appendChild(this.plh);
+            // Create placeholder if not yet exists
+            if (!plh) {
+                plh = this.createPlaceholder();
+                container.appendChild(plh);
+                this.plh = plh;
             }
 
             if (src) {
-                var srcModel = this.getSourceModel();
-                srcModel && srcModel.set('status', 'freezed');
-                this.$document.on('mouseup', this.endMove);
+                srcModel = this.getSourceModel(src);
+                srcModel && srcModel.set && srcModel.set('status', 'freezed');
             }
 
-            this.$el.on('mousemove', this.onMove);
-            $(document).on('keydown', this.rollback);
-            this.$document.on('keydown', this.rollback);
-
-            if (typeof this.onStart === 'function')
-                this.onStart();
+            (0, utilsMixins.on)(container, 'mousemove dragover', this.onMove);
+            (0, utilsMixins.on)(docs, 'mouseup dragend', this.endMove);
+            (0, utilsMixins.on)(docs, 'keydown', this.rollback);
+            onStart && onStart();
 
             // Avoid strange effects on dragging
-            if (this.em) {
-                this.em.clearSelection();
-            }
-
+            em && em.clearSelection();
             this.toggleSortCursor(1);
+
+            em && em.trigger('sorter:drag:start', src, srcModel);
         },
 
         /**
          * Get the model from HTMLElement target
          * @return {Model|null}
          */
-        getTargetModel(el) {
-            let elem = el || this.target;
+        getTargetModel: function getTargetModel(el) {
+            var elem = el || this.target;
             return $(elem).data('model');
         },
 
@@ -275,18 +292,22 @@ define([
          * Get the model of the current source element (element to drag)
          * @return {Model}
          */
-        getSourceModel() {
-            var src = this.eV;
-            let dropContent = this.dropContent;
-            let dropModel = this.dropModel;
-            const em = this.em;
+        getSourceModel: function getSourceModel(source) {
+            var src = source || this.eV;
+            var dropContent = this.dropContent;
+            var dropModel = this.dropModel;
+            var em = this.em;
 
             if (dropContent && em) {
                 if (!dropModel) {
-                    let comps = em.get('DomComponents').getComponents();
-                    let tempModel = comps.add(dropContent);
-                    dropModel = comps.remove(tempModel);
-                    this.dropModel = dropModel;
+                    var comps = em.get('DomComponents').getComponents();
+                    var tempModel = comps.add(dropContent, {
+                        avoidChildren: 1,
+                        avoidUpdateStyle: 1,
+                        temporary: 1
+                    });
+                    dropModel = comps.remove(tempModel, { temporary: 1 });
+                    this.dropModel = dropModel instanceof Array ? dropModel[0] : dropModel;
                 }
                 return dropModel;
             }
@@ -300,7 +321,7 @@ define([
          * Highlight target
          * @param  {Model|null} model
          */
-        selectTargetModel(model) {
+        selectTargetModel: function selectTargetModel(model) {
             if (model instanceof Backbone.Collection) {
                 return;
             }
@@ -320,56 +341,65 @@ define([
          * During move
          * @param {Event} e
          * */
-        onMove(e) {
+        onMove: function onMove(e) {
+            var em = this.em;
             this.moved = 1;
 
             // Turn placeholder visibile
             var plh = this.plh;
             var dsp = plh.style.display;
-            if (!dsp || dsp === 'none')
-                plh.style.display = 'block';
+            if (!dsp || dsp === 'none') plh.style.display = 'block';
 
             // Cache all necessary positions
             var eO = this.offset(this.el);
             this.elT = this.wmargin ? Math.abs(eO.top) : eO.top;
             this.elL = this.wmargin ? Math.abs(eO.left) : eO.left;
-            var rY = (e.pageY - this.elT) + this.el.scrollTop;
-            var rX = (e.pageX - this.elL) + this.el.scrollLeft;
+            var rY = e.pageY - this.elT + this.el.scrollTop;
+            var rX = e.pageX - this.elL + this.el.scrollLeft;
 
-            if (this.canvasRelative && this.em) {
-                var mousePos = this.em.get('Canvas').getMouseRelativeCanvas(e);
+            if (this.canvasRelative && em) {
+                var mousePos = em.get('Canvas').getMouseRelativeCanvas(e);
                 rX = mousePos.x;
                 rY = mousePos.y;
             }
 
-            var dims = this.dimsFromTarget(e.target, rX, rY);
+            this.rX = rX;
+            this.rY = rY;
+            this.eventMove = e;
 
-            let targetModel = this.getTargetModel(this.target);
+            //var targetNew = this.getTargetFromEl(e.target);
+            var dims = this.dimsFromTarget(e.target, rX, rY);
+            var target = this.target;
+            var targetModel = this.getTargetModel(target);
             this.selectTargetModel(targetModel);
 
             this.lastDims = dims;
             var pos = this.findPosition(dims, rX, rY);
             // If there is a significant changes with the pointer
-            if (!this.lastPos ||
-                (this.lastPos.index != pos.index || this.lastPos.method != pos.method)) {
+            if (!this.lastPos || this.lastPos.index != pos.index || this.lastPos.method != pos.method) {
                 this.movePlaceholder(this.plh, dims, pos, this.prevTargetDim);
-                if (!this.$plh)
-                    this.$plh = $(this.plh);
+                if (!this.$plh) this.$plh = $(this.plh);
 
                 // With canvasRelative the offset is calculated automatically for
                 // each element
                 if (!this.canvasRelative) {
-                    if (this.offTop)
-                        this.$plh.css('top', '+=' + this.offTop + 'px');
-                    if (this.offLeft)
-                        this.$plh.css('left', '+=' + this.offLeft + 'px');
+                    if (this.offTop) this.$plh.css('top', '+=' + this.offTop + 'px');
+                    if (this.offLeft) this.$plh.css('left', '+=' + this.offLeft + 'px');
                 }
 
                 this.lastPos = pos;
             }
 
-            if (typeof this.onMoveClb === 'function')
-                this.onMoveClb(e);
+            if (typeof this.onMoveClb === 'function') this.onMoveClb(e);
+
+            em && em.trigger('sorter:drag', {
+                target: target,
+                targetModel: targetModel,
+                dims: dims,
+                pos: pos,
+                x: rX,
+                y: rY
+            });
         },
 
         /**
@@ -380,19 +410,16 @@ define([
          * @return {Boolean}
          * @private
          * */
-        isInFlow(el, parent) {
-            if (!el)
-                return false;
+        isInFlow: function isInFlow(el, parent) {
+            if (!el) return false;
 
             parent = parent || document.body;
             var ch = -1,
                 h;
             var elem = el;
             h = elem.offsetHeight;
-            if ( /*h < ch || */ !this.styleInFlow(elem, parent))
-                return false;
-            else
-                return true;
+            if ( /*h < ch || */ !this.styleInFlow(elem, parent)) return false;
+            else return true;
         },
 
         /**
@@ -402,15 +429,12 @@ define([
          * @return {Boolean}
          * @private
          */
-        styleInFlow(el, parent) {
+        styleInFlow: function styleInFlow(el, parent) {
             var style = el.style;
             var $el = $(el);
-            if (style.overflow && style.overflow !== 'visible')
-                return;
-            if ($el.css('float') !== 'none')
-                return;
-            if (parent && $(parent).css('display') == 'flex')
-                return;
+            if (style.overflow && style.overflow !== 'visible') return;
+            if ($el.css('float') !== 'none') return;
+            if (parent && $(parent).css('display') == 'flex') return;
             switch (style.position) {
                 case 'static':
                 case 'relative':
@@ -441,17 +465,17 @@ define([
          * @param  {HTMLElement} trg
          * @return {Boolean}
          */
-        validTarget(trg) {
-            let srcModel = this.getSourceModel();
-            let src = srcModel && srcModel.view && srcModel.view.el;
-            let trgModel = this.getTargetModel(trg);
+        validTarget: function validTarget(trg) {
+            var srcModel = this.getSourceModel();
+            var src = srcModel && srcModel.view && srcModel.view.el;
+            var trgModel = this.getTargetModel(trg);
             trg = trgModel && trgModel.view && trgModel.view.el;
-            let result = {
+            var result = {
                 valid: true,
-                src,
-                srcModel,
-                trg,
-                trgModel
+                src: src,
+                srcModel: srcModel,
+                trg: trg,
+                trgModel: trgModel
             };
 
             if (!src || !trg) {
@@ -460,18 +484,18 @@ define([
             }
 
             // Check if the target could accept the source
-            let droppable = trgModel.get('droppable');
+            var droppable = trgModel.get('droppable');
             droppable = droppable instanceof Backbone.Collection ? 1 : droppable;
             droppable = droppable instanceof Array ? droppable.join(', ') : droppable;
             result.dropInfo = droppable;
-            droppable = typeof droppable === 'string' ? src.matches(droppable) : droppable;
+            droppable = (0, underscore.isString)(droppable) ? this.matches(src, droppable) : droppable;
             result.droppable = droppable;
 
             // check if the source is draggable in target
-            let draggable = srcModel.get('draggable');
+            var draggable = srcModel.get('draggable');
             draggable = draggable instanceof Array ? draggable.join(', ') : draggable;
             result.dragInfo = draggable;
-            draggable = typeof draggable === 'string' ? trg.matches(draggable) : draggable;
+            draggable = (0, underscore.isString)(draggable) ? this.matches(trg, draggable) : draggable;
             result.draggable = draggable;
 
             if (!droppable || !draggable) {
@@ -488,11 +512,16 @@ define([
          * @param {number} rY Relative Y position
          * @return {Array<Array>}
          */
-        dimsFromTarget(target, rX, rY) {
+        dimsFromTarget: function dimsFromTarget(target, rX, rY) {
+            var em = this.em;
             var dims = [];
 
+            if (!target) {
+                return dims;
+            }
+
             // Select the first valuable target
-            if (!target.matches(`${this.itemSel}, ${this.containerSel}`)) {
+            if (!this.matches(target, this.itemSel + ', ' + this.containerSel)) {
                 target = this.closest(target, this.itemSel);
             }
 
@@ -515,7 +544,9 @@ define([
                 this.targetP = this.closest(target, this.containerSel);
 
                 // Check if the source is valid with the target
-                let validResult = this.validTarget(target);
+                var validResult = this.validTarget(target);
+                em && em.trigger('sorter:drag:validation', validResult);
+
                 if (!validResult.valid && this.targetP) {
                     return this.dimsFromTarget(this.targetP, rX, rY);
                 }
@@ -527,21 +558,20 @@ define([
             }
 
             // If the target is the previous one will return the cached dims
-            if (this.prevTarget == target)
-                dims = this.cacheDims;
+            if (this.prevTarget == target) dims = this.cacheDims;
 
             // Target when I will drop element to sort
             this.target = this.prevTarget;
 
-            // Generally also on every new target the poiner enters near
-            // to borders, so have to to check always
-            if (this.nearBorders(this.prevTargetDim, rX, rY) ||
-                (!this.nested && !this.cacheDims.length)) {
-                if (!this.validTarget(this.targetP).valid) {
-                    return this.dimsFromTarget(this.targetP, rX, rY);
+            // Generally, on any new target the poiner enters inside its area and
+            // triggers nearBorders(), so have to take care of this
+            if (this.nearBorders(this.prevTargetDim, rX, rY) || !this.nested && !this.cacheDims.length) {
+                var targetParent = this.targetP;
+
+                if (targetParent && this.validTarget(targetParent).valid) {
+                    dims = this.cacheDimsP;
+                    this.target = targetParent;
                 }
-                dims = this.cacheDimsP;
-                this.target = this.targetP;
             }
 
             this.lastPos = null;
@@ -549,11 +579,106 @@ define([
         },
 
         /**
+         * Get valid target from element
+         * This method should replace dimsFromTarget()
+         * @param  {HTMLElement} el
+         * @return {HTMLElement}
+         */
+        getTargetFromEl: function getTargetFromEl(el) {
+            var target = el;
+            var targetParent = undefined;
+            var targetPrev = this.targetPrev;
+            var em = this.em;
+            var containerSel = this.containerSel;
+            var itemSel = this.itemSel;
+
+            // Select the first valuable target
+            if (!this.matches(target, itemSel + ', ' + containerSel)) {
+                target = this.closest(target, itemSel);
+            }
+
+            // If draggable is an array the target will be one of those
+            // TODO check if this options is used somewhere
+            if (this.draggable instanceof Array) {
+                target = this.closest(target, this.draggable.join(','));
+            }
+
+            // Check if the target is different from the previous one
+            if (targetPrev && targetPrev != target) {
+                this.targetPrev = '';
+            }
+
+            // New target found
+            if (!this.targetPrev) {
+                targetParent = this.closest(target, containerSel);
+
+                // If the current target is not valid (src/trg reasons) try with
+                // the parent one (if exists)
+                var validResult = this.validTarget(target);
+                em && em.trigger('sorter:drag:validation', validResult);
+
+                if (!validResult.valid && targetParent) {
+                    return this.getTargetFromEl(targetParent);
+                }
+
+                this.targetPrev = target;
+            }
+
+            // Generally, on any new target the poiner enters inside its area and
+            // triggers nearBorders(), so have to take care of this
+            if (this.nearElBorders(target)) {
+                targetParent = this.closest(target, containerSel);
+
+                if (targetParent && this.validTarget(targetParent).valid) {
+                    target = targetParent;
+                }
+            }
+
+            return target;
+        },
+
+        /**
+         * Check if the current pointer is neare to element borders
+         * @return {Boolen}
+         */
+        nearElBorders: function nearElBorders(el) {
+            var off = 10;
+            var rect = el.getBoundingClientRect();
+            var body = el.ownerDocument.body;
+
+            var _getCurrentPos = this.getCurrentPos();
+
+            var x = _getCurrentPos.x;
+            var y = _getCurrentPos.y;
+
+            var top = rect.top + body.scrollTop;
+            var left = rect.left + body.scrollLeft;
+            var width = rect.width;
+            var height = rect.height;
+
+            //console.log(pos, {top, left});
+            if (y < top + off || // near top edge
+                y > top + height - off || // near bottom edge
+                x < left + off || // near left edge
+                x > left + width - off // near right edge
+            ) {
+                return 1;
+            }
+        },
+
+        getCurrentPos: function getCurrentPos() {
+            var ev = this.eventMove;
+            var x = ev.pageX || 0;
+            var y = ev.pageY || 0;
+            return { x: x, y: y };
+        },
+
+        /**
          * Returns dimensions and positions about the element
          * @param {HTMLElement} el
          * @return {Array<number>}
          */
-        getDim(el) {
+        getDim: function getDim(el) {
             var top, left, height, width;
 
             if (this.canvasRelative && this.em) {
@@ -585,10 +710,9 @@ define([
          * @param {HTMLELement} el Element root
          * @retun {Array}
          * */
-        getChildrenDim(trg) {
+        getChildrenDim: function getChildrenDim(trg) {
             var dims = [];
-            if (!trg)
-                return dims;
+            if (!trg) return dims;
 
             // Get children based on getChildrenContainer
             var trgModel = this.getTargetModel(trg);
@@ -601,19 +725,16 @@ define([
             for (var i = 0, len = ch.length; i < len; i++) {
                 var el = ch[i];
 
-                if (!el.matches(this.itemSel)) {
+                if (!this.matches(el, this.itemSel)) {
                     continue;
                 }
 
                 var dim = this.getDim(el);
                 var dir = this.direction;
 
-                if (dir == 'v')
-                    dir = true;
-                else if (dir == 'h')
-                    dir = false;
-                else
-                    dir = this.isInFlow(el, trg);
+                if (dir == 'v') dir = true;
+                else if (dir == 'h') dir = false;
+                else dir = this.isInFlow(el, trg);
 
                 dim.push(dir);
                 dim.push(el);
@@ -630,7 +751,7 @@ define([
          * @param {number} rY Relative Y position
          * @return {Boolean}
          * */
-        nearBorders(dim, rX, rY) {
+        nearBorders: function nearBorders(dim, rX, rY) {
             var result = 0;
             var off = this.borderOffset;
             var x = rX || 0;
@@ -639,9 +760,7 @@ define([
             var l = dim[1];
             var h = dim[2];
             var w = dim[3];
-            if (((t + off) > y) || (y > (t + h - off)) ||
-                ((l + off) > x) || (x > (l + w - off)))
-                result = 1;
+            if (t + off > y || y > t + h - off || l + off > x || x > l + w - off) result = 1;
 
             return !!result;
         },
@@ -653,11 +772,8 @@ define([
          * @param {number} posY Y coordindate
          * @retun {Object}
          * */
-        findPosition(dims, posX, posY) {
-            var result = {
-                index: 0,
-                method: 'before'
-            };
+        findPosition: function findPosition(dims, posX, posY) {
+            var result = { index: 0, method: 'before' };
             var leftLimit = 0,
                 xLimit = 0,
                 dimRight = 0,
@@ -674,39 +790,34 @@ define([
                 // Bottom position of the element. Top + Height
                 dimDown = dim[0] + dim[2];
                 // X center position of the element. Left + (Width / 2)
-                xCenter = dim[1] + (dim[3] / 2);
+                xCenter = dim[1] + dim[3] / 2;
                 // Y center position of the element. Top + (Height / 2)
-                yCenter = dim[0] + (dim[2] / 2);
+                yCenter = dim[0] + dim[2] / 2;
                 // Skip if over the limits
-                if ((xLimit && dim[1] > xLimit) ||
-                    (yLimit && yCenter >= yLimit) || // >= avoid issue with clearfixes
-                    (leftLimit && dimRight < leftLimit))
-                    continue;
+                if (xLimit && dim[1] > xLimit || yLimit && yCenter >= yLimit || // >= avoid issue with clearfixes
+                    leftLimit && dimRight < leftLimit) continue;
                 result.index = i;
                 // If it's not in flow (like 'float' element)
                 if (!dim[4]) {
-                    if (posY < dimDown)
-                        yLimit = dimDown;
+                    if (posY < dimDown) yLimit = dimDown;
                     //If x lefter than center
                     if (posX < xCenter) {
                         xLimit = xCenter;
-                        result.method = "before";
+                        result.method = 'before';
                     } else {
                         leftLimit = xCenter;
-                        result.method = "after";
+                        result.method = 'after';
                     }
                 } else {
                     // If y upper than center
                     if (posY < yCenter) {
-                        result.method = "before";
+                        result.method = 'before';
                         break;
-                    } else
-                        result.method = "after"; // After last element
+                    } else result.method = 'after'; // After last element
                 }
             }
             return result;
         },
-
 
         /**
          * Updates the position of the placeholder
@@ -715,7 +826,7 @@ define([
          * @param {Object} pos Position object
          * @param {Array<number>} trgDim target dimensions
          * */
-        movePlaceholder(plh, dims, pos, trgDim) {
+        movePlaceholder: function movePlaceholder(plh, dims, pos, trgDim) {
             var marg = 0,
                 t = 0,
                 l = 0,
@@ -734,16 +845,16 @@ define([
                 // If it's not in flow (like 'float' element)
                 if (!elDim[4]) {
                     w = 'auto';
-                    h = elDim[2] - (marg * 2) + un;
+                    h = elDim[2] - marg * 2 + un;
                     t = elDim[0] + marg;
-                    l = (method == 'before') ? (elDim[1] - marg) : (elDim[1] + elDim[3] - marg);
+                    l = method == 'before' ? elDim[1] - marg : elDim[1] + elDim[3] - marg;
                     plh.style.borderColor = brdCol + ' transparent';
-                    plh.style.borderWidth = (brd + 2) + un + ' ' + brd + un;
+                    plh.style.borderWidth = brd + 2 + un + ' ' + brd + un;
                     plh.style.margin = '0 0 0 -' + brd + 'px';
                 } else {
                     w = elDim[3] + un;
                     h = 'auto';
-                    t = (method == 'before') ? (elDim[0] - marg) : (elDim[0] + elDim[2] - marg);
+                    t = method == 'before' ? elDim[0] - marg : elDim[0] + elDim[2] - marg;
                     l = elDim[1];
                 }
             } else {
@@ -754,16 +865,14 @@ define([
                 if (trgDim) {
                     t = trgDim[0] + margI;
                     l = trgDim[1] + margI;
-                    w = (parseInt(trgDim[3]) - margI * 2) + un;
+                    w = parseInt(trgDim[3]) - margI * 2 + un;
                     h = 'auto';
                 }
             }
             plh.style.top = t + un;
             plh.style.left = l + un;
-            if (w)
-                plh.style.width = w;
-            if (h)
-                plh.style.height = h;
+            if (w) plh.style.width = w;
+            if (h) plh.style.height = h;
         },
 
         /**
@@ -772,35 +881,40 @@ define([
          *
          * @return void
          * */
-        endMove(e) {
+        endMove: function endMove(e) {
             var created;
-            this.$el.off('mousemove', this.onMove);
-            this.$document.off('mouseup', this.endMove);
-            this.$document.off('keydown', this.rollback);
+            var docs = this.getDocuments();
+            var container = this.getContainerEl();
+            (0, utilsMixins.off)(container, 'mousemove dragover', this.onMove);
+            (0, utilsMixins.off)(docs, 'mouseup dragend', this.endMove);
+            (0, utilsMixins.off)(docs, 'keydown', this.rollback);
+            //this.$document.off('mouseup', this.endMove);
+            //this.$document.off('keydown', this.rollback);
             this.plh.style.display = 'none';
             var clsReg = new RegExp('(?:^|\\s)' + this.freezeClass + '(?!\\S)', 'gi');
-            let src = this.eV;
+            var src = this.eV;
 
             if (src) {
                 var srcModel = this.getSourceModel();
-                if (srcModel) {
+                if (srcModel && srcModel.set) {
                     srcModel.set('status', '');
                     srcModel.set('status', 'selected');
+                    //this.selectOnEnd && srcModel.set('status', 'selected');
                 }
             }
 
-            if (this.moved)
+            if (this.moved) {
                 created = this.move(this.target, src, this.lastPos);
-            if (this.plh)
-                this.plh.style.display = 'none';
+            }
 
-            if (typeof this.onEndMove === 'function')
-                this.onEndMove(created);
+            if (this.plh) this.plh.style.display = 'none';
+
+            if (typeof this.onEndMove === 'function') this.onEndMove(created);
 
             var dragHelper = this.dragHelper;
 
             if (dragHelper) {
-                dragHelper.remove();
+                dragHelper.parentNode.removeChild(dragHelper);
                 this.dragHelper = null;
             }
 
@@ -814,9 +928,9 @@ define([
          * @param {HTMLElement} src Element to move
          * @param {Object} pos Object with position coordinates
          * */
-        move(dst, src, pos) {
+        move: function move(dst, src, pos) {
             var em = this.em;
-            em && em.trigger('component:dragEnd:before', dst, src, pos);
+            em && em.trigger('component:dragEnd:before', dst, src, pos); // @depricated
             var warns = [];
             var index = pos.index;
             var modelToDrop, modelTemp, created;
@@ -832,10 +946,7 @@ define([
 
             if (targetCollection && droppable && draggable) {
                 index = pos.method === 'after' ? index + 1 : index;
-                var opts = {
-                    at: index,
-                    noIncrement: 1
-                };
+                var opts = { at: index, noIncrement: 1 };
 
                 if (!dropContent) {
                     modelTemp = targetCollection.add({}, opts);
@@ -846,6 +957,7 @@ define([
                 } else {
                     modelToDrop = dropContent;
                     opts.silent = false;
+                    opts.avoidUpdateStyle = 1;
                 }
 
                 created = targetCollection.add(modelToDrop, opts);
@@ -864,17 +976,18 @@ define([
                 }
 
                 if (!droppable) {
-                    warns.push(`Target is not droppable, accepts [${dropInfo}]`);
+                    warns.push('Target is not droppable, accepts [' + dropInfo + ']');
                 }
 
                 if (!draggable) {
-                    warns.push(`Component not draggable, acceptable by [${dragInfo}]`);
+                    warns.push('Component not draggable, acceptable by [' + dragInfo + ']');
                 }
 
                 console.warn('Invalid target position: ' + warns.join(', '));
             }
 
-            em && em.trigger('component:dragEnd', targetCollection, modelToDrop, warns);
+            em && em.trigger('component:dragEnd', targetCollection, modelToDrop, warns); // @depricated
+            em && em.trigger('sorter:drag:end', targetCollection, modelToDrop, warns);
 
             return created;
         },
@@ -884,17 +997,14 @@ define([
          * @param {Event}
          * @param {Bool} Indicates if rollback in anycase
          * */
-        rollback(e) {
-            $(document).off('keydown', this.rollback);
-            this.$document.off('keydown', this.rollback);
+        rollback: function rollback(e) {
+            (0, utilsMixins.off)(this.getDocuments(), 'keydown', this.rollback);
             var key = e.which || e.keyCode;
 
             if (key == 27) {
-                this.moved = false;
+                this.moved = 0;
                 this.endMove();
             }
-            return;
-        },
-
+        }
     });
 });

@@ -1,10 +1,10 @@
-define([
-    "backbone",
-    "./PanelView"
-], function(Backbone, PanelView) {
-    return Backbone.View.extend({
+define(['exports', 'module', './PanelView'], function(exports, module, PanelView) {
+    'use strict';
 
-        initialize(o) {
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
             this.opt = o || {};
             this.config = this.opt.config || {};
             this.pfx = this.config.stylePrefix || '';
@@ -20,7 +20,7 @@ define([
          * @return Object
          * @private
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             this.addToCollection(model);
         },
 
@@ -33,11 +33,11 @@ define([
          * @return Object Object created
          * @private
          * */
-        addToCollection(model, fragmentEl) {
+        addToCollection: function addToCollection(model, fragmentEl) {
             var fragment = fragmentEl || null;
             var view = new PanelView({
-                model,
-                config: this.config,
+                model: model,
+                config: this.config
             });
             var rendered = view.render().el;
             var appendTo = model.get('appendTo');
@@ -57,7 +57,7 @@ define([
             return rendered;
         },
 
-        render() {
+        render: function render() {
             var fragment = document.createDocumentFragment();
             this.$el.empty();
 

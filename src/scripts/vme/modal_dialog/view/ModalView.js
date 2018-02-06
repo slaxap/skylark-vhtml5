@@ -1,38 +1,32 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
-        template: _.template(`
-    <div class="<%= pfx %>dialog">
-      <div class="<%= pfx %>header">
-        <div class="<%= pfx %>title"><%= title %></div>
-        <div class="<%= pfx %>btn-close">&Cross;</div>
-      </div>
-      <div class="<%= pfx %>content">
-        <div id="<%= pfx %>c"> <%= content %> </div>
-        <div style="clear:both"></div>
-      </div>
-    </div>
-    <div class="<%= pfx %>backlayer"></div>
-    <div class="<%= pfx %>collector" style="display: none"></div>`),
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    module.exports = require('backbone').View.extend({
+        template: function template(_ref) {
+            var pfx = _ref.pfx;
+            var ppfx = _ref.ppfx;
+            var content = _ref.content;
+            var title = _ref.title;
+
+            return '<div class="' + pfx + 'dialog ' + ppfx + 'one-bg">\n      <div class="' + pfx + 'header">\n        <div class="' + pfx + 'title">' + title + '</div>\n        <div class="' + pfx + 'btn-close">&Cross;</div>\n      </div>\n      <div class="' + pfx + 'content">\n        <div id="' + pfx + 'c">' + content + '</div>\n        <div style="clear:both"></div>\n      </div>\n    </div>\n    <div class="' + pfx + 'backlayer"></div>\n    <div class="' + pfx + 'collector" style="display: none"></div>';
+        },
 
         events: {},
 
-        initialize(o) {
-            this.config = o.config || {};
-            this.pfx = this.config.stylePrefix || '';
-            this.listenTo(this.model, 'change:open', this.updateOpen);
-            this.listenTo(this.model, 'change:title', this.updateTitle);
-            this.listenTo(this.model, 'change:content', this.updateContent);
-
-            this.events = {};
-
-            this.events['click .' + this.pfx + 'btn-close'] = 'hide';
-
-            if (this.config.backdrop)
-                this.events['click .' + this.pfx + 'backlayer'] = 'hide';
-
-            //this.delegateEvents();
+        initialize: function initialize(o) {
+            var model = this.model;
+            var config = o.config || {};
+            var pfx = config.stylePrefix || '';
+            var bkd = config.backdrop;
+            this.config = config;
+            this.pfx = pfx;
+            this.ppfx = config.pStylePrefix || '';
+            this.listenTo(model, 'change:open', this.updateOpen);
+            this.listenTo(model, 'change:title', this.updateTitle);
+            this.listenTo(model, 'change:content', this.updateContent);
+            this.events['click .' + pfx + 'btn-close'] = 'hide';
+            bkd && (this.events['click .' + pfx + 'backlayer'] = 'hide');
+            // this.delegateEvents();
         },
 
         /**
@@ -40,9 +34,8 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getCollector() {
-            if (!this.$collector)
-                this.$collector = this.$el.find('.' + this.pfx + 'collector');
+        getCollector: function getCollector() {
+            if (!this.$collector) this.$collector = this.$el.find('.' + this.pfx + 'collector');
             return this.$collector;
         },
 
@@ -51,9 +44,13 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getContent() {
-            if (!this.$content)
-                this.$content = this.$el.find('.' + this.pfx + 'content #' + this.pfx + 'c');
+        getContent: function getContent() {
+            var pfx = this.pfx;
+
+            if (!this.$content) {
+                this.$content = this.$el.find('.' + pfx + 'content #' + pfx + 'c');
+            }
+
             return this.$content;
         },
 
@@ -62,9 +59,8 @@ define([
          * @return {HTMLElement}
          * @private
          */
-        getTitle() {
-            if (!this.$title)
-                this.$title = this.$el.find('.' + this.pfx + 'title');
+        getTitle: function getTitle() {
+            if (!this.$title) this.$title = this.$el.find('.' + this.pfx + 'title');
             return this.$title.get(0);
         },
 
@@ -72,38 +68,37 @@ define([
          * Update content
          * @private
          * */
-        updateContent() {
+        updateContent: function updateContent() {
             var content = this.getContent();
-            this.getCollector().append(content.children());
-            content.html(this.model.get('content'));
+            var children = content.children();
+            var coll = this.getCollector();
+            var body = this.model.get('content');
+            children.length && coll.append(children);
+            content.empty().append(body);
         },
 
         /**
          * Update title
          * @private
          * */
-        updateTitle() {
+        updateTitle: function updateTitle() {
             var title = this.getTitle();
-            if (title)
-                title.innerHTML = this.model.get('title');
+            if (title) title.innerHTML = this.model.get('title');
         },
 
         /**
          * Update open
          * @private
          * */
-        updateOpen() {
-            if (this.model.get('open'))
-                this.$el.show();
-            else
-                this.$el.hide();
+        updateOpen: function updateOpen() {
+            this.el.style.display = this.model.get('open') ? '' : 'none';
         },
 
         /**
          * Hide modal
          * @private
          * */
-        hide() {
+        hide: function hide() {
             this.model.set('open', 0);
         },
 
@@ -111,18 +106,21 @@ define([
          * Show modal
          * @private
          * */
-        show() {
+        show: function show() {
             this.model.set('open', 1);
         },
 
-        render() {
+        render: function render() {
+            var el = this.$el;
+            var pfx = this.pfx;
+            var ppfx = this.ppfx;
             var obj = this.model.toJSON();
             obj.pfx = this.pfx;
-            this.$el.html(this.template(obj));
-            this.$el.attr('class', this.pfx + 'container');
+            obj.ppfx = this.ppfx;
+            el.html(this.template(obj));
+            el.attr('class', pfx + 'container');
             this.updateOpen();
             return this;
-        },
-
+        }
     });
 });

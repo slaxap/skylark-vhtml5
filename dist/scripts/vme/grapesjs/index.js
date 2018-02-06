@@ -1,28 +1,68 @@
-define(['./config/config',
+define([
+    'exports',
+    'module',
+    'cash-dom',
+    'underscore',
     '../editor/index',
-    '../plugin_manager/index'
-], function(defaults, Editor, PluginManager) {
+    '../plugin_manager/index',
+    '../utils/polyfills'
+], function(exports, module, _cashDom, underscore, Editor, PluginManager, _utilsPolyfills) {
+    'use strict';
 
-    return (function(config) {
+    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-        var c = config || {};
+    var _$ = _interopRequireDefault(_cashDom);
+
+    var _polyfills = _interopRequireDefault(_utilsPolyfills);
+
+    (0, _polyfills['default'])();
+
+    module.exports = (function() {
         var plugins = new PluginManager();
         var editors = [];
+        var defaultConfig = {
+            // If true renders editor on init
+            autorender: 1,
+
+            // Where init the editor
+            container: '',
+
+            // HTML string or object of components
+            components: '',
+
+            // CSS string or object of rules
+            style: '',
+
+            // If true, will fetch HTML and CSS from selected container
+            fromElement: 0,
+
+            // Storage Manager
+            storageManager: {},
+
+            // Array of plugins to init
+            plugins: [],
+
+            // Custom options for plugins
+            pluginsOpts: {}
+        };
 
         return {
+            $: _$['default'],
 
-            editors,
+            editors: editors,
 
-            plugins,
+            plugins: plugins,
+
+            // Will be replaced on build
+            version: '<# VERSION #>',
 
             /**
              * Initializes an editor based on passed options
              * @param {Object} config Configuration object
-             * @param {string} config.container Selector which indicates where render the editor
+             * @param {string|HTMLElement} config.container Selector which indicates where render the editor
              * @param {Object|string} config.components='' HTML string or Component model in JSON format
              * @param {Object|string} config.style='' CSS string or CSS model in JSON format
              * @param {Boolean} [config.fromElement=false] If true, will fetch HTML and CSS from selected container
-             * @param {Boolean} [config.copyPaste=true] Enable/Disable the possibility to copy(ctrl+c) & paste(ctrl+v) components
              * @param {Boolean} [config.undoManager=true] Enable/Disable undo manager
              * @param {Array} [config.plugins=[]] Array of plugins to execute on start
              * @return {grapesjs.Editor} GrapesJS editor instance
@@ -33,43 +73,40 @@ define(['./config/config',
              *   style: '.hello{color: red}',
              * })
              */
-            init(config) {
-                var c = config || {};
-                var els = c.container;
+            init: function init() {
+                var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-                // Set default options
-                for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
-                }
+                var els = config.container;
 
-                if (!els)
+                if (!els) {
                     throw new Error("'container' is required");
-
-                c.el = document.querySelector(els);
-                var editor = new Editor(c).init();
-
-                // Execute all plugins
-                var plugs = plugins.getAll();
-                for (var id in plugs) {
-                    // Check if plugin is requested
-                    if (c.plugins.indexOf(id) < 0)
-                        continue;
-
-                    var opts = c.pluginsOpts[id] || {};
-                    var plug = plugins.get(id);
-                    plug(editor, opts);
                 }
 
-                if (c.autorender)
-                    editor.render();
+                (0, underscore.defaults)(config, defaultConfig);
+                config.el = els instanceof window.HTMLElement ? els : document.querySelector(els);
+                var editor = new Editor(config).init();
+
+                // Load plugins
+                config.plugins.forEach(function(pluginId) {
+                    var plugin = plugins.get(pluginId);
+
+                    if (plugin) {
+                        plugin(editor, config.pluginsOpts[pluginId] || {});
+                    } else {
+                        console.warn('Plugin ' + pluginId + ' not found');
+                    }
+                });
+
+                // Execute `onLoad` on modules once all plugins are initialized.
+                // A plugin might have extended/added some custom type so this
+                // is a good point to load stuff like components, css rules, etc.
+                editor.getModel().loadOnStart();
+
+                config.autorender && editor.render();
 
                 editors.push(editor);
                 return editor;
-            },
-
+            }
         };
-
     })();
-
 });

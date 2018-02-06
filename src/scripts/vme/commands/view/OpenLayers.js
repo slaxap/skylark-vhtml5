@@ -1,38 +1,39 @@
-define([
-    "../../navigator/index"
-], function(Layers) {
-    return {
+define(['exports', 'module', 'backbone', '../../navigator/index'], function(exports, module, Backbone, Layers) {
+    'use strict';
 
-        run(em, sender) {
-            if (!this.$layers) {
-                var collection = em.DomComponents.getComponent().get('components'),
-                    config = em.getConfig(),
-                    panels = em.Panels,
-                    lyStylePfx = config.layers.stylePrefix || 'nv-';
+    var $ = Backbone.$;
+
+    module.exports = {
+        run: function run(em, sender) {
+            if (!this.toAppend) {
+                var collection = em.DomComponents.getComponent().get('components');
+                var config = em.getConfig();
+                var pfx = config.stylePrefix;
+                var panels = em.Panels;
+                var lyStylePfx = config.layers.stylePrefix || 'nv-';
 
                 config.layers.stylePrefix = config.stylePrefix + lyStylePfx;
                 config.layers.pStylePrefix = config.stylePrefix;
                 config.layers.em = em.editor;
                 config.layers.opened = em.editor.get('opened');
-                var layers = new Layers(collection, config.layers);
-                this.$layers = layers.render();
 
                 // Check if panel exists otherwise crate it
-                if (!panels.getPanel('views-container'))
-                    this.panel = panels.addPanel({
-                        id: 'views-container'
-                    });
-                else
-                    this.panel = panels.getPanel('views-container');
+                if (!panels.getPanel('views-container')) this.panel = panels.addPanel({ id: 'views-container' });
+                else this.panel = panels.getPanel('views-container');
 
-                this.panel.set('appendContent', this.$layers).trigger('change:appendContent');
+                var toAppend = $('<div class="' + pfx + 'layers"></div>');
+                this.panel.set('appendContent', toAppend).trigger('change:appendContent');
+                config.layers.sortContainer = toAppend.get(0);
+                var layers = new Layers().init(collection, config.layers);
+                this.$layers = layers.render();
+                toAppend.append(this.$layers);
+                this.toAppend = toAppend;
             }
-            this.$layers.show();
+            this.toAppend.show();
         },
 
-        stop() {
-            if (this.$layers)
-                this.$layers.hide();
+        stop: function stop() {
+            this.toAppend && this.toAppend.hide();
         }
     };
 });

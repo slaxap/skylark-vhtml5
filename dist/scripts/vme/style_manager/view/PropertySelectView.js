@@ -1,45 +1,36 @@
-define([
-    "backbone",
-    "./PropertyView"
-], function(Backbone, PropertyView) {
-    return PropertyView.extend({
+define(['exports', 'module', './PropertyView'], function(exports, module, PropertyView) {
+    'use strict';
 
-        template: _.template(`
-  <div class="<%= ppfx %>field <%= ppfx %>select">
-    <span id='<%= pfx %>input-holder'></span>
-    <div class="<%= ppfx %>sel-arrow">
-      <div class="<%= ppfx %>d-s-arrow"></div>
-    </div>
-  </div>
-  <div style="clear:both"></div>`),
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
 
-        initialize(options) {
-            PropertyView.prototype.initialize.apply(this, arguments);
-            this.list = this.model.get('list') || [];
-        },
-
-        /** @inheritdoc */
-        renderInput() {
+    module.exports = PropertyView.extend({
+        templateInput: function templateInput() {
             var pfx = this.pfx;
-            if (!this.$input) {
-                var input = '<select>';
-
-                if (this.list && this.list.length) {
-                    _.each(this.list, el => {
-                        var name = el.name ? el.name : el.value;
-                        var style = el.style ? el.style.replace(/"/g, '&quot;') : '';
-                        var styleAttr = style ? 'style="' + style + '"' : '';
-                        input += '<option value="' + el.value.replace(/"/g, '&quot;') + '" ' + styleAttr + '>' + name + '</option>';
-                    });
-                }
-
-                input += '</select>';
-                this.input = input;
-                this.$input = $(this.input);
-                this.$el.find('#' + pfx + 'input-holder').html(this.$input);
-            }
-            this.setValue(this.componentValue, 0);
+            var ppfx = this.ppfx;
+            return '\n      <div class="' + ppfx + 'field ' + ppfx + 'select">\n        <span id="' + pfx + 'input-holder"></span>\n        <div class="' + ppfx + 'sel-arrow">\n          <div class="' + ppfx + 'd-s-arrow"></div>\n        </div>\n      </div>\n    ';
         },
 
+        onRender: function onRender() {
+            var pfx = this.pfx;
+            var model = this.model;
+            var options = model.get('list') || model.get('options') || [];
+
+            if (!this.input) {
+                var optionsStr = '';
+
+                options.forEach(function(option) {
+                    var name = option.name || option.value;
+                    var style = option.style ? option.style.replace(/"/g, '&quot;') : '';
+                    var styleAttr = style ? 'style="' + style + '"' : '';
+                    var value = option.value.replace(/"/g, '&quot;');
+                    optionsStr += '<option value="' + value + '" ' + styleAttr + '>' + name + '</option>';
+                });
+
+                var inputH = this.el.querySelector('#' + pfx + 'input-holder');
+                inputH.innerHTML = '<select>' + optionsStr + '</select>';
+                this.input = inputH.firstChild;
+            }
+        }
     });
 });

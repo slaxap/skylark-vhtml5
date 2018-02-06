@@ -1,15 +1,12 @@
-define([
-    './config/config',
-    './model/Traits',
-    './view/TraitsView'
-], function(defaults, Traits, TraitsView) {
-    return function() {
+define(['exports', 'module', 'underscore', './config/config', './view/TraitsView'], function(exports, module, underscore, defaultOpts, TraitsView) {
+    'use strict';
+
+    module.exports = function() {
         var c = {};
-        var TraitsViewer;
+        var TraitsViewer = undefined;
 
         return {
-
-            TraitsView,
+            TraitsView: TraitsView,
 
             /**
              * Name of the module
@@ -23,7 +20,7 @@ define([
              * @return {Object}
              * @private
              */
-            getConfig() {
+            getConfig: function getConfig() {
                 return c;
             },
 
@@ -31,20 +28,17 @@ define([
              * Initialize module. Automatically called with a new instance of the editor
              * @param {Object} config Configurations
              */
-            init(config) {
-                c = config || {};
-                for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
-                }
+            init: function init() {
+                var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
+                c = config;
+                (0, underscore.defaults)(c, defaultOpts);
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                ppfx && (c.stylePrefix = '' + ppfx + c.stylePrefix);
                 TraitsViewer = new TraitsView({
                     collection: [],
                     editor: c.em,
-                    config: c,
+                    config: c
                 });
                 return this;
             },
@@ -54,7 +48,7 @@ define([
              * Get Traits viewer
              * @private
              */
-            getTraitsViewer() {
+            getTraitsViewer: function getTraitsViewer() {
                 return TraitsViewer;
             },
 
@@ -63,7 +57,7 @@ define([
              * @param {string} name Type name
              * @param {Object} methods Object representing the trait
              */
-            addType(name, trait) {
+            addType: function addType(name, trait) {
                 var itemView = TraitsViewer.itemView;
                 TraitsViewer.itemsView[name] = itemView.extend(trait);
             },
@@ -73,10 +67,9 @@ define([
              * @param {string} name Type name
              * @return {Object}
              */
-            getType(name) {
+            getType: function getType(name) {
                 return TraitsViewer.itemsView[name];
-            },
-
+            }
         };
     };
 });

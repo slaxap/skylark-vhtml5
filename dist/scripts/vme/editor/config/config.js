@@ -1,31 +1,21 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    module.exports = {
         // Style prefix
         stylePrefix: 'gjs-',
 
         //TEMP
         components: '',
 
-        // Enable/Disable possibility to copy(ctrl + c) & paste(ctrl + v) components
-        copyPaste: true,
-
         // Show an alert before unload the page with unsaved changes
         noticeOnUnload: true,
-
-        // Enable/Disable undo manager
-        undoManager: true,
 
         // Show paddings and margins
         showOffsets: false,
 
         // Show paddings and margins on selected component
         showOffsetsSelected: false,
-
-        // Clear the canvas when editor.render() is called
-        clearOnRender: false,
-
-        // Return JS of components inside HTML from 'editor.getHtml()'
-        jsInHtml: true,
 
         // On creation of a new Component (via object), if the 'style' attribute is not
         // empty, all those roles will be moved in its new class
@@ -38,7 +28,7 @@ define([], function() {
         width: '100%',
 
         // CSS that could only be seen (for instance, inside the code viewer)
-        protectedCss: '*{box-sizing: border-box;} body{margin: 0;}',
+        protectedCss: '* { box-sizing: border-box; } body {margin: 0;}',
 
         // CSS for the iframe which containing the canvas, useful if you need to custom something inside
         // (eg. the style of the selected component)
@@ -63,12 +53,35 @@ define([], function() {
         // Comes handy for mobile-first cases
         mediaCondition: 'max-width',
 
-        // This option makes available custom component types also for loaded
-        // elements inside canvas
-        loadCompsOnRender: 1,
+        // Starting tag for variable inside scripts in Components
+        tagVarStart: '{[ ',
+
+        // Ending tag for variable inside scripts in Components
+        tagVarEnd: ' ]}',
+
+        // Return JS of components inside HTML from 'editor.getHtml()'
+        jsInHtml: true,
+
+        // Enable native HTML5 drag and drop
+        nativeDnD: 1,
+
+        // Show the wrapper component in the final code, eg. in editor.getHtml()
+        exportWrapper: 0,
+
+        // The wrapper, if visible, will be shown as a `<body>`
+        wrappesIsBody: 1,
+
+        // Usually when you update the `style` of the component this changes the
+        // element's `style` attribute. Unfortunately, inline styling doesn't allow
+        // use of media queries (@media) or even pseudo selectors (eg. :hover).
+        // When `avoidInlineStyle` is true all styles are inserted inside the css rule
+        avoidInlineStyle: 0,
 
         // Dom element
         el: '',
+
+        // Configurations for Undo Manager
+        undoManager: {},
 
         //Configurations for Asset Manager
         assetManager: {},
@@ -110,67 +123,56 @@ define([], function() {
         deviceManager: {
             devices: [{
                 name: 'Desktop',
-                width: '',
+                width: ''
             }, {
                 name: 'Tablet',
                 width: '768px',
-                widthMedia: '992px',
+                widthMedia: '992px'
             }, {
                 name: 'Mobile landscape',
                 width: '568px',
-                widthMedia: '768px',
+                widthMedia: '768px'
             }, {
                 name: 'Mobile portrait',
                 width: '320px',
-                widthMedia: '480px',
-            }],
+                widthMedia: '480px'
+            }]
         },
 
         //Configurations for Style Manager
         styleManager: {
-
             sectors: [{
                 name: 'General',
                 open: false,
-                buildProps: ['float', 'display', 'position', 'top', 'right', 'left', 'bottom'],
+                buildProps: ['float', 'display', 'position', 'top', 'right', 'left', 'bottom']
             }, {
                 name: 'Dimension',
                 open: false,
-                buildProps: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding'],
+                buildProps: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding']
             }, {
                 name: 'Typography',
                 open: false,
                 buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-shadow'],
                 properties: [{
                     property: 'text-align',
-                    list: [{
-                        value: 'left',
-                        className: 'fa fa-align-left'
-                    }, {
-                        value: 'center',
-                        className: 'fa fa-align-center'
-                    }, {
-                        value: 'right',
-                        className: 'fa fa-align-right'
-                    }, {
-                        value: 'justify',
-                        className: 'fa fa-align-justify'
-                    }],
+                    list: [{ value: 'left', className: 'fa fa-align-left' }, { value: 'center', className: 'fa fa-align-center' }, { value: 'right', className: 'fa fa-align-right' }, { value: 'justify', className: 'fa fa-align-justify' }]
                 }]
             }, {
                 name: 'Decorations',
                 open: false,
-                buildProps: ['border-radius-c', 'background-color', 'border-radius', 'border', 'box-shadow', 'background'],
+                buildProps: ['border-radius-c', 'background-color', 'border-radius', 'border', 'box-shadow', 'background']
             }, {
                 name: 'Extra',
                 open: false,
-                buildProps: ['transition', 'perspective', 'transform'],
-            }],
-
+                buildProps: ['transition', 'perspective', 'transform']
+            }]
         },
 
         //Configurations for Block Manager
         blockManager: {},
 
+        // Texts
+
+        textViewCode: 'Code'
     };
 });

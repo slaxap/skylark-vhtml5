@@ -1,7 +1,8 @@
 define([
     "jquery",
+    "backbone",
     "skylarkjs"
-], function($, skylarkjs) {
+], function($, backbone,skylarkjs) {
     var spa = skylarkjs.spa,
         noder = skylarkjs.noder,
         langx = skylarkjs.langx,

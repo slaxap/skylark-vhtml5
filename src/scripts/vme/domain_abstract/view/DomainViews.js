@@ -1,9 +1,9 @@
-define([
-    'backbone'
-], function(Backbone) {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-    return Backbone.View.extend({
+    var Backbone = require('backbone');
 
+    module.exports = Backbone.View.extend({
         // Default view
         itemView: '',
 
@@ -12,17 +12,16 @@ define([
 
         itemType: 'type',
 
-        initialize(opts, config) {
+        initialize: function initialize(opts, config) {
             this.config = config || {};
         },
-
 
         /**
          * Add new model to the collection
          * @param {Model} model
          * @private
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             this.add(model);
         },
 
@@ -32,7 +31,7 @@ define([
          * @param {Object} fragment Fragment collection
          * @private
          * */
-        add(model, fragment) {
+        add: function add(model, fragment) {
             var frag = fragment || null;
             var itemView = this.itemView;
             var typeField = model.get(this.itemType);
@@ -40,32 +39,25 @@ define([
                 itemView = this.itemsView[typeField];
             }
             var view = new itemView({
-                model,
+                model: model,
                 config: this.config
             }, this.config);
             var rendered = view.render().el;
 
-            if (frag)
-                frag.appendChild(rendered);
-            else
-                this.$el.append(rendered);
+            if (frag) frag.appendChild(rendered);
+            else this.$el.append(rendered);
         },
 
-
-
-        render() {
+        render: function render() {
             var frag = document.createDocumentFragment();
             this.$el.empty();
 
-            if (this.collection.length)
-                this.collection.each(function(model) {
-                    this.add(model, frag);
-                }, this);
+            if (this.collection.length) this.collection.each(function(model) {
+                this.add(model, frag);
+            }, this);
 
             this.$el.append(frag);
             return this;
-        },
-
+        }
     });
-
 });

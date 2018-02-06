@@ -1,18 +1,21 @@
-define([
-    "backbone"
-], function(Backbone) {
+define([], function() {
+    'use strict';
+    require(['scripts/vme/style_manager/model/Properties']);
     return Backbone.Model.extend({
-
         defaults: {
             index: '',
             value: '',
             values: {},
-            active: true,
+            active: false,
             preview: false,
+            properties: []
         },
 
-        initialize() {
+        initialize: function initialize() {
+            var Properties = require('scripts/vme/style_manager/model/Properties');
+            var properties = this.get('properties');
             var value = this.get('value');
+            this.set('properties', properties instanceof Properties ? properties : new Properties(properties));
 
             // If there is no value I'll try to get it from values
             // I need value setted to make preview working
@@ -28,5 +31,22 @@ define([
             }
         },
 
+        getPropertyValue: function getPropertyValue(property) {
+            var result = '';
+            this.get('properties').each(function(prop) {
+                if (prop.get('property') == property) {
+                    result = prop.getFullValue();
+                }
+            });
+            return result;
+        },
+
+        getFullValue: function getFullValue() {
+            var result = [];
+            this.get('properties').each(function(prop) {
+                return result.push(prop.getFullValue());
+            });
+            return result.join(' ');
+        }
     });
 });

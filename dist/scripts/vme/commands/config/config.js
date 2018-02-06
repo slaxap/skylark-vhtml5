@@ -1,6 +1,7 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    module.exports = {
         ESCAPE_KEY: 27,
 
         stylePrefix: 'com-',
@@ -20,6 +21,6 @@ define([], function() {
         minComponentH: 50,
 
         // Minimum width (in px) of component on creation
-        minComponentW: 50,
+        minComponentW: 50
     };
 });

@@ -1,12 +1,12 @@
-define([], function() {
-    return function(config) {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    module.exports = function(config) {
         var TEXT_NODE = 'span';
         var c = config;
         var modelAttrStart = 'data-gjs-';
 
         return {
-
             compTypes: '',
 
             /**
@@ -18,15 +18,14 @@ define([], function() {
              * console.log(stl);
              * // {color: 'black', width: '100px', test: 'value'}
              */
-            parseStyle(str) {
+            parseStyle: function parseStyle(str) {
                 var result = {};
                 var decls = str.split(';');
                 for (var i = 0, len = decls.length; i < len; i++) {
                     var decl = decls[i].trim();
-                    if (!decl)
-                        continue;
+                    if (!decl) continue;
                     var prop = decl.split(':');
-                    result[prop[0].trim()] = prop[1].trim();
+                    result[prop[0].trim()] = prop.slice(1).join(':').trim();
                 }
                 return result;
             },
@@ -40,116 +39,114 @@ define([], function() {
              * console.log(res);
              * // ['test1', 'test2', 'test3']
              */
-            parseClass(str) {
+            parseClass: function parseClass(str) {
                 var result = [];
                 var cls = str.split(' ');
                 for (var i = 0, len = cls.length; i < len; i++) {
                     var cl = cls[i].trim();
                     var reg = new RegExp('^' + c.pStylePrefix);
-                    if (!cl || reg.test(cl))
-                        continue;
+                    if (!cl || reg.test(cl)) continue;
                     result.push(cl);
                 }
                 return result;
             },
 
             /**
-             * Fetch data from node
-             * @param  {HTMLElement} el DOM
+             * Get data from the node element
+             * @param  {HTMLElement} el DOM element to traverse
              * @return {Array<Object>}
              */
-            parseNode(el) {
+            parseNode: function parseNode(el) {
                 var result = [];
                 var nodes = el.childNodes;
 
                 for (var i = 0, len = nodes.length; i < len; i++) {
                     var node = nodes[i];
-                    var model = {};
                     var attrs = node.attributes || [];
                     var attrsLen = attrs.length;
-                    var prevI = result.length - 1;
-                    var prevSib = result[prevI];
+                    var nodePrev = result[result.length - 1];
+                    var nodeChild = node.childNodes.length;
                     var ct = this.compTypes;
+                    var model = {};
 
+                    // Start with understanding what kind of component it is
                     if (ct) {
                         var obj = '';
-                        /*
-          for (var cType in ct) {
-            var component = ct[cType].model;
-            obj = component.isComponent(node);
-            if(obj)
-              break;
-          }*/
+
+                        // Iterate over all available Component Types and
+                        // the first with a valid result will be that component
                         for (var it = 0; it < ct.length; it++) {
-                            var component = ct[it].model;
-                            obj = component.isComponent(node);
-                            if (obj)
-                                break;
+                            obj = ct[it].model.isComponent(node);
+                            if (obj) break;
                         }
 
                         model = obj;
                     }
 
-                    if (!model.tagName)
+                    // Set tag name if not yet done
+                    if (!model.tagName) {
                         model.tagName = node.tagName ? node.tagName.toLowerCase() : '';
+                    }
 
-                    if (attrsLen)
+                    if (attrsLen) {
                         model.attributes = {};
+                    }
 
-                    // Store attributes
+                    // Parse attributes
                     for (var j = 0; j < attrsLen; j++) {
                         var nodeName = attrs[j].nodeName;
                         var nodeValue = attrs[j].nodeValue;
 
-                        //Isolate few attributes
-                        if (nodeName == 'style')
+                        // Isolate attributes
+                        if (nodeName == 'style') {
                             model.style = this.parseStyle(nodeValue);
-                        else if (nodeName == 'class')
+                        } else if (nodeName == 'class') {
                             model.classes = this.parseClass(nodeValue);
-                        else if (nodeName == 'contenteditable')
+                        } else if (nodeName == 'contenteditable') {
                             continue;
-                        else if (nodeName.indexOf(modelAttrStart) === 0) {
+                        } else if (nodeName.indexOf(modelAttrStart) === 0) {
                             var modelAttr = nodeName.replace(modelAttrStart, '');
+                            var valueLen = nodeValue.length;
+                            var firstChar = nodeValue && nodeValue.substr(0, 1);
+                            var lastChar = nodeValue && nodeValue.substr(valueLen - 1);
                             nodeValue = nodeValue === 'true' ? true : nodeValue;
                             nodeValue = nodeValue === 'false' ? false : nodeValue;
+
+                            // Try to parse JSON where it's possible
+                            // I can get false positive here (eg. a selector '[data-attr]')
+                            // so put it under try/catch and let fail silently
+                            try {
+                                nodeValue = firstChar == '{' && lastChar == '}' || firstChar == '[' && lastChar == ']' ? JSON.parse(nodeValue) : nodeValue;
+                            } catch (e) {}
+
                             model[modelAttr] = nodeValue;
-                        } else
+                        } else {
                             model.attributes[nodeName] = nodeValue;
+                        }
                     }
 
-
-                    var nodeChild = node.childNodes.length;
-
-                    // Check for nested elements and avoid them if an array
-                    // was already given
+                    // Check for nested elements but avoid it if already provided
                     if (nodeChild && !model.components) {
-                        // Avoid infinite text nodes nesting
+                        // Avoid infinite nested text nodes
                         var firstChild = node.childNodes[0];
+
+                        // If there is only one child and it's a TEXTNODE
+                        // just make it content of the current node
                         if (nodeChild === 1 && firstChild.nodeType === 3) {
-                            if (!model.type) {
-                                model.type = 'text';
-                            }
+                            !model.type && (model.type = 'text');
                             model.content = firstChild.nodeValue;
                         } else {
-                            var parsed = this.parseNode(node);
-                            // From: <div> <span>TEST</span> </div> <-- span is text type
-                            // TO: <div> TEST </div> <-- div become text type
-                            if (parsed.length == 1 && parsed[0].type == 'text' &&
-                                parsed[0].tagName == TEXT_NODE) {
-                                model.type = 'text';
-                                model.content = parsed[0].content;
-                            } else
-                                model.components = parsed;
+                            model.components = this.parseNode(node);
                         }
                     }
 
                     // Check if it's a text node and if could be moved to the prevous model
                     if (model.type == 'textnode') {
-                        var prevIsText = prevSib && prevSib.type == 'textnode';
-                        if (prevIsText) {
-                            prevSib.content += model.content;
+                        if (nodePrev && nodePrev.type == 'textnode') {
+                            nodePrev.content += model.content;
                             continue;
                         }
+
                         // Throw away empty nodes (keep spaces)
                         var content = node.nodeValue;
                         if (content != ' ' && !content.trim()) {
@@ -163,24 +160,30 @@ define([], function() {
                     if (!model.type && comps) {
                         var allTxt = 1;
                         var foundTextNode = 0;
+
                         for (var ci = 0; ci < comps.length; ci++) {
                             var comp = comps[ci];
-                            if (comp.type != 'text' &&
-                                comp.type != 'textnode' &&
-                                c.textTags.indexOf(comp.tagName) < 0) {
+                            var cType = comp.type;
+
+                            if (['text', 'textnode'].indexOf(cType) < 0 && c.textTags.indexOf(comp.tagName) < 0) {
                                 allTxt = 0;
                                 break;
                             }
-                            if (comp.type == 'textnode')
+
+                            if (cType == 'textnode') {
                                 foundTextNode = 1;
+                            }
                         }
-                        if (allTxt && foundTextNode)
+
+                        if (allTxt && foundTextNode) {
                             model.type = 'text';
+                        }
                     }
 
                     // If tagName is still empty and is not a textnode, do not push it
-                    if (!model.tagName && model.type != 'textnode')
+                    if (!model.tagName && model.type != 'textnode') {
                         continue;
+                    }
 
                     result.push(model);
                 }
@@ -194,12 +197,9 @@ define([], function() {
              * @param  {ParserCss} parserCss In case there is style tags inside HTML
              * @return {Object}
              */
-            parse(str, parserCss) {
-                var config = (c.em && c.em.get('Config')) || {};
-                var res = {
-                    html: '',
-                    css: ''
-                };
+            parse: function parse(str, parserCss) {
+                var config = c.em && c.em.get('Config') || {};
+                var res = { html: '', css: '' };
                 var el = document.createElement('div');
                 el.innerHTML = str;
                 var scripts = el.querySelectorAll('script');
@@ -207,8 +207,7 @@ define([], function() {
 
                 // Remove all scripts
                 if (!config.allowScripts) {
-                    while (i--)
-                        scripts[i].parentNode.removeChild(scripts[i]);
+                    while (i--) scripts[i].parentNode.removeChild(scripts[i]);
                 }
 
                 // Detach style tags and parse them
@@ -222,21 +221,17 @@ define([], function() {
                         styles[j].parentNode.removeChild(styles[j]);
                     }
 
-                    if (styleStr)
-                        res.css = parserCss.parse(styleStr);
+                    if (styleStr) res.css = parserCss.parse(styleStr);
                 }
 
                 var result = this.parseNode(el);
 
-                if (result.length == 1)
-                    result = result[0];
+                if (result.length == 1) result = result[0];
 
                 res.html = result;
 
                 return res;
-
-            },
-
+            }
         };
     };
 });

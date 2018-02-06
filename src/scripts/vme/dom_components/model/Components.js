@@ -1,34 +1,29 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.Collection.extend({
+define(['exports', 'module', 'underscore'], function(exports, module, underscore) {
+    'use strict';
 
-        initialize(models, opt) {
+    var Backbone = require('backbone');
 
+    module.exports = Backbone.Collection.extend({
+        initialize: function initialize(models, opt) {
             this.on('add', this.onAdd);
 
             this.config = opt && opt.config ? opt.config : null;
 
             // Inject editor
-            if (opt && opt.sm)
-                this.editor = opt.sm;
+            if (opt && (opt.sm || opt.em)) this.editor = opt.sm || opt.em;
 
             this.model = function(attrs, options) {
                 var model;
 
-                if (!options.sm && opt && opt.sm)
-                    options.sm = opt.sm;
+                if (!options.sm && opt && opt.sm) options.sm = opt.sm;
 
-                if (opt && opt.config)
-                    options.config = opt.config;
+                if (!options.em && opt && opt.em) options.em = opt.em;
 
-                if (opt && opt.defaultTypes)
-                    options.defaultTypes = opt.defaultTypes;
+                if (opt && opt.config) options.config = opt.config;
 
-                if (opt && opt.componentTypes)
-                    options.componentTypes = opt.componentTypes;
+                if (opt && opt.componentTypes) options.componentTypes = opt.componentTypes;
 
-                var df = opt.defaultTypes;
+                var df = opt.componentTypes;
 
                 for (var it = 0; it < df.length; it++) {
                     var dfId = df[it].id;
@@ -45,18 +40,23 @@ define([
 
                 return new model(attrs, options);
             };
-
         },
 
-        add(models, opt) {
+        add: function add(models) {
+            var opt = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
             if (typeof models === 'string') {
                 var parsed = this.editor.get('Parser').parseHtml(models);
                 models = parsed.html;
 
                 var cssc = this.editor.get('CssComposer');
+
                 if (parsed.css && cssc) {
+                    var avoidUpdateStyle = opt.avoidUpdateStyle;
+
                     var added = cssc.addCollection(parsed.css, {
-                        extend: 1
+                        extend: 1,
+                        avoidUpdateStyle: avoidUpdateStyle
                     });
                 }
             }
@@ -64,21 +64,19 @@ define([
             return Backbone.Collection.prototype.add.apply(this, [models, opt]);
         },
 
-        onAdd(model, c, opts) {
-            var style = model.get('style');
+        onAdd: function onAdd(model, c, opts) {
             var em = this.editor;
+            var style = model.get('style');
+            var avoidInline = em && em.getConfig('avoidInlineStyle');
 
-            if (!_.isEmpty(style) && em && em.get('Config').forceClass) {
+            if (!(0, underscore.isEmpty)(style) && !avoidInline && em && em.get && em.get('Config').forceClass) {
                 var cssC = this.editor.get('CssComposer');
                 var newClass = this.editor.get('SelectorManager').add(model.cid);
-                model.set({
-                    style: {}
-                });
+                model.set({ style: {} });
                 model.get('classes').add(newClass);
                 var rule = cssC.add(newClass);
                 rule.set('style', style);
             }
-        },
-
+        }
     });
 });

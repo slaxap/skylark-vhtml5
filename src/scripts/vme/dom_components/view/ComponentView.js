@@ -1,66 +1,66 @@
-define([
-    "backbone"
-], function(Backbone) {
-    var ComponentView = Backbone.View.extend({
+define(['exports', 'module', 'underscore', './ComponentsView'], function(exports, module, underscore, ComponentsView) {
+    'use strict';
 
-        events: {
-            'click': 'initResize',
-        },
-
-        className() {
+    module.exports = Backbone.View.extend({
+        className: function className() {
             return this.getClasses();
         },
 
-        tagName() {
+        tagName: function tagName() {
             return this.model.get('tagName');
         },
 
-        initialize(opt) {
+        initialize: function initialize() {
+            var opt = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
             var model = this.model;
-            this.opts = opt || {};
-            this.config = this.opts.config || {};
-            this.em = this.config.em || '';
-            this.pfx = this.config.stylePrefix || '';
-            this.ppfx = this.config.pStylePrefix || '';
-            this.components = model.get('components');
-            this.attr = model.get("attributes");
-            this.classe = this.attr.class || [];
+            var config = opt.config || {};
+            this.opts = opt;
+            this.config = config;
+            this.em = config.em || '';
+            this.pfx = config.stylePrefix || '';
+            this.ppfx = config.pStylePrefix || '';
+            this.attr = model.get('attributes');
+            this.classe = this.attr['class'] || [];
+            var $el = this.$el;
+            var classes = model.get('classes');
             this.listenTo(model, 'destroy remove', this.remove);
             this.listenTo(model, 'change:style', this.updateStyle);
             this.listenTo(model, 'change:attributes', this.updateAttributes);
+            this.listenTo(model, 'change:highlightable', this.updateHighlight);
             this.listenTo(model, 'change:status', this.updateStatus);
             this.listenTo(model, 'change:state', this.updateState);
             this.listenTo(model, 'change:script', this.render);
             this.listenTo(model, 'change', this.handleChange);
-            this.listenTo(model.get('classes'), 'add remove change', this.updateClasses);
-            this.$el.data('model', model);
+            this.listenTo(classes, 'add remove change', this.updateClasses);
+            $el.data('model', model);
+            $el.data('collection', model.get('components'));
             model.view = this;
-            this.$el.data("collection", this.components);
-
-            if (model.get('classes').length)
-                this.importClasses();
-
+            classes.length && this.importClasses();
             this.init();
+        },
+
+        remove: function remove() {
+            Backbone.View.prototype.remove.apply(this);
+            var children = this.childrenView;
+            children && children.stopListening();
         },
 
         /**
          * Initialize callback
          */
-        init() {},
+        init: function init() {},
 
         /**
          * Handle any property change
          * @private
          */
-        handleChange() {
-            var em = this.em;
-            if (em) {
-                var model = this.model;
-                em.trigger('component:update', model);
+        handleChange: function handleChange() {
+            var model = this.model;
+            model.emitUpdate();
 
-                for (var prop in model.changed) {
-                    em.trigger('component:update:' + prop, model);
-                }
+            for (var prop in model.changed) {
+                model.emitUpdate(prop);
             }
         },
 
@@ -68,11 +68,11 @@ define([
          * Import, if possible, classes inside main container
          * @private
          * */
-        importClasses() {
+        importClasses: function importClasses() {
             var clm = this.config.em.get('SelectorManager');
 
             if (clm) {
-                this.model.get('classes').each(m => {
+                this.model.get('classes').each(function(m) {
                     clm.add(m.get('name'));
                 });
             }
@@ -83,7 +83,7 @@ define([
          * @param  {Event} e
          * @private
          * */
-        updateState(e) {
+        updateState: function updateState(e) {
             var cl = 'hc-state';
             var state = this.model.get('state');
 
@@ -99,29 +99,29 @@ define([
          * @param  {Event} e
          * @private
          * */
-        updateStatus(e) {
+        updateStatus: function updateStatus(e) {
             var el = this.el;
             var status = this.model.get('status');
             var pfx = this.pfx;
             var ppfx = this.ppfx;
             var selectedCls = pfx + 'selected';
             var selectedParentCls = selectedCls + '-parent';
-            var freezedCls = `${ppfx}freezed`;
+            var freezedCls = ppfx + 'freezed';
             var actualCls = el.getAttribute('class') || '';
             var cls = '';
 
             switch (status) {
                 case 'selected':
-                    cls = `${actualCls} ${selectedCls}`;
+                    cls = actualCls + ' ' + selectedCls;
                     break;
                 case 'selected-parent':
-                    cls = `${actualCls} ${selectedParentCls}`;
+                    cls = actualCls + ' ' + selectedParentCls;
                     break;
                 case 'freezed':
-                    cls = `${actualCls} ${freezedCls}`;
+                    cls = actualCls + ' ' + freezedCls;
                     break;
                 default:
-                    this.$el.removeClass(`${selectedCls} ${selectedParentCls} ${freezedCls}`);
+                    this.$el.removeClass(selectedCls + ' ' + selectedParentCls + ' ' + freezedCls);
             }
 
             cls = cls.trim();
@@ -132,168 +132,97 @@ define([
         },
 
         /**
-         * Get classes from attributes.
-         * This method is called before initialize
-         *
-         * @return  {Array}|null
+         * Update highlight attribute
          * @private
          * */
-        getClasses() {
-            var attr = this.model.get("attributes"),
-                classes = attr['class'] || [];
-            if (classes.length) {
-                return classes.join(" ");
-            } else
-                return null;
-        },
-
-        /**
-         * Update attributes
-         * @private
-         * */
-        updateAttributes() {
-            var model = this.model;
-            var attributes = {},
-                attr = model.get("attributes");
-            for (var key in attr) {
-                if (attr.hasOwnProperty(key))
-                    attributes[key] = attr[key];
-            }
-
-            // Update src
-            if (model.get('src'))
-                attributes.src = model.get('src');
-
-            if (model.get('highlightable'))
-                attributes['data-highlightable'] = 1;
-
-            var styleStr = this.getStyleString();
-
-            if (styleStr)
-                attributes.style = styleStr;
-
-            this.$el.attr(attributes);
+        updateHighlight: function updateHighlight() {
+            var hl = this.model.get('highlightable');
+            this.setAttribute('data-highlightable', hl ? 1 : '');
         },
 
         /**
          * Update style attribute
          * @private
          * */
-        updateStyle() {
-            this.$el.attr('style', this.getStyleString());
-        },
+        updateStyle: function updateStyle() {
+            var em = this.em;
+            var model = this.model;
 
-        /**
-         * Return style string
-         * @return  {string}
-         * @private
-         * */
-        getStyleString() {
-            var style = '';
-            this.style = this.model.get('style');
-            for (var key in this.style) {
-                if (this.style.hasOwnProperty(key))
-                    style += key + ':' + this.style[key] + ';';
+            if (em && em.get('avoidInlineStyle')) {
+                this.el.id = model.getId();
+                model.setStyle(model.getStyle());
+            } else {
+                this.setAttribute('style', model.styleToString());
             }
-
-            return style;
         },
 
         /**
          * Update classe attribute
          * @private
          * */
-        updateClasses() {
-            var str = '';
-
-            this.model.get('classes').each(model => {
-                str += model.get('name') + ' ';
-            });
-            str = str.trim();
-
-            if (str)
-                this.$el.attr('class', str);
-            else
-                this.$el.removeAttr('class');
+        updateClasses: function updateClasses() {
+            var str = this.model.get('classes').pluck('name').join(' ');
+            this.setAttribute('class', str);
 
             // Regenerate status class
             this.updateStatus();
         },
 
         /**
-         * Reply to event call
-         * @param object Event that generated the request
-         * @private
-         * */
-        eventCall(event) {
-            event.viewResponse = this;
+         * Update single attribute
+         * @param {[type]} name  [description]
+         * @param {[type]} value [description]
+         */
+        setAttribute: function setAttribute(name, value) {
+            var el = this.$el;
+            value ? el.attr(name, value) : el.removeAttr(name);
         },
 
         /**
-         * Init component for resizing
-         */
-        initResize() {
-            var em = this.opts.config.em;
-            var editor = em ? em.get('Editor') : '';
-            var config = em ? em.get('Config') : '';
-            var pfx = config.stylePrefix || '';
-            var attrName = 'data-' + pfx + 'handler';
-            var resizeClass = pfx + 'resizing';
-            var model = this.model;
-            var modelToStyle;
+         * Get classes from attributes.
+         * This method is called before initialize
+         *
+         * @return  {Array}|null
+         * @private
+         * */
+        getClasses: function getClasses() {
+            var attr = this.model.get('attributes'),
+                classes = attr['class'] || [];
+            classes = (0, underscore.isArray)(classes) ? classes : [classes];
 
-            var toggleBodyClass = (method, e, opts) => {
-                var handlerAttr = e.target.getAttribute(attrName);
-                var resizeHndClass = pfx + 'resizing-' + handlerAttr;
-                var classToAdd = resizeClass; // + ' ' +resizeHndClass;
-                if (opts.docs) {
-                    opts.docs.find('body')[method](classToAdd);
-                }
-            };
-
-            if (editor && this.model.get('resizable')) {
-                editor.runCommand('resize', {
-                    el: this.el,
-                    options: {
-                        onStart(e, opts) {
-                            toggleBodyClass('addClass', e, opts);
-                            modelToStyle = em.get('StyleManager').getModelToStyle(model);
-                        },
-                        // Update all positioned elements (eg. component toolbar)
-                        onMove() {
-                            editor.trigger('change:canvasOffset');
-                        },
-                        onEnd(e, opts) {
-                            toggleBodyClass('removeClass', e, opts);
-                            editor.trigger('change:canvasOffset');
-                        },
-                        updateTarget(el, rect, store) {
-                            if (!modelToStyle) {
-                                return;
-                            }
-                            var unit = 'px';
-                            var style = _.clone(modelToStyle.get('style'));
-                            var width = rect.w + (store ? 1 : 0);
-                            style.width = width + unit;
-                            style.height = rect.h + unit;
-                            modelToStyle.set('style', style, {
-                                avoidStore: 1
-                            });
-                            em.trigger('targetStyleUpdated');
-
-                            // This trick will trigger the Undo Manager. To trigger "change:style"
-                            // on the Model you need to provide a new object and after that
-                            // Undo Manager will trigger only if values are different (this is why
-                            // above I've added + 1 to width if store required)
-                            if (store) {
-                                var style3 = _.clone(style);
-                                style3.width = (width - 1) + unit;
-                                modelToStyle.set('style', style3);
-                            }
-                        }
-                    }
-                });
+            if (classes.length) {
+                return classes.join(' ');
+            } else {
+                return null;
             }
+        },
+
+        /**
+         * Update attributes
+         * @private
+         * */
+        updateAttributes: function updateAttributes() {
+            var model = this.model;
+            var attrs = {};
+            var attr = model.get('attributes');
+            var src = model.get('src');
+
+            for (var key in attr) {
+                attrs[key] = attr[key];
+            }
+
+            src && (attrs.src = src);
+            this.$el.attr(attrs);
+            this.updateHighlight();
+            this.updateStyle();
+        },
+
+        /**
+         * Update component content
+         * @private
+         * */
+        updateContent: function updateContent() {
+            this.getChildrenContainer().innerHTML = this.model.get('content');
         },
 
         /**
@@ -301,7 +230,7 @@ define([
          * @param  {Event} e
          * @private
          */
-        prevDef(e) {
+        prevDef: function prevDef(e) {
             e.preventDefault();
         },
 
@@ -309,7 +238,7 @@ define([
          * Render component's script
          * @private
          */
-        updateScript() {
+        updateScript: function updateScript() {
             if (!this.model.get('script')) {
                 return;
             }
@@ -345,7 +274,7 @@ define([
          * @return HTMLElement
          * @private
          */
-        getChildrenContainer() {
+        getChildrenContainer: function getChildrenContainer() {
             var container = this.el;
 
             if (typeof this.getChildrenSelector == 'function') {
@@ -361,17 +290,17 @@ define([
          * Render children components
          * @private
          */
-        renderChildren() {
+        renderChildren: function renderChildren() {
+            var container = this.getChildrenContainer();
             var view = new ComponentsView({
                 collection: this.model.get('components'),
                 config: this.config,
-                defaultTypes: this.opts.defaultTypes,
-                componentTypes: this.opts.componentTypes,
+                componentTypes: this.opts.componentTypes
             });
 
-            var container = this.getChildrenContainer();
-            var childNodes = view.render($(container)).el.childNodes;
-            childNodes = Array.prototype.slice.call(childNodes);
+            view.render(container);
+            this.childrenView = view;
+            var childNodes = Array.prototype.slice.call(view.el.childNodes);
 
             for (var i = 0, len = childNodes.length; i < len; i++) {
                 container.appendChild(childNodes.shift());
@@ -382,9 +311,9 @@ define([
             // to disable pointer-events for all nested components as they
             // might prevent the component to be selected
             if (container !== this.el) {
-                var disableNode = el => {
+                var disableNode = function disableNode(el) {
                     var children = Array.prototype.slice.call(el.children);
-                    children.forEach(el => {
+                    children.forEach(function(el) {
                         el.style['pointer-events'] = 'none';
                         if (container !== el) {
                             disableNode(el);
@@ -395,134 +324,17 @@ define([
             }
         },
 
-        renderAttributes() {
+        renderAttributes: function renderAttributes() {
             this.updateAttributes();
             this.updateClasses();
         },
 
-        render() {
+        render: function render() {
             this.renderAttributes();
-            var model = this.model;
-            var container = this.getChildrenContainer();
-            container.innerHTML = model.get('content');
+            this.updateContent();
             this.renderChildren();
             this.updateScript();
             return this;
-        },
-
-    });
-
-    var ComponentsView = ComponentView.collectionView =    Backbone.View.extend({
-
-        initialize(o) {
-            this.opts = o || {};
-            this.config = o.config || {};
-            this.listenTo(this.collection, 'add', this.addTo);
-            this.listenTo(this.collection, 'reset', this.render);
-        },
-
-        /**
-         * Add to collection
-         * @param  {Object} Model
-         *
-         * @return  void
-         * @private
-         * */
-        addTo(model) {
-            var i = this.collection.indexOf(model);
-            this.addToCollection(model, null, i);
-
-            var em = this.config.em;
-            if (em) {
-                // OLD
-                em.trigger('add:component', model);
-                em.trigger('component:add', model);
-            }
-        },
-
-        /**
-         * Add new object to collection
-         * @param  {Object}  Model
-         * @param  {Object}   Fragment collection
-         * @param  {Integer}  Index of append
-         *
-         * @return   {Object}   Object rendered
-         * @private
-         * */
-        addToCollection(model, fragmentEl, index) {
-            if (!this.compView)
-                this.compView = ComponentView;
-            var fragment = fragmentEl || null,
-                viewObject = this.compView;
-            //console.log('Add to collection', model, 'Index',i);
-
-            var dt = this.opts.defaultTypes;
-            var ct = this.opts.componentTypes;
-
-            var type = model.get('type');
-
-            for (var it = 0; it < dt.length; it++) {
-                var dtId = dt[it].id;
-                if (dtId == type) {
-                    viewObject = dt[it].view;
-                    break;
-                }
-            }
-            //viewObject = dt[type] ? dt[type].view : dt.default.view;
-
-            var view = new viewObject({
-                model,
-                config: this.config,
-                defaultTypes: dt,
-                componentTypes: ct,
-            });
-            var rendered = view.render().el;
-            if (view.model.get('type') == 'textnode')
-                rendered = document.createTextNode(view.model.get('content'));
-
-            if (fragment) {
-                fragment.appendChild(rendered);
-            } else {
-                var p = this.$parent;
-                var pc = p.children;
-                if (typeof index != 'undefined') {
-                    var method = 'before';
-                    // If the added model is the last of collection
-                    // need to change the logic of append
-                    if (pc && p.children().length == index) {
-                        index--;
-                        method = 'after';
-                    }
-                    // In case the added is new in the collection index will be -1
-                    if (index < 0) {
-                        p.append(rendered);
-                    } else {
-                        if (pc) {
-                            p.children().eq(index)[method](rendered);
-                        }
-                    }
-                } else {
-                    p.append(rendered);
-                }
-            }
-
-            return rendered;
-        },
-
-        render($p) {
-            var fragment = document.createDocumentFragment();
-            this.$parent = $p || this.$el;
-            this.$el.empty();
-            this.collection.each(function(model) {
-                this.addToCollection(model, fragment);
-            }, this);
-            this.$el.append(fragment);
-
-            return this;
         }
-
     });
-
-    return ComponentView;
-
 });

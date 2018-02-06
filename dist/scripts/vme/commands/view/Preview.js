@@ -1,22 +1,21 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        getPanels(editor) {
-            if (!this.panels)
-                this.panels = editor.Panels.getPanelsEl();
+    module.exports = {
+        getPanels: function getPanels(editor) {
+            if (!this.panels) this.panels = editor.Panels.getPanelsEl();
             return this.panels;
         },
 
-        tglPointers(editor, v) {
+        tglPointers: function tglPointers(editor, v) {
             var elP = editor.Canvas.getBody().querySelectorAll('.' + this.ppfx + 'no-pointer');
-            _.each(elP, item => {
+            _.each(elP, function(item) {
                 item.style.pointerEvents = v ? '' : 'all';
             });
         },
 
-        run(editor, sender) {
-            if (sender && sender.set)
-                sender.set('active', false);
+        run: function run(editor, sender) {
+            if (sender && sender.set) sender.set('active', false);
             editor.stopCommand('sw-visibility');
             editor.getModel().stopDefault();
             var that = this;
@@ -28,17 +27,17 @@ define([], function() {
                 this.helper = document.createElement('span');
                 this.helper.className = pfx + 'off-prv fa fa-eye-slash';
                 editorEl.appendChild(this.helper);
-                this.helper.onclick = () => {
-                    that.stop(editor);
+                this.helper.onclick = function() {
+                    editor.stopCommand('preview');
                 };
             }
             this.helper.style.display = 'inline-block';
             this.tglPointers(editor);
 
             /*
-    editor.Canvas.getBody().querySelectorAll('.' + pfx + 'no-pointer').forEach(function(){
-      this.style.pointerEvents = 'all';
-    });*/
+            editor.Canvas.getBody().querySelectorAll('.' + pfx + 'no-pointer').forEach(function(){
+              this.style.pointerEvents = 'all';
+            });*/
 
             panels.style.display = 'none';
             var canvasS = canvas.style;
@@ -51,7 +50,7 @@ define([], function() {
             editor.trigger('change:canvasOffset');
         },
 
-        stop(editor, sender) {
+        stop: function stop(editor, sender) {
             var panels = this.getPanels(editor);
             editor.runCommand('sw-visibility');
             editor.getModel().runDefault();

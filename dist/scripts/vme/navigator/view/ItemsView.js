@@ -1,38 +1,40 @@
-define([
-    "backbone",
-    "./ItemView"
-], function(Backbone, ItemView) {
-    return Backbone.View.extend({
+define(['exports', 'module', './ItemView'], function(exports, module, ItemView) {
+    'use strict';
 
-        initialize(o) {
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize() {
+            var o = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
             this.opt = o;
-            this.config = o.config;
+            var config = o.config || {};
+            this.level = o.level;
+            this.config = config;
             this.preview = o.preview;
-            this.ppfx = o.config.pStylePrefix || '';
-            this.pfx = o.config.stylePrefix || '';
+            this.ppfx = config.pStylePrefix || '';
+            this.pfx = config.stylePrefix || '';
             this.parent = o.parent;
             this.listenTo(this.collection, 'add', this.addTo);
             this.listenTo(this.collection, 'reset resetNavigator', this.render);
             this.className = this.pfx + 'items';
 
-            if (this.config.sortable && !this.opt.sorter) {
+            if (config.sortable && !this.opt.sorter) {
                 var pfx = this.pfx;
-                var utils = this.config.em.get('Utils');
+                var utils = config.em.get('Utils');
                 this.opt.sorter = new utils.Sorter({
-                    container: this.el,
+                    container: config.sortContainer || this.el,
                     containerSel: '.' + pfx + 'items',
                     itemSel: '.' + pfx + 'item',
                     ppfx: this.ppfx,
                     ignoreViewChildren: 1,
-                    pfx,
+                    avoidSelectOnEnd: 1,
+                    pfx: pfx,
                     nested: 1
                 });
             }
 
             this.sorter = this.opt.sorter || '';
-
-            if (!this.parent)
-                this.className += ' ' + this.pfx + this.config.containerId;
 
             // For the sorter
             this.$el.data('collection', this.collection);
@@ -48,7 +50,7 @@ define([
          *
          * @return Object
          * */
-        addTo(model) {
+        addTo: function addTo(model) {
             var i = this.collection.indexOf(model);
             this.addToCollection(model, null, i);
         },
@@ -61,16 +63,22 @@ define([
          *
          * @return Object Object created
          * */
-        addToCollection(model, fragmentEl, index) {
+        addToCollection: function addToCollection(model, fragmentEl, index) {
+            var level = this.level;
             var fragment = fragmentEl || null;
             var viewObject = ItemView;
 
+            if (!this.isCountable(model, this.config.hideTextnode)) {
+                return;
+            }
+
             var view = new viewObject({
-                model,
+                level: level,
+                model: model,
                 config: this.config,
                 sorter: this.sorter,
                 isCountable: this.isCountable,
-                opened: this.opt.opened,
+                opened: this.opt.opened
             });
             var rendered = view.render().el;
 
@@ -88,10 +96,8 @@ define([
                     // In case the added is new in the collection index will be -1
                     if (index < 0) {
                         this.$el.append(rendered);
-                    } else
-                        this.$el.children().eq(index)[method](rendered);
-                } else
-                    this.$el.append(rendered);
+                    } else this.$el.children().eq(index)[method](rendered);
+                } else this.$el.append(rendered);
             }
 
             return rendered;
@@ -103,28 +109,25 @@ define([
          * @return {Boolean}
          * @private
          */
-        isCountable(model, hide) {
+        isCountable: function isCountable(model, hide) {
             var type = model.get('type');
             var tag = model.get('tagName');
-            if (((type == 'textnode' || tag == 'br') && hide) ||
-                model.get('hiddenLayer')) {
+            if ((type == 'textnode' || tag == 'br') && hide || !model.get('layerable')) {
                 return false;
             }
             return true;
         },
 
-        render() {
-            var fragment = document.createDocumentFragment();
-            this.$el.empty();
+        render: function render() {
+            var _this = this;
 
+            var frag = document.createDocumentFragment();
+            this.el.innerHTML = '';
             this.collection.each(function(model) {
-                if (!this.isCountable(model, this.config.hideTextnode))
-                    return;
-                this.addToCollection(model, fragment);
-            }, this);
-
-            this.$el.append(fragment);
-            this.$el.attr('class', _.result(this, 'className'));
+                return _this.addToCollection(model, frag);
+            });
+            this.el.appendChild(frag);
+            this.$el.attr('class', this.className);
             return this;
         }
     });

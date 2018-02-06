@@ -1,46 +1,10 @@
-/**
- *
- * * [add](#add)
- * * [get](#get)
- * * [has](#has)
- *
- * You can init the editor with all necessary commands via configuration
- *
- * ```js
- * var editor = grapesjs.init({
- * 	...
- *  commands: {...} // Check below for the properties
- * 	...
- * });
- * ```
- *
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var commands = editor.Commands;
- * ```
- *
- * @module Commands
- * @param {Object} config Configurations
- * @param {Array<Object>} [config.defaults=[]] Array of possible commands
- * @example
- * ...
- * commands: {
- * 	defaults: [{
- * 		id: 'helloWorld',
- * 		run:  function(editor, sender){
- * 			alert('Hello world!');
- * 		},
- * 		stop:  function(editor, sender){
- * 			alert('Stop!');
- * 		},
- * 	}],
- * },
- * ...
- */
 define([
+    'exports',
+    'module',
+    'underscore',
     './config/config',
     './view/CommandAbstract',
+    './view/ExportTemplate',
     './view/SelectComponent',
     './view/CreateComponent',
     './view/DeleteComponent',
@@ -48,7 +12,6 @@ define([
     './view/MoveComponent',
     './view/TextComponent',
     './view/InsertCustom',
-    './view/ExportTemplate',
     './view/SwitchVisibility',
     './view/OpenLayers',
     './view/OpenStyleManager',
@@ -56,28 +19,74 @@ define([
     './view/OpenBlocks',
     './view/OpenAssets',
     './view/ShowOffset',
+    './view/SelectParent',
     './view/Fullscreen',
     './view/Preview',
     './view/Resize',
-    './view/Drag'
-], function(defaults, AbsCommands,SelectComponent,CreateComponent,DeleteComponent,ImageComponent,
-    MoveComponent,TextComponent,InsertCustom,ExportTemplate,SwitchVisibility,OpenLayers,
-    OpenStyleManager,OpenTraitManager,OpenBlocks,OpenAssets,ShowOffset,Fullscreen,
-    Preview,Resize,Drag) {
-    return function() {
+    './view/Drag',
+], function(exports, module, underscore, defaults, AbsCommands, ExportTemplate, SelectComponent, CreateComponent,
+    DeleteComponent, ImageComponent, MoveComponent, TextComponent, InsertCustom, SwitchVisibility, OpenLayers,
+    OpenStyleManager, OpenTraitManager, OpenBlocks, OpenAssets, ShowOffset, SelectParent, Fullscreen, Preview, Resize, Drag) {
+    /**
+     *
+     * * [add](#add)
+     * * [get](#get)
+     * * [has](#has)
+     *
+     * You can init the editor with all necessary commands via configuration
+     *
+     * ```js
+     * var editor = grapesjs.init({
+     * 	...
+     *  commands: {...} // Check below for the properties
+     * 	...
+     * });
+     * ```
+     *
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var commands = editor.Commands;
+     * ```
+     *
+     * @module Commands
+     * @param {Object} config Configurations
+     * @param {Array<Object>} [config.defaults=[]] Array of possible commands
+     * @example
+     * ...
+     * commands: {
+     * 	defaults: [{
+     * 		id: 'helloWorld',
+     * 		run:  function(editor, sender){
+     * 			alert('Hello world!');
+     * 		},
+     * 		stop:  function(editor, sender){
+     * 			alert('Stop!');
+     * 		},
+     * 	}],
+     * },
+     * ...
+     */
+    'use strict';
+
+    module.exports = function() {
+        var em = undefined;
         var c = {},
             commands = {},
             defaultCommands = {};
 
         // Need it here as it would be used below
-        var add = function(id, obj) {
+        var add = function add(id, obj) {
+            if ((0, underscore.isFunction)(obj)) {
+                obj = { run: obj };
+            }
+
             delete obj.initialize;
             commands[id] = AbsCommands.extend(obj);
             return this;
         };
 
         return {
-
             /**
              * Name of the module
              * @type {String}
@@ -90,24 +99,22 @@ define([
              * @param {Object} config Configurations
              * @private
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
-
+                em = c.em;
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
                 // Load commands passed via configuration
                 for (var k in c.defaults) {
                     var obj = c.defaults[k];
-                    if (obj.id)
-                        this.add(obj.id, obj);
+                    if (obj.id) this.add(obj.id, obj);
                 }
 
+                var ViewCode = ExportTemplate;
                 defaultCommands['select-comp'] = SelectComponent;
                 defaultCommands['create-comp'] = CreateComponent;
                 defaultCommands['delete-comp'] = DeleteComponent;
@@ -115,7 +122,7 @@ define([
                 defaultCommands['move-comp'] = MoveComponent;
                 defaultCommands['text-comp'] = TextComponent;
                 defaultCommands['insert-custom'] = InsertCustom;
-                defaultCommands['export-template'] = ExportTemplate;
+                defaultCommands['export-template'] = ViewCode;
                 defaultCommands['sw-visibility'] = SwitchVisibility;
                 defaultCommands['open-layers'] = OpenLayers;
                 defaultCommands['open-sm'] = OpenStyleManager;
@@ -123,13 +130,14 @@ define([
                 defaultCommands['open-blocks'] = OpenBlocks;
                 defaultCommands['open-assets'] = OpenAssets;
                 defaultCommands['show-offset'] = ShowOffset;
+                defaultCommands['select-parent'] = SelectParent;
                 defaultCommands.fullscreen = Fullscreen;
                 defaultCommands.preview = Preview;
                 defaultCommands.resize = Resize;
                 defaultCommands.drag = Drag;
 
                 defaultCommands['tlb-delete'] = {
-                    run(ed) {
+                    run: function run(ed) {
                         var sel = ed.getSelected();
 
                         if (!sel || !sel.get('removable')) {
@@ -137,15 +145,13 @@ define([
                             return;
                         }
 
-                        sel.set('status', '');
+                        ed.select(null);
                         sel.destroy();
-                        ed.trigger('component:update', sel);
-                        ed.editor.set('selectedComponent', null);
-                    },
+                    }
                 };
 
                 defaultCommands['tlb-clone'] = {
-                    run(ed) {
+                    run: function run(ed) {
                         var sel = ed.getSelected();
 
                         if (!sel || !sel.get('copyable')) {
@@ -155,24 +161,37 @@ define([
 
                         var collection = sel.collection;
                         var index = collection.indexOf(sel);
-                        collection.add(sel.clone(), {
-                            at: index + 1
-                        });
-                        ed.trigger('component:update', sel);
-                    },
+                        var added = collection.add(sel.clone(), { at: index + 1 });
+                        sel.emitUpdate();
+                        ed.trigger('component:clone', added);
+                    }
                 };
 
                 defaultCommands['tlb-move'] = {
-                    run(ed, sender, opts) {
+                    run: function run(ed, sender, opts) {
+                        var dragger = undefined;
+                        var em = ed.getModel();
+                        var event = opts && opts.event;
                         var sel = ed.getSelected();
-                        var dragger;
+                        var toolbarStyle = ed.Canvas.getToolbarEl().style;
+                        var nativeDrag = event.type == 'dragstart';
+
+                        var hideTlb = function hideTlb() {
+                            toolbarStyle.display = 'none';
+                            em.stopDefault();
+                        };
 
                         if (!sel || !sel.get('draggable')) {
                             console.warn('The element is not draggable');
                             return;
                         }
 
-                        const onStart = (e, opts) => {
+                        // Without setTimeout the ghost image disappears
+                        nativeDrag ? setTimeout(function() {
+                            return hideTlb;
+                        }, 0) : hideTlb();
+
+                        var onStart = function onStart(e, opts) {
                             console.log('start mouse pos ', opts.start);
                             console.log('el rect ', opts.elRect);
                             var el = opts.el;
@@ -180,74 +199,101 @@ define([
                             el.style.margin = 0;
                         };
 
-                        const onEnd = (e, opts) => {
+                        var onEnd = function onEnd(e, opts) {
                             em.runDefault();
-                            em.set('selectedComponent', sel);
-                            ed.trigger('component:update', sel);
+                            em.setSelected(sel);
+                            sel.emitUpdate();
                             dragger && dragger.blur();
                         };
 
-                        const onDrag = (e, opts) => {
+                        var onDrag = function onDrag(e, opts) {
                             console.log('Delta ', opts.delta);
                             console.log('Current ', opts.current);
                         };
-
-                        var toolbarEl = ed.Canvas.getToolbarEl();
-                        toolbarEl.style.display = 'none';
-                        var em = ed.getModel();
-                        em.stopDefault();
 
                         if (em.get('designerMode')) {
                             // TODO move grabbing func in editor/canvas from the Sorter
                             dragger = editor.runCommand('drag', {
                                 el: sel.view.el,
                                 options: {
-                                    event: opts && opts.event,
-                                    onStart,
-                                    onDrag,
-                                    onEnd
+                                    event: event,
+                                    onStart: onStart,
+                                    onDrag: onDrag,
+                                    onEnd: onEnd
                                 }
                             });
                         } else {
+                            if (nativeDrag) {
+                                event.dataTransfer.setDragImage(sel.view.el, 0, 0);
+                                //sel.set('status', 'freezed');
+                            }
+
                             var cmdMove = ed.Commands.get('move-comp');
                             cmdMove.onEndMoveFromModel = onEnd;
                             cmdMove.initSorterFromModel(sel);
                         }
 
-
                         sel.set('status', 'selected');
-                    },
+                    }
                 };
 
-                if (c.em)
-                    c.model = c.em.get('Canvas');
+                // Core commands
+                defaultCommands['core:undo'] = function(e) {
+                    return e.UndoManager.undo();
+                };
+                defaultCommands['core:redo'] = function(e) {
+                    return e.UndoManager.redo();
+                };
+                defaultCommands['core:canvas-clear'] = function(e) {
+                    e.DomComponents.clear();
+                    e.CssComposer.clear();
+                };
+                defaultCommands['core:copy'] = function(ed) {
+                    var em = ed.getModel();
+                    var model = ed.getSelected();
+
+                    if (model && model.get('copyable') && !ed.Canvas.isInputFocused()) {
+                        em.set('clipboard', model);
+                    }
+                };
+                defaultCommands['core:paste'] = function(ed) {
+                    var em = ed.getModel();
+                    var clp = em.get('clipboard');
+                    var model = ed.getSelected();
+                    var coll = model && model.collection;
+
+                    if (coll && clp && !ed.Canvas.isInputFocused()) {
+                        var at = coll.indexOf(model) + 1;
+                        coll.add(clp.clone(), { at: at });
+                    }
+                };
+
+                if (c.em) c.model = c.em.get('Canvas');
+
+                this.loadDefaultCommands();
 
                 return this;
             },
 
             /**
-             * On load callback
-             * @private
-             */
-            onLoad() {
-                this.loadDefaultCommands();
-            },
-
-            /**
              * Add new command to the collection
              * @param	{string} id Command's ID
-             * @param	{Object} command Object representing you command. Methods `run` and `stop` are required
+             * @param	{Object|Function} command Object representing your command,
+             *  By passing just a function it's intended as a stateless command
+             *  (just like passing an object with only `run` method).
              * @return {this}
              * @example
              * commands.add('myCommand', {
-             * 	run:  function(editor, sender){
+             * 	run(editor, sender) {
              * 		alert('Hello world!');
              * 	},
-             * 	stop:  function(editor, sender){
+             * 	stop(editor, sender) {
              * 	},
              * });
+             * // As a function
+             * commands.add('myCommand2', editor => { ... });
              * */
-            add,
+            add: add,
 
             /**
              * Get command by ID
@@ -257,7 +303,7 @@ define([
              * var myCommand = commands.get('myCommand');
              * myCommand.run();
              * */
-            get(id) {
+            get: function get(id) {
                 var el = commands[id];
 
                 if (typeof el == 'function') {
@@ -273,7 +319,7 @@ define([
              * @param	{string}	id Command's ID
              * @return {Boolean}
              * */
-            has(id) {
+            has: function has(id) {
                 return !!commands[id];
             },
 
@@ -282,14 +328,13 @@ define([
              * @return {this}
              * @private
              * */
-            loadDefaultCommands() {
+            loadDefaultCommands: function loadDefaultCommands() {
                 for (var id in defaultCommands) {
                     this.add(id, defaultCommands[id]);
                 }
 
                 return this;
-            },
+            }
         };
-
     };
 });

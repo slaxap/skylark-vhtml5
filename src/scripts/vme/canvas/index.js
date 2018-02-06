@@ -1,19 +1,23 @@
-define([
-    "./config/config",
-    "./model/Canvas",
-    "./view/CanvasView"
-], function(defaults, Canvas, CanvasView) {
-    return function() {
-        var c = {},
-            canvas, frameRect;
+define(['exports', 'module', '../utils/mixins',
+    '../utils/Droppable', './config/config', './model/Canvas', './view/CanvasView'
+], function(exports, module, utilsMixins, _utilsDroppable, defaults, Canvas, CanvasView) {
+    'use strict';
+
+    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+    var _Droppable = _interopRequireDefault(_utilsDroppable);
+
+    module.exports = function() {
+        var c = {};
+        var canvas;
+        var frameRect;
 
         return {
-
             /**
              * Used inside RTE
              * @private
              */
-            getCanvasView() {
+            getCanvasView: function getCanvasView() {
                 return CanvasView;
             },
 
@@ -28,26 +32,23 @@ define([
              * Initialize module. Automatically called with a new instance of the editor
              * @param {Object} config Configurations
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
                 canvas = new Canvas(config);
                 CanvasView = new CanvasView({
                     model: canvas,
-                    config: c,
+                    config: c
                 });
 
                 var cm = c.em.get('DomComponents');
-                if (cm)
-                    this.setWrapper(cm);
+                if (cm) this.setWrapper(cm);
 
                 this.startAutoscroll = this.startAutoscroll.bind(this);
                 this.stopAutoscroll = this.stopAutoscroll.bind(this);
@@ -56,11 +57,19 @@ define([
             },
 
             /**
+             * Return config object
+             * @return {Object}
+             */
+            getConfig: function getConfig() {
+                return c;
+            },
+
+            /**
              * Add wrapper
-             * @param   {Object}    wrp Wrapper
+             * @param	{Object}	wrp Wrapper
              *
              * */
-            setWrapper(wrp) {
+            setWrapper: function setWrapper(wrp) {
                 canvas.set('wrapper', wrp);
             },
 
@@ -68,7 +77,7 @@ define([
              * Returns canvas element
              * @return {HTMLElement}
              */
-            getElement() {
+            getElement: function getElement() {
                 return CanvasView.el;
             },
 
@@ -76,7 +85,7 @@ define([
              * Returns frame element of the canvas
              * @return {HTMLElement}
              */
-            getFrameEl() {
+            getFrameEl: function getFrameEl() {
                 return CanvasView.frame.el;
             },
 
@@ -84,7 +93,7 @@ define([
              * Returns body element of the frame
              * @return {HTMLElement}
              */
-            getBody() {
+            getBody: function getBody() {
                 return CanvasView.frame.el.contentDocument.body;
             },
 
@@ -92,15 +101,15 @@ define([
              * Returns body wrapper element of the frame
              * @return {HTMLElement}
              */
-            getWrapperEl() {
+            getWrapperEl: function getWrapperEl() {
                 return this.getBody().querySelector('#wrapper');
             },
 
             /**
-             * Returns element containing canvas tools
+             * Returns element containing all canvas tools
              * @return {HTMLElement}
              */
-            getToolsEl() {
+            getToolsEl: function getToolsEl() {
                 return CanvasView.toolsEl;
             },
 
@@ -108,7 +117,7 @@ define([
              * Returns highlighter element
              * @return {HTMLElement}
              */
-            getHighlighter() {
+            getHighlighter: function getHighlighter() {
                 return CanvasView.hlEl;
             },
 
@@ -116,7 +125,7 @@ define([
              * Returns badge element
              * @return {HTMLElement}
              */
-            getBadgeEl() {
+            getBadgeEl: function getBadgeEl() {
                 return CanvasView.badgeEl;
             },
 
@@ -124,7 +133,7 @@ define([
              * Returns placer element
              * @return {HTMLElement}
              */
-            getPlacerEl() {
+            getPlacerEl: function getPlacerEl() {
                 return CanvasView.placerEl;
             },
 
@@ -133,7 +142,7 @@ define([
              * @return {HTMLElement}
              * @private
              */
-            getGhostEl() {
+            getGhostEl: function getGhostEl() {
                 return CanvasView.ghostEl;
             },
 
@@ -141,7 +150,7 @@ define([
              * Returns toolbar element
              * @return {HTMLElement}
              */
-            getToolbarEl() {
+            getToolbarEl: function getToolbarEl() {
                 return CanvasView.toolbarEl;
             },
 
@@ -149,7 +158,7 @@ define([
              * Returns resizer element
              * @return {HTMLElement}
              */
-            getResizerEl() {
+            getResizerEl: function getResizerEl() {
                 return CanvasView.resizerEl;
             },
 
@@ -157,7 +166,7 @@ define([
              * Returns offset viewer element
              * @return {HTMLElement}
              */
-            getOffsetViewerEl() {
+            getOffsetViewerEl: function getOffsetViewerEl() {
                 return CanvasView.offsetEl;
             },
 
@@ -165,14 +174,14 @@ define([
              * Returns fixed offset viewer element
              * @return {HTMLElement}
              */
-            getFixedOffsetViewerEl() {
+            getFixedOffsetViewerEl: function getFixedOffsetViewerEl() {
                 return CanvasView.fixedOffsetEl;
             },
 
             /**
              * Render canvas
              * */
-            render() {
+            render: function render() {
                 return CanvasView.render().el;
             },
 
@@ -181,7 +190,7 @@ define([
              * @return {Object}
              * @private
              */
-            getOffset() {
+            getOffset: function getOffset() {
                 var frameOff = this.offset(this.getFrameEl());
                 var canvasOff = this.offset(this.getElement());
                 return {
@@ -196,12 +205,20 @@ define([
              * @return {Object}
              * @private
              */
-            offset(el) {
-                var rect = el.getBoundingClientRect();
-                return {
-                    top: rect.top + document.body.scrollTop,
-                    left: rect.left + document.body.scrollLeft
-                };
+            offset: function offset(el) {
+                return CanvasView.offset(el);
+            },
+
+            /**
+             * Set custom badge naming strategy
+             * @param  {Function} f
+             * @example
+             * canvas.setCustomBadgeLabel(function(model){
+             *  return ComponentModel.getName();
+             * });
+             */
+            setCustomBadgeLabel: function setCustomBadgeLabel(f) {
+                c.customBadgeLabel = f;
             },
 
             /**
@@ -209,7 +226,7 @@ define([
              * @param {HTMLElement} el
              * @return {Object}
              */
-            getElementPos(el, opts) {
+            getElementPos: function getElementPos(el, opts) {
                 return CanvasView.getElementPos(el, opts);
             },
 
@@ -228,7 +245,7 @@ define([
              * @param {Boolean} options.toRight Set to true if you want the toolbar attached to the right
              * @return {Object}
              */
-            getTargetToElementDim(target, element, options) {
+            getTargetToElementDim: function getTargetToElementDim(target, element, options) {
                 var opts = options || {};
                 var canvasPos = CanvasView.getPosition();
                 var pos = opts.elPos || CanvasView.getElementPos(element);
@@ -240,11 +257,11 @@ define([
                 var elTop = pos.top - targetHeight;
                 var elLeft = pos.left;
                 elLeft += toRight ? pos.width : 0;
-                elLeft = toRight ? (elLeft - targetWidth) : elLeft;
+                elLeft = toRight ? elLeft - targetWidth : elLeft;
 
                 var leftPos = elLeft < canvasPos.left ? canvasPos.left : elLeft;
                 var topPos = elTop < canvasPos.top ? canvasPos.top : elTop;
-                topPos = topPos > (pos.top + pos.height) ? (pos.top + pos.height) : topPos;
+                topPos = topPos > pos.top + pos.height ? pos.top + pos.height : topPos;
 
                 var result = {
                     top: topPos,
@@ -256,7 +273,7 @@ define([
                     targetWidth: target.offsetWidth,
                     targetHeight: target.offsetHeight,
                     canvasTop: canvasPos.top,
-                    canvasLeft: canvasPos.left,
+                    canvasLeft: canvasPos.left
                 };
 
                 // In this way I can catch data and also change the position strategy
@@ -275,7 +292,7 @@ define([
              * @param {Event} e
              * @return {Object}
              */
-            getMouseRelativePos(e, options) {
+            getMouseRelativePos: function getMouseRelativePos(e, options) {
                 var opts = options || {};
                 var addTop = 0;
                 var addLeft = 0;
@@ -294,7 +311,7 @@ define([
 
                 return {
                     y: e.clientY + addTop - yOffset,
-                    x: e.clientX + addLeft - xOffset,
+                    x: e.clientX + addLeft - xOffset
                 };
             },
 
@@ -303,7 +320,7 @@ define([
              * @param {Event} e
              * @return {Object}
              */
-            getMouseRelativeCanvas(e, options) {
+            getMouseRelativeCanvas: function getMouseRelativeCanvas(e, options) {
                 var opts = options || {};
                 var frame = this.getFrameEl();
                 var body = this.getBody();
@@ -314,37 +331,53 @@ define([
 
                 return {
                     y: e.clientY + addTop + yOffset,
-                    x: e.clientX + addLeft + xOffset,
+                    x: e.clientX + addLeft + xOffset
                 };
+            },
+
+            /**
+             * Detects if some input is focused (input elements, text components, etc.)
+             * Used internally, for example, to avoid undo/redo in text editing mode
+             * @return {Boolean}
+             */
+            isInputFocused: function isInputFocused() {
+                return this.getFrameEl().contentDocument.activeElement.tagName !== 'BODY';
             },
 
             /**
              * Start autoscroll
              */
-            startAutoscroll() {
+            startAutoscroll: function startAutoscroll() {
+                var _this = this;
+
                 this.dragging = 1;
-                let toListen = this.getScrollListeners();
+                var toListen = this.getScrollListeners();
                 frameRect = CanvasView.getFrameOffset(1);
-                toListen.on('mousemove', this.autoscroll);
-                toListen.on('mouseup', this.stopAutoscroll);
+
+                // By detaching those from the stack avoid browsers lags
+                // Noticeable with "fast" drag of blocks
+                setTimeout(function() {
+                    (0, utilsMixins.on)(toListen, 'mousemove', _this.autoscroll);
+                    (0, utilsMixins.on)(toListen, 'mouseup', _this.stopAutoscroll);
+                }, 0);
             },
 
-            autoscroll(e) {
+            autoscroll: function autoscroll(e) {
                 e.preventDefault();
                 if (this.dragging) {
-                    let frameWindow = this.getFrameEl().contentWindow;
-                    let actualTop = frameWindow.document.body.scrollTop;
-                    let nextTop = actualTop;
-                    let clientY = e.clientY;
-                    let limitTop = 50;
-                    let limitBottom = frameRect.height - limitTop;
+                    var frameWindow = this.getFrameEl().contentWindow;
+                    var actualTop = frameWindow.document.body.scrollTop;
+                    var nextTop = actualTop;
+                    var clientY = e.clientY;
+                    var limitTop = 50;
+                    var limitBottom = frameRect.height - limitTop;
 
                     if (clientY < limitTop) {
-                        nextTop -= (limitTop - clientY);
+                        nextTop -= limitTop - clientY;
                     }
 
                     if (clientY > limitBottom) {
-                        nextTop += (clientY - limitBottom);
+                        nextTop += clientY - limitBottom;
                     }
 
                     //console.log(`actualTop: ${actualTop} clientY: ${clientY} nextTop: ${nextTop} frameHeigh: ${frameRect.height}`);
@@ -355,20 +388,19 @@ define([
             /**
              * Stop autoscroll
              */
-            stopAutoscroll() {
+            stopAutoscroll: function stopAutoscroll() {
                 this.dragging = 0;
-                let toListen = this.getScrollListeners();
-                toListen.off('mousemove', this.autoscroll);
-                toListen.off('mouseup', this.stopAutoscroll);
+                var toListen = this.getScrollListeners();
+                (0, utilsMixins.off)(toListen, 'mousemove', this.autoscroll);
+                (0, utilsMixins.off)(toListen, 'mouseup', this.stopAutoscroll);
             },
 
-            getScrollListeners() {
-                if (!this.scrollListeners) {
-                    this.scrollListeners =
-                        $(this.getFrameEl().contentWindow, this.getElement());
-                }
+            getScrollListeners: function getScrollListeners() {
+                return [this.getFrameEl().contentWindow, this.getElement()];
+            },
 
-                return this.scrollListeners;
+            postRender: function postRender() {
+                if ((0, utilsMixins.hasDnd)(c.em)) this.droppable = new _Droppable['default'](c.em);
             },
 
             /**
@@ -376,9 +408,9 @@ define([
              * @return {HTMLElement}
              * ????
              */
-            getFrameWrapperEl() {
+            getFrameWrapperEl: function getFrameWrapperEl() {
                 return CanvasView.frame.getWrapper();
-            },
+            }
         };
     };
-})
+});

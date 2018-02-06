@@ -1,38 +1,26 @@
-/**
- * - [isAutosave](#isautosave)
- * - [setAutosave](#setautosave)
- * - [getStepsBeforeSave](#getstepsbeforesave)
- * - [setStepsBeforeSave](#setstepsbeforesave)
- * - [getStorages](#getstorages)
- * - [getCurrent](#getcurrent)
- * - [setCurrent](#setcurrent)
- * - [add](#add)
- * - [get](#get)
- * - [store](#store)
- * - [load](#load)
- *
- *
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var storageManager = editor.StorageManager;
- * ```
- *
- * @module StorageManager
- */
 define([
+    'exports',
+    'module',
     './config/config',
     './model/LocalStorage',
     './model/RemoteStorage'
-], function(defaults, LocalStorage, RemoteStorage) {
-    return function() {
+], function(exports, module, defaults, LocalStorage, RemoteStorage) {
+    /**
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var storageManager = editor.StorageManager;
+     * ```
+     */
+    'use strict';
+
+    module.exports = function() {
         var c = {};
 
         var storages = {};
         var defaultStorages = {};
 
         return {
-
             /**
              * Name of the module
              * @type {String}
@@ -49,6 +37,7 @@ define([
              * @param {number} [config.stepsBeforeSave=1] If autosave enabled, indicates how many steps/changes are necessary
              * before autosave is triggered
              * @param {string} [config.type='local'] Default storage type. Available: 'local' | 'remote' | ''(do not store)
+             * @private
              * @example
              * ...
              * {
@@ -57,32 +46,25 @@ define([
              * }
              * ...
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
+
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 defaultStorages.remote = new RemoteStorage(c);
                 defaultStorages.local = new LocalStorage(c);
                 c.currentStorage = c.type;
-                return this;
-            },
-
-            /**
-             * Callback executed after the module is loaded
-             * @private
-             */
-            onLoad() {
                 this.loadDefaultProviders().setCurrent(c.type);
+                return this;
             },
 
             /**
              * Checks if autosave is enabled
              * @return {Boolean}
              * */
-            isAutosave() {
+            isAutosave: function isAutosave() {
                 return !!c.autosave;
             },
 
@@ -91,8 +73,13 @@ define([
              * @param  {Boolean}  v
              * @return {this}
              * */
-            setAutosave(v) {
+            setAutosave: function setAutosave(v) {
                 c.autosave = !!v;
+                return this;
+            },
+
+            setAutoload: function(v) {
+                c.autoload = !!v;
                 return this;
             },
 
@@ -100,7 +87,7 @@ define([
              * Returns number of steps required before trigger autosave
              * @return {number}
              * */
-            getStepsBeforeSave() {
+            getStepsBeforeSave: function getStepsBeforeSave() {
                 return c.stepsBeforeSave;
             },
 
@@ -109,7 +96,7 @@ define([
              * @param  {number} v
              * @return {this}
              * */
-            setStepsBeforeSave(v) {
+            setStepsBeforeSave: function setStepsBeforeSave(v) {
                 c.stepsBeforeSave = v;
                 return this;
             },
@@ -123,21 +110,22 @@ define([
              * @return {this}
              * @example
              * storageManager.add('local2', {
-             *   load: function(keys){
+             *   load: function(keys, clb) {
              *     var res = {};
              *     for (var i = 0, len = keys.length; i < len; i++){
              *       var v = localStorage.getItem(keys[i]);
              *       if(v) res[keys[i]] = v;
              *     }
-             *     return res;
+             *     clb(res); // might be called inside some async method
              *   },
-             *   store: function(data){
+             *   store: function(data, clb) {
              *     for(var key in data)
              *       localStorage.setItem(key, data[key]);
+             *     clb(); // might be called inside some async method
              *   }
              * });
              * */
-            add(id, storage) {
+            add: function add(id, storage) {
                 storages[id] = storage;
                 return this;
             },
@@ -147,7 +135,7 @@ define([
              * @param {string} id Storage ID
              * @return {Object|null}
              * */
-            get(id) {
+            get: function get(id) {
                 return storages[id] || null;
             },
 
@@ -155,7 +143,7 @@ define([
              * Returns all storages
              * @return   {Array}
              * */
-            getStorages() {
+            getStorages: function getStorages() {
                 return storages;
             },
 
@@ -163,7 +151,7 @@ define([
              * Returns current storage type
              * @return {string}
              * */
-            getCurrent() {
+            getCurrent: function getCurrent() {
                 return c.currentStorage;
             },
 
@@ -172,7 +160,7 @@ define([
              * @param {string} id Storage ID
              * @return {this}
              * */
-            setCurrent(id) {
+            setCurrent: function setCurrent(id) {
                 c.currentStorage = id;
                 return this;
             },
@@ -185,12 +173,11 @@ define([
              * @example
              * storageManager.store({item1: value1, item2: value2});
              * */
-            store(data, clb) {
+            store: function store(data, clb) {
                 var st = this.get(this.getCurrent());
                 var dataF = {};
 
-                for (var key in data)
-                    dataF[c.id + key] = data[key];
+                for (var key in data) dataF[c.id + key] = data[key];
 
                 return st ? st.store(dataF, clb) : null;
             },
@@ -199,34 +186,33 @@ define([
              * Load resource from the current storage by keys
              * @param  {string|Array<string>} keys Keys to load
              * @param {Function} clb Callback function
-             * @return {Object|null} Loaded resources
              * @example
-             * var data = storageManager.load(['item1', 'item2']);
-             * // data -> {item1: value1, item2: value2}
-             * var data2 = storageManager.load('item1');
-             * // data2 -> {item1: value1}
+             * storageManager.load(['item1', 'item2'], res => {
+             *  // res -> {item1: value1, item2: value2}
+             * });
+             * storageManager.load('item1', res => {
+             * // res -> {item1: value1}
+             * });
              * */
-            load(keys, clb) {
+            load: function load(keys, clb) {
                 var st = this.get(this.getCurrent());
                 var keysF = [];
                 var result = {};
 
-                if (typeof keys === 'string')
-                    keys = [keys];
+                if (typeof keys === 'string') keys = [keys];
 
-                for (var i = 0, len = keys.length; i < len; i++)
-                    keysF.push(c.id + keys[i]);
+                for (var i = 0, len = keys.length; i < len; i++) keysF.push(c.id + keys[i]);
 
-                var loaded = st ? st.load(keysF, clb) : {};
-
-                // Restore keys name
-                for (var itemKey in loaded) {
+                st && st.load(keysF, function(res) {
+                    // Restore keys name
                     var reg = new RegExp('^' + c.id + '');
-                    var itemKeyR = itemKey.replace(reg, '');
-                    result[itemKeyR] = loaded[itemKey];
-                }
+                    for (var itemKey in res) {
+                        var itemKeyR = itemKey.replace(reg, '');
+                        result[itemKeyR] = res[itemKey];
+                    }
 
-                return result;
+                    clb && clb(result);
+                });
             },
 
             /**
@@ -234,9 +220,8 @@ define([
              * @return {this}
              * @private
              * */
-            loadDefaultProviders() {
-                for (var id in defaultStorages)
-                    this.add(id, defaultStorages[id]);
+            loadDefaultProviders: function loadDefaultProviders() {
+                for (var id in defaultStorages) this.add(id, defaultStorages[id]);
                 return this;
             },
 
@@ -245,10 +230,9 @@ define([
              * @return {Object}
              * @private
              * */
-            getConfig() {
+            getConfig: function getConfig() {
                 return c;
-            },
-
+            }
         };
     };
 });

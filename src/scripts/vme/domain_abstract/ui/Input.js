@@ -1,83 +1,89 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = Backbone.View.extend({
         events: {
-            'change': 'handleChange',
+            change: 'handleChange'
         },
 
-        template: _.template(`<span class='<%= holderClass %>'></span>`),
+        template: function template() {
+            return '<span class="' + this.holderClass() + '"></span>';
+        },
 
-        initialize(opts) {
-            var opt = opts || {};
-            var ppfx = opt.ppfx || '';
-            this.target = opt.target || {};
-            this.inputClass = ppfx + 'field';
-            this.inputHolderClass = ppfx + 'input-holder';
+        inputClass: function inputClass() {
+            return this.ppfx + 'field';
+        },
+
+        holderClass: function holderClass() {
+            return this.ppfx + 'input-holder';
+        },
+
+        initialize: function initialize() {
+            var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+            var ppfx = opts.ppfx || '';
+            this.opts = opts;
             this.ppfx = ppfx;
+            this.em = opts.target || {};
             this.listenTo(this.model, 'change:value', this.handleModelChange);
         },
 
         /**
-         * Handled when the view is changed
+         * Fired when the element of the property is updated
          */
-        handleChange(e) {
-            e.stopPropagation();
-            this.setValue(this.getInputEl().value);
+        elementUpdated: function elementUpdated() {
+            this.model.trigger('el:change');
         },
 
         /**
-         * Set value to the model
+         * Set value to the input element
          * @param {string} value
-         * @param {Object} opts
          */
-        setValue(value, opts) {
-            var opt = opts || {};
+        setValue: function setValue(value) {
             var model = this.model;
-            model.set({
-                value: value || model.get('defaults')
-            }, opt);
-
-            // Generally I get silent when I need to reflect data to view without
-            // reupdating the target
-            if (opt.silent) {
-                this.handleModelChange();
-            }
+            var val = value || model.get('defaults');
+            var input = this.getInputEl();
+            input && (input.value = val);
         },
 
         /**
          * Updates the view when the model is changed
          * */
-        handleModelChange() {
-            this.getInputEl().value = this.model.get('value');
+        handleModelChange: function handleModelChange(model, value, opts) {
+            this.setValue(value, opts);
+        },
+
+        /**
+         * Handled when the view is changed
+         */
+        handleChange: function handleChange(e) {
+            e.stopPropagation();
+            this.model.set('value', this.getInputEl().value);
+            this.elementUpdated();
         },
 
         /**
          * Get the input element
          * @return {HTMLElement}
          */
-        getInputEl() {
+        getInputEl: function getInputEl() {
             if (!this.inputEl) {
-                this.inputEl = $('<input>', {
-                    type: 'text',
-                    class: this.inputCls,
-                    placeholder: this.model.get('defaults')
-                });
+                var plh = this.model.get('defaults');
+                this.inputEl = $('<input type="text" placeholder="' + plh + '">');
             }
+
             return this.inputEl.get(0);
         },
 
-        render() {
+        render: function render() {
             var el = this.$el;
-            el.addClass(this.inputClass);
-            el.html(this.template({
-                holderClass: this.inputHolderClass,
-                ppfx: this.ppfx
-            }));
-            el.find('.' + this.inputHolderClass).html(this.getInputEl());
+            el.addClass(this.inputClass());
+            el.html(this.template());
+            el.find('.' + this.holderClass()).append(this.getInputEl());
             return this;
         }
-
     });
 });

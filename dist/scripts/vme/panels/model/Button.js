@@ -1,8 +1,9 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.Model.extend({
+define(['exports', 'module', './Buttons'], function(exports, module, Buttons) {
+    'use strict';
 
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.Model.extend({
         defaults: {
             id: '',
             className: '',
@@ -15,14 +16,13 @@ define([
             dragDrop: false,
             runDefaultCommand: true,
             stopDefaultCommand: false,
+            disable: false
         },
 
-        initialize(options) {
+        initialize: function initialize(options) {
             if (this.get('buttons').length) {
-                var Buttons = require('./Buttons');
                 this.set('buttons', new Buttons(this.get('buttons')));
             }
-        },
-
+        }
     });
 });

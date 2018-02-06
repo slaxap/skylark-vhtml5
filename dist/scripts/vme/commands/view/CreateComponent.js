@@ -1,10 +1,11 @@
-define([
-    "backbone",
-    "./SelectPosition"
-], function(Backbone, SelectPosition) {
-    return _.extend({}, SelectPosition, {
+define(['exports', 'module', './SelectPosition'], function(exports, module, SelectPosition) {
+    'use strict';
 
-        init(opt) {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = _.extend({}, SelectPosition, {
+        init: function init(opt) {
             _.bindAll(this, 'startDraw', 'draw', 'endDraw', 'rollback');
             this.config = opt || {};
             this.hType = this.config.newFixedH ? 'height' : 'min-height';
@@ -15,11 +16,14 @@ define([
          * Start with enabling to select position and listening to start drawning
          * @private
          * */
-        enable(...args) {
+        enable: function enable() {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
             SelectPosition.enable.apply(this, args);
             this.$wr.css('cursor', 'crosshair');
-            if (this.allowDraw)
-                this.$wr.on('mousedown', this.startDraw);
+            if (this.allowDraw) this.$wr.on('mousedown', this.startDraw);
             this.ghost = this.canvas.getGhostEl();
         },
 
@@ -28,7 +32,7 @@ define([
          * @param   {Object} e  Event
          * @private
          * */
-        startDraw(e) {
+        startDraw: function startDraw(e) {
             e.preventDefault();
             this.stopSelectPosition();
             this.ghost.style.display = 'block';
@@ -38,9 +42,7 @@ define([
                 left: e.pageX + this.frameOff.left
             };
             this.isDragged = false;
-            this.tempComponent = {
-                style: {}
-            };
+            this.tempComponent = { style: {} };
             this.beforeDraw(this.tempComponent);
             this.updateSize(this.startPos.top, this.startPos.left, 0, 0);
             this.toggleEvents(1);
@@ -50,7 +52,7 @@ define([
          * Enable/Disable events
          * @param {Boolean} enable
          */
-        toggleEvents(enable) {
+        toggleEvents: function toggleEvents(enable) {
             var method = enable ? 'on' : 'off';
             this.$wr[method]('mousemove', this.draw);
             this.$wr[method]('mouseup', this.endDraw);
@@ -64,7 +66,7 @@ define([
          * @param   {Object}  e  Event
          * @private
          * */
-        draw(e) {
+        draw: function draw(e) {
             this.isDragged = true;
             this.updateComponentSize(e);
         },
@@ -74,7 +76,7 @@ define([
          * @param   {Object}  e Event
          * @private
          * */
-        endDraw(e) {
+        endDraw: function endDraw(e) {
             this.toggleEvents();
             var model = {};
             // Only if the mouse was moved
@@ -98,7 +100,7 @@ define([
          * @param {string} method Before or after of the children
          * @param {Object} opts Options
          */
-        create(target, component, index, method, opts) {
+        create: function create(target, component, index, method, opts) {
             index = method === 'after' ? index + 1 : index;
             var opt = opts || {};
             var $trg = $(target);
@@ -106,10 +108,8 @@ define([
             var trgCollection = $trg.data('collection');
             var droppable = trgModel ? trgModel.get('droppable') : 1;
             opt.at = index;
-            if (trgCollection && droppable)
-                return trgCollection.add(component, opt);
-            else
-                console.warn("Invalid target position");
+            if (trgCollection && droppable) return trgCollection.add(component, opt);
+            else console.warn('Invalid target position');
         },
 
         /**
@@ -118,30 +118,24 @@ define([
          * @return   {Object}   Component updated
          * @private
          * */
-        setRequirements(component) {
+        setRequirements: function setRequirements(component) {
             var c = this.config;
             var compStl = component.style;
             // Check min width
-            if (compStl.width.replace(/\D/g, '') < c.minComponentW)
-                compStl.width = c.minComponentW + 'px';
+            if (compStl.width.replace(/\D/g, '') < c.minComponentW) compStl.width = c.minComponentW + 'px';
             // Check min height
-            if (compStl[this.hType].replace(/\D/g, '') < c.minComponentH)
-                compStl[this.hType] = c.minComponentH + 'px';
+            if (compStl[this.hType].replace(/\D/g, '') < c.minComponentH) compStl[this.hType] = c.minComponentH + 'px';
             // Set overflow in case of fixed height
-            if (c.newFixedH)
-                compStl.overflow = 'auto';
+            if (c.newFixedH) compStl.overflow = 'auto';
             if (!this.absoluteMode) {
                 delete compStl.left;
                 delete compStl.top;
-            } else
-                compStl.position = 'absolute';
+            } else compStl.position = 'absolute';
             var lp = this.sorter.lastPos;
 
-            if (this.nearFloat(lp.index, lp.method, this.sorter.lastDims))
-                compStl.float = 'left';
+            if (this.nearFloat(lp.index, lp.method, this.sorter.lastDims)) compStl.float = 'left';
 
-            if (this.config.firstCentered &&
-                this.getCanvasWrapper() == this.sorter.target) {
+            if (this.config.firstCentered && this.getCanvasWrapper() == this.sorter.target) {
                 compStl.margin = '0 auto';
             }
 
@@ -153,7 +147,7 @@ define([
          * @param   {Object}   e  Event
          * @private
          * */
-        updateComponentSize(e) {
+        updateComponentSize: function updateComponentSize(e) {
             var y = e.pageY + this.frameOff.top;
             var x = e.pageX + this.frameOff.left;
             var start = this.startPos;
@@ -176,7 +170,7 @@ define([
          * Update size
          * @private
          */
-        updateSize(top, left, width, height) {
+        updateSize: function updateSize(top, left, width, height) {
             var u = 'px';
             var ghStl = this.ghost.style;
             var compStl = this.tempComponent.style;
@@ -192,7 +186,7 @@ define([
          * @param   {Boolean}   forse  Indicates if rollback in anycase
          * @private
          * */
-        rollback(e, force) {
+        rollback: function rollback(e, force) {
             var key = e.which || e.keyCode;
             if (key == this.config.ESCAPE_KEY || force) {
                 this.isDragged = false;
@@ -206,7 +200,7 @@ define([
          * @param   {Object}  component  Object component before creation
          * @private
          * */
-        beforeDraw(component) {
+        beforeDraw: function beforeDraw(component) {
             component.editable = false; //set this component editable
         },
 
@@ -215,17 +209,16 @@ define([
          * @param   {Object}  model  Component model created
          * @private
          * */
-        afterDraw(model) {},
+        afterDraw: function afterDraw(model) {},
 
-
-        run(editor, sender, opts) {
+        run: function run(editor, sender, opts) {
             this.editor = editor;
             this.sender = sender;
             this.$wr = this.$wrapper;
             this.enable();
         },
 
-        stop() {
+        stop: function stop() {
             this.stopSelectPosition();
             this.$wrapper.css('cursor', '');
             this.$wrapper.unbind();

@@ -1,29 +1,22 @@
-define([], function() {
-    return {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    module.exports = {
         // Style prefix
         stylePrefix: 'clm-',
 
-        // Default classes
+        // Default selectors
         selectors: [],
 
-        // Label for classes
+        // Label for selectors
         label: 'Classes',
 
         // Label for states
         statesLabel: '- State -',
 
-        // States
-        states: [{
-            name: 'hover',
-            label: 'Hover'
-        }, {
-            name: 'active',
-            label: 'Click'
-        }, {
-            name: 'nth-of-type(2n)',
-            label: 'Even/Odd'
-        }],
+        selectedLabel: 'Selected',
 
+        // States
+        states: [{ name: 'hover', label: 'Hover' }, { name: 'active', label: 'Click' }, { name: 'nth-of-type(2n)', label: 'Even/Odd' }]
     };
 });

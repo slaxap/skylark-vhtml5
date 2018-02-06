@@ -1,37 +1,22 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        template: _.template(`
-    <div class="<%= ppfx %>device-label"><%= deviceLabel %></div>
-    <div class="<%= ppfx %>field <%= ppfx %>select">
-      <span id="<%= ppfx %>input-holder">
-        <select class="<%= ppfx %>devices"></select>
-      </span>
-      <div class="<%= ppfx %>sel-arrow">
-        <div class="<%= ppfx %>d-s-arrow"></div>
-      </div>
-    </div>
-    <button style="display:none" class="<%= ppfx %>add-trasp">+</button>`),
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        template: _.template('\n    <div class="<%= ppfx %>device-label"><%= deviceLabel %></div>\n    <div class="<%= ppfx %>field <%= ppfx %>select">\n      <span id="<%= ppfx %>input-holder">\n        <select class="<%= ppfx %>devices"></select>\n      </span>\n      <div class="<%= ppfx %>sel-arrow">\n        <div class="<%= ppfx %>d-s-arrow"></div>\n      </div>\n    </div>\n    <button style="display:none" class="<%= ppfx %>add-trasp">+</button>'),
 
         events: {
-            'change': 'updateDevice'
+            change: 'updateDevice'
         },
 
-        initialize(o) {
+        initialize: function initialize(o) {
             this.config = o.config || {};
             this.em = this.config.em;
             this.ppfx = this.config.pStylePrefix || '';
-
-            this.events = {
-                'change': 'updateDevice'
-            };
-
             this.events['click .' + this.ppfx + 'add-trasp'] = this.startAdd;
             this.listenTo(this.em, 'change:device', this.updateSelect);
-            
-            //this.delegateEvents();
+            // this.delegateEvents();
         },
 
         /**
@@ -39,13 +24,13 @@ define([
          * @return {[type]} [description]
          * @private
          */
-        startAdd() {},
+        startAdd: function startAdd() {},
 
         /**
          * Update device of the editor
          * @private
          */
-        updateDevice() {
+        updateDevice: function updateDevice() {
             var em = this.em;
             if (em) {
                 var devEl = this.devicesEl;
@@ -58,7 +43,7 @@ define([
          * Update select value on device update
          * @private
          */
-        updateSelect() {
+        updateSelect: function updateSelect() {
             var em = this.em;
             var devEl = this.devicesEl;
             if (em && em.getDeviceModel && devEl) {
@@ -73,16 +58,16 @@ define([
          * @return {string} String of options
          * @private
          */
-        getOptions() {
+        getOptions: function getOptions() {
             var result = '';
-            this.collection.each(device => {
+            this.collection.each(function(device) {
                 var name = device.get('name');
                 result += '<option value="' + name + '">' + name + '</option>';
             });
             return result;
         },
 
-        render() {
+        render: function render() {
             var pfx = this.ppfx;
             this.$el.html(this.template({
                 ppfx: pfx,
@@ -92,7 +77,6 @@ define([
             this.devicesEl.append(this.getOptions());
             this.el.className = pfx + 'devices-c';
             return this;
-        },
-
+        }
     });
 });

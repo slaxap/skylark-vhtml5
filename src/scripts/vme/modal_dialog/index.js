@@ -1,31 +1,33 @@
-/**
- * * [open](#open)
- * * [close](#close)
- * * [isOpen](#isopen)
- * * [setTitle](#settitle)
- * * [getTitle](#gettitle)
- * * [setContent](#setcontent)
- * * [getContent](#getcontent)
- *
- * Before using the methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var modal = editor.Modal;
- * ```
- * @module Modal
- */
-
 define([
+    'exports',
+    'module',
     './config/config',
     './model/Modal',
     './view/ModalView'
-], function(defaults, ModalM, ModalView) {
-    return function() {
+], function(exports, module, defaults, ModalM, ModalView) {
+    /**
+     * * [open](#open)
+     * * [close](#close)
+     * * [isOpen](#isopen)
+     * * [setTitle](#settitle)
+     * * [getTitle](#gettitle)
+     * * [setContent](#setcontent)
+     * * [getContent](#getcontent)
+     *
+     * Before using the methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var modal = editor.Modal;
+     * ```
+     * @module Modal
+     */
+    'use strict';
+
+    module.exports = function() {
         var c = {};
         var model, modal;
 
         return {
-
             /**
              * Name of the module
              * @type {String}
@@ -38,36 +40,34 @@ define([
              * @param {Object} config Configurations
              * @private
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
                 model = new ModalM(c);
                 modal = new ModalView({
-                    model,
-                    config: c,
+                    model: model,
+                    config: c
                 });
 
-                if (c.em)
-                    c.em.on('loaded', function() {
-                        this.render().appendTo(c.em.config.el || 'body');
-                    }, this);
-
                 return this;
+            },
+
+            postRender: function postRender(editorView) {
+                // c.em.config.el || 'body'
+                this.render().appendTo(editorView.el);
             },
 
             /**
              * Open the modal window
              * @return {this}
              */
-            open() {
+            open: function open() {
                 modal.show();
                 return this;
             },
@@ -76,7 +76,7 @@ define([
              * Close the modal window
              * @return {this}
              */
-            close() {
+            close: function close() {
                 modal.hide();
                 return this;
             },
@@ -85,7 +85,7 @@ define([
              * Checks if the modal window is open
              * @return {Boolean}
              */
-            isOpen() {
+            isOpen: function isOpen() {
                 return !!model.get('open');
             },
 
@@ -96,7 +96,7 @@ define([
              * @example
              * modal.setTitle('New title');
              */
-            setTitle(title) {
+            setTitle: function setTitle(title) {
                 model.set('title', title);
                 return this;
             },
@@ -105,7 +105,7 @@ define([
              * Returns the title of the modal window
              * @return {string}
              */
-            getTitle() {
+            getTitle: function getTitle() {
                 return model.get('title');
             },
 
@@ -116,7 +116,7 @@ define([
              * @example
              * modal.setContent('<div>Some HTML content</div>');
              */
-            setContent(content) {
+            setContent: function setContent(content) {
                 model.set('content', ' ');
                 model.set('content', content);
                 return this;
@@ -126,7 +126,7 @@ define([
              * Get the content of the modal window
              * @return {string}
              */
-            getContent() {
+            getContent: function getContent() {
                 return model.get('content');
             },
 
@@ -135,7 +135,7 @@ define([
              * @return {HTMLElement}
              * @private
              */
-            getContentEl() {
+            getContentEl: function getContentEl() {
                 return modal.getContent().get(0);
             },
 
@@ -144,7 +144,7 @@ define([
              * @return {Model}
              * @private
              */
-            getModel() {
+            getModel: function getModel() {
                 return model;
             },
 
@@ -153,7 +153,7 @@ define([
              * @return {HTMLElement}
              * @private
              */
-            render() {
+            render: function render() {
                 return modal.render().$el;
             }
         };

@@ -1,21 +1,27 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.Model.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-        /** @inheritdoc */
-        build(model, cssc) {
-            var coll = model.get('components') || model,
-                code = '';
+    var Backbone = require('backbone');
 
-            coll.each(m => {
-                code += m.toHTML({
-                    cssc
-                });
-            }, this);
+    module.exports = Backbone.Model.extend({
+        build: function build(model) {
+            var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-            return code;
+            var models = model.get('components');
+
+            if (opts.exportWrapper) {
+                return opts.wrappesIsBody ? '<body>' + this.buildModels(models) + '</body>' : model.toHTML();
+            }
+
+            return this.buildModels(models);
         },
 
+        buildModels: function buildModels(models) {
+            var code = '';
+            models.each(function(model) {
+                code += model.toHTML();
+            });
+            return code;
+        }
     });
 });

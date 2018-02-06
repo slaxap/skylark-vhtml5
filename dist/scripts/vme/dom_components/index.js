@@ -1,126 +1,159 @@
-/**
- *
- * * [getWrapper](#getwrapper)
- * * [getComponents](#getcomponents)
- * * [addComponent](#addcomponent)
- * * [clear](#clear)
- * * [load](#load)
- * * [store](#store)
- * * [render](#render)
- *
- * With this module is possible to manage components inside the canvas.
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var domComponents = editor.DomComponents;
- * ```
- *
- * @module DomComponents
- * @param {Object} config Configurations
- * @param {string|Array<Object>} [config.components=[]] HTML string or an array of possible components
- * @example
- * ...
- * domComponents: {
- *    components: '<div>Hello world!</div>',
- * }
- * // Or
- * domComponents: {
- *    components: [
- *      { tagName: 'span', style: {color: 'red'}, content: 'Hello'},
- *      { style: {width: '100px', content: 'world!'}}
- *    ],
- * }
- * ...
- */
 define([
-        './config/config',
-        './model/Component',
-        './view/ComponentView',
-        './model/ComponentTableCell',
-        './view/ComponentTableCellView',
-        './model/ComponentTableRow',
-        './view/ComponentTableRowView',
-        './model/ComponentTable',
-        './view/ComponentTableView',
-        './model/ComponentMap',
-        './view/ComponentMapView',
-        './model/ComponentLink',
-        './view/ComponentLinkView',
-        './model/ComponentVideo',
-        './view/ComponentVideoView',
-        './model/ComponentImage',
-        './view/ComponentImageView',
-        './model/ComponentScript',
-        './view/ComponentScriptView',
-        './model/ComponentSvg',
-        './view/ComponentSvgView',
-        './model/ComponentTextNode',
-        './view/ComponentTextNodeView',
-        './model/ComponentText',
-        './view/ComponentTextView'
-    ], function(defaults, Component, ComponentView,ComponentTableCell,ComponentTableCellView,
-        ComponentTableRow,ComponentTableRowView,ComponentTable,ComponentTableView,
-        ComponentMap,ComponentMapView,ComponentLink,ComponentLinkView,ComponentVideo,ComponentVideoView,
-        ComponentImage,ComponentImageView,ComponentScript,ComponentScriptView,ComponentSvg,ComponentSvgView,
-        ComponentTextNode,ComponentTextNodeView,ComponentText,ComponentTextView) {
-return function() {
-        var c = {},
-            componentTypes = {};
+    'exports',
+    'module',
+    './config/config',
+    './model/Component',
+    './view/ComponentView',
+    './model/Components',
+    './view/ComponentsView',
+    './model/ComponentTableCell',
+    './view/ComponentTableCellView',
+    './model/ComponentTableRow',
+    './view/ComponentTableRowView',
+    './model/ComponentTable',
+    './view/ComponentTableView',
+    './model/ComponentTableHead',
+    './view/ComponentTableHeadView',
+    './model/ComponentTableBody',
+    './view/ComponentTableBodyView',
+    './model/ComponentTableFoot',
+    './view/ComponentTableFootView',
+    './model/ComponentMap',
+    './view/ComponentMapView',
+    './model/ComponentLink',
+    './view/ComponentLinkView',
+    './model/ComponentVideo',
+    './view/ComponentVideoView',
+    './model/ComponentImage',
+    './view/ComponentImageView',
+    './model/ComponentScript',
+    './view/ComponentScriptView',
+    './model/ComponentSvg',
+    './view/ComponentSvgView',
+    './model/ComponentTextNode',
+    './view/ComponentTextNodeView',
+    './model/ComponentText',
+    './view/ComponentTextView'
+], function(exports, module, defaults, Component, ComponentView, Components, ComponentsView, ComponentTableCell,
+    ComponentTableCellView, ComponentTableRow, ComponentTableRowView, ComponentTable, ComponentTableView, ComponentTableHead,
+    ComponentTableHeadView, ComponentTableBody, ComponentTableBodyView, ComponentTableFoot, ComponentTableFootView, ComponentMap,
+    ComponentMapView, ComponentLink, ComponentLinkView, ComponentVideo, ComponentVideoView, ComponentImage, ComponentImageView,
+    ComponentScript, ComponentScriptView, ComponentSvg, ComponentSvgView, ComponentTextNode, ComponentTextNodeView, ComponentText,
+    ComponentTextView) {
+    /**
+     *
+     * * [getWrapper](#getwrapper)
+     * * [getComponents](#getcomponents)
+     * * [addComponent](#addcomponent)
+     * * [clear](#clear)
+     * * [load](#load)
+     * * [store](#store)
+     * * [render](#render)
+     *
+     * With this module is possible to manage components inside the canvas.
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var domComponents = editor.DomComponents;
+     * ```
+     *
+     * @module DomComponents
+     * @param {Object} config Configurations
+     * @param {string|Array<Object>} [config.components=[]] HTML string or an array of possible components
+     * @example
+     * ...
+     * domComponents: {
+     *    components: '<div>Hello world!</div>',
+     * }
+     * // Or
+     * domComponents: {
+     *    components: [
+     *      { tagName: 'span', style: {color: 'red'}, content: 'Hello'},
+     *      { style: {width: '100px', content: 'world!'}}
+     *    ],
+     * }
+     * ...
+     */
+    'use strict';
+
+    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+    module.exports = function() {
+        var c = {};
+        var em = undefined;
+
 
         var component, componentView;
-        var defaultTypes = [{
+        var componentTypes = [{
             id: 'cell',
             model: ComponentTableCell,
             view: ComponentTableCellView
         }, {
             id: 'row',
             model: ComponentTableRow,
-            view: ComponentTableRowView,
+            view: ComponentTableRowView
         }, {
             id: 'table',
             model: ComponentTable,
-            view: ComponentTableView,
+            view: ComponentTableView
+        }, {
+            id: 'thead',
+            model: ComponentTableHead,
+            view: ComponentTableHeadView
+        }, {
+            id: 'tbody',
+            model: ComponentTableBody,
+            view: ComponentTableBodyView
+        }, {
+            id: 'tfoot',
+            model: ComponentTableFoot,
+            view: ComponentTableFootView
         }, {
             id: 'map',
             model: ComponentMap,
-            view: ComponentMapView,
+            view: ComponentMapView
         }, {
             id: 'link',
             model: ComponentLink,
-            view: ComponentLinkView,
+            view: ComponentLinkView
         }, {
             id: 'video',
             model: ComponentVideo,
-            view: ComponentVideoView,
+            view: ComponentVideoView
         }, {
             id: 'image',
             model: ComponentImage,
-            view: ComponentImageView,
+            view: ComponentImageView
         }, {
             id: 'script',
             model: ComponentScript,
-            view: ComponentScriptView,
+            view: ComponentScriptView
         }, {
             id: 'svg',
             model: ComponentSvg,
-            view: ComponentSvgView,
+            view: ComponentSvgView
         }, {
             id: 'textnode',
             model: ComponentTextNode,
-            view: ComponentTextNodeView,
+            view: ComponentTextNodeView
         }, {
             id: 'text',
             model: ComponentText,
-            view: ComponentTextView,
+            view: ComponentTextView
         }, {
             id: 'default',
             model: Component,
-            view: ComponentView,
-        }, ];
+            view: ComponentView
+        }];
 
         return {
+            Component: Component,
 
-            componentTypes: defaultTypes,
+            Components: Components,
+
+            ComponentsView: ComponentsView,
+
+            componentTypes: componentTypes,
 
             /**
              * Name of the module
@@ -134,7 +167,7 @@ return function() {
              * @return {Object} Config object
              * @private
              */
-            getConfig() {
+            getConfig: function getConfig() {
                 return c;
             },
 
@@ -143,13 +176,11 @@ return function() {
              * @type {String}
              * @private
              */
-            storageKey() {
+            storageKey: function storageKey() {
                 var keys = [];
-                var smc = (c.stm && c.stm.getConfig()) || {};
-                if (smc.storeHtml)
-                    keys.push('html');
-                if (smc.storeComponents)
-                    keys.push('components');
+                var smc = c.stm && c.stm.getConfig() || {};
+                if (smc.storeHtml) keys.push('html');
+                if (smc.storeComponents) keys.push('components');
                 return keys;
             },
 
@@ -159,49 +190,59 @@ return function() {
              * @param {Object} config Configurations
              * @private
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
-                if (c.em)
-                    c.components = c.em.config.components || c.components;
+                em = c.em;
+
+                if (em) {
+                    c.components = em.config.components || c.components;
+                }
 
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 var ppfx = c.pStylePrefix;
-                if (ppfx)
-                    c.stylePrefix = ppfx + c.stylePrefix;
+                if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
                 // Load dependencies
-                if (c.em) {
-                    c.rte = c.em.get('rte') || '';
-                    c.modal = c.em.get('Modal') || '';
-                    c.am = c.em.get('AssetManager') || '';
-                    c.em.get('Parser').compTypes = defaultTypes;
+                if (em) {
+                    c.modal = em.get('Modal') || '';
+                    c.am = em.get('AssetManager') || '';
+                    em.get('Parser').compTypes = componentTypes;
+                    em.on('change:selectedComponent', this.componentChanged, this);
                 }
 
-                component = new Component(c.wrapper, {
-                    sm: c.em,
-                    config: c,
-                    defaultTypes,
-                    componentTypes,
-                });
-                component.set({
-                    attributes: {
-                        id: 'wrapper'
+                // Build wrapper
+                var components = c.components;
+                var wrapper = _extends({}, c.wrapper);
+                wrapper['custom-name'] = c.wrapperName;
+                wrapper.wrapper = 1;
+
+                // Components might be a wrapper
+                if (components && components.constructor === Object && components.wrapper) {
+                    wrapper = _extends({}, components);
+                    components = components.components || [];
+                    wrapper.components = [];
+
+                    // Have to put back the real object of components
+                    if (em) {
+                        em.config.components = components;
+                        c.components = components;
                     }
-                });
-
-                if (c.em && !c.em.config.loadCompsOnRender) {
-                    component.get('components').add(c.components);
                 }
+
+                component = new Component(wrapper, {
+                    sm: em,
+                    config: c,
+                    componentTypes: componentTypes
+                });
+                component.set({ attributes: { id: 'wrapper' } });
 
                 componentView = new ComponentView({
                     model: component,
                     config: c,
-                    defaultTypes,
-                    componentTypes,
+                    componentTypes: componentTypes
                 });
                 return this;
             },
@@ -210,11 +251,61 @@ return function() {
              * On load callback
              * @private
              */
-            onLoad() {
-                if (c.stm && c.stm.isAutosave()) {
-                    c.em.initUndoManager();
-                    c.em.initChildrenComp(this.getWrapper());
-                }
+            onLoad: function onLoad() {
+                this.getComponents().reset(c.components);
+            },
+
+            /**
+             * Do stuff after load
+             * @param  {Editor} em
+             * @private
+             */
+            postLoad: function postLoad(em) {
+                this.handleChanges(this.getWrapper(), null, { avoidStore: 1 });
+            },
+
+            /**
+             * Handle component changes
+             * @private
+             */
+            handleChanges: function handleChanges(model, value) {
+                var _this = this;
+
+                var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                var comps = model.components();
+                var um = em.get('UndoManager');
+                var handleUpdates = em.handleUpdates.bind(em);
+                var handleChanges = this.handleChanges.bind(this);
+                var handleRemoves = this.handleRemoves.bind(this);
+                um && um.add(model);
+                um && comps && um.add(comps);
+                var evn = 'change:style change:content change:attributes change:src';
+
+                [
+                    [model, evn, handleUpdates],
+                    [comps, 'add', handleChanges],
+                    [comps, 'remove', handleRemoves],
+                    [model.get('classes'), 'add remove', handleUpdates]
+                ].forEach(function(els) {
+                    em.stopListening(els[0], els[1], els[2]);
+                    em.listenTo(els[0], els[1], els[2]);
+                });
+
+                !opts.avoidStore && handleUpdates('', '', opts);
+                comps.each(function(model) {
+                    return _this.handleChanges(model, value, opts);
+                });
+            },
+
+            /**
+             * Triggered when some component is removed
+             * @private
+             * */
+            handleRemoves: function handleRemoves(model, value) {
+                var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+                !opts.avoidStore && em.handleUpdates(model, value, opts);
             },
 
             /**
@@ -224,24 +315,38 @@ return function() {
              * @param {Object} data Object of data to load
              * @return {Object} Loaded data
              */
-            load(data) {
-                var d = data || '';
-                if (!d && c.stm)
-                    d = c.em.getCacheLoad();
-                var obj = '';
-                if (d.components) {
-                    try {
-                        obj = JSON.parse(d.components);
-                    } catch (err) {}
-                } else if (d.html)
-                    obj = d.html;
-                if (obj) {
-                    this.clear();
-                    this.getComponents().reset();
-                    this.getComponents().add(obj);
+            load: function load() {
+                var data = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+
+                var result = '';
+
+                if (!data && c.stm) {
+                    data = c.em.getCacheLoad();
                 }
 
-                return obj;
+                if (data.components) {
+                    try {
+                        result = JSON.parse(data.components);
+                    } catch (err) {}
+                } else if (data.html) {
+                    result = data.html;
+                }
+
+                var isObj = result && result.constructor === Object;
+
+                if (result && result.length || isObj) {
+                    this.clear();
+                    this.getComponents().reset();
+
+                    // If the result is an object I consider it the wrapper
+                    if (isObj) {
+                        this.getWrapper().set(result).initComponents().initClasses().loadTraits();
+                    } else {
+                        this.getComponents().add(result);
+                    }
+                }
+
+                return result;
             },
 
             /**
@@ -249,15 +354,22 @@ return function() {
              * @param {Boolean} noStore If true, won't store
              * @return {Object} Data to store
              */
-            store(noStore) {
-                if (!c.stm)
+            store: function store(noStore) {
+                if (!c.stm) {
                     return;
+                }
+
                 var obj = {};
                 var keys = this.storageKey();
-                if (keys.indexOf('html') >= 0)
+
+                if (keys.indexOf('html') >= 0) {
                     obj.html = c.em.getHtml();
-                if (keys.indexOf('components') >= 0)
-                    obj.components = JSON.stringify(c.em.getComponents());
+                }
+
+                if (keys.indexOf('components') >= 0) {
+                    var toStore = c.storeWrapper ? this.getWrapper() : this.getComponents();
+                    obj.components = JSON.stringify(toStore);
+                }
 
                 if (!noStore) {
                     c.stm.store(obj);
@@ -271,7 +383,7 @@ return function() {
              * @return {Object}
              * @private
              */
-            getComponent() {
+            getComponent: function getComponent() {
                 return component;
             },
 
@@ -285,7 +397,7 @@ return function() {
              * wrapper.set('style', {'background-color': 'red'});
              * wrapper.set('attributes', {'title': 'Hello!'});
              */
-            getWrapper() {
+            getWrapper: function getWrapper() {
                 return this.getComponent();
             },
 
@@ -316,7 +428,7 @@ return function() {
              * // Remove comp2
              * wrapperChildren.remove(comp2);
              */
-            getComponents() {
+            getComponents: function getComponents() {
                 return this.getWrapper().get('components');
             },
 
@@ -348,7 +460,7 @@ return function() {
              *   attributes: { title: 'here' }
              * });
              */
-            addComponent(component) {
+            addComponent: function addComponent(component) {
                 return this.getComponents().add(component);
             },
 
@@ -359,7 +471,7 @@ return function() {
              * updated immediately
              * @return {HTMLElement}
              */
-            render() {
+            render: function render() {
                 return componentView.render().el;
             },
 
@@ -367,10 +479,9 @@ return function() {
              * Remove all components
              * @return {this}
              */
-            clear() {
+            clear: function clear() {
                 var c = this.getComponents();
-                for (var i = 0, len = c.length; i < len; i++)
-                    c.pop();
+                for (var i = 0, len = c.length; i < len; i++) c.pop();
                 return this;
             },
 
@@ -380,7 +491,7 @@ return function() {
              * @return {this}
              * @private
              */
-            setComponents(components) {
+            setComponents: function setComponents(components) {
                 this.clear().addComponent(components);
             },
 
@@ -390,14 +501,14 @@ return function() {
              * @param {Object} methods
              * @private
              */
-            addType(type, methods) {
+            addType: function addType(type, methods) {
                 var compType = this.getType(type);
                 if (compType) {
                     compType.model = methods.model;
                     compType.view = methods.view;
                 } else {
                     methods.id = type;
-                    defaultTypes.unshift(methods);
+                    componentTypes.unshift(methods);
                 }
             },
 
@@ -406,8 +517,8 @@ return function() {
              * @param {string} type
              * @private
              */
-            getType(type) {
-                var df = defaultTypes;
+            getType: function getType(type) {
+                var df = componentTypes;
 
                 for (var it = 0; it < df.length; it++) {
                     var dfId = df[it].id;
@@ -418,6 +529,25 @@ return function() {
                 return;
             },
 
+            /**
+             * Triggered when the selected component is changed
+             * @private
+             */
+            componentChanged: function componentChanged() {
+                var em = c.em;
+                var model = em.get('selectedComponent');
+                var previousModel = em.previous('selectedComponent');
+
+                // Deselect the previous component
+                if (previousModel) {
+                    previousModel.set({
+                        status: '',
+                        state: ''
+                    });
+                }
+
+                model && model.set('status', 'selected');
+            }
         };
     };
 });

@@ -1,0 +1,34 @@
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    module.exports = function(editor, config) {
+        var sm = editor.StyleManager;
+        var csm = config.customStyleManager;
+
+        sm.getSectors().reset(csm && csm.length ? csm : [{
+            name: config.textGeneral,
+            open: false,
+            buildProps: ['float', 'display', 'position', 'top', 'right', 'left', 'bottom']
+        }, {
+            name: config.textLayout,
+            open: false,
+            buildProps: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding']
+        }, {
+            name: config.textTypography,
+            open: false,
+            buildProps: ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'color', 'line-height', 'text-align', 'text-shadow'],
+            properties: [{
+                property: 'text-align',
+                list: [{ value: 'left', className: 'fa fa-align-left' }, { value: 'center', className: 'fa fa-align-center' }, { value: 'right', className: 'fa fa-align-right' }, { value: 'justify', className: 'fa fa-align-justify' }]
+            }]
+        }, {
+            name: config.textDecorations,
+            open: false,
+            buildProps: ['border-radius-c', 'background-color', 'border-radius', 'border', 'box-shadow', 'background']
+        }, {
+            name: config.textExtra,
+            open: false,
+            buildProps: ['transition', 'perspective', 'transform']
+        }]);
+    };
+});

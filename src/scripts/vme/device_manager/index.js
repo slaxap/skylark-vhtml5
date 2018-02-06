@@ -1,27 +1,20 @@
-/**
- * * [add](#add)
- * * [get](#get)
- * * [getAll](#getall)
- *
- * Before using methods you should get first the module from the editor instance, in this way:
- *
- * ```js
- * var deviceManager = editor.DeviceManager;
- * ```
- *
- * @module DeviceManager
- */
-define([
-    './config/config',
-    './model/Devices',
-    './view/DevicesView'
-], function(defaults, Devices, DevicesView) {
-    return function() {
-        var c = {},
-            devices, view;
+define(['exports', 'module', './config/config', './model/Devices', './view/DevicesView'], function(exports, module, defaults, Devices, DevicesView) {
+    /**
+     * Before using methods you should get first the module from the editor instance, in this way:
+     *
+     * ```js
+     * var deviceManager = editor.DeviceManager;
+     * ```
+     *
+     * @module DeviceManager
+     */
+    'use strict';
+
+    module.exports = function() {
+        var c = {};
+        var devices, view;
 
         return {
-
             /**
              * Name of the module
              * @type {String}
@@ -43,12 +36,12 @@ define([
              * }
              * ...
              * @return {this}
+             * @private
              */
-            init(config) {
+            init: function init(config) {
                 c = config || {};
                 for (var name in defaults) {
-                    if (!(name in c))
-                        c[name] = defaults[name];
+                    if (!(name in c)) c[name] = defaults[name];
                 }
 
                 devices = new Devices(c.devices);
@@ -67,8 +60,12 @@ define([
              * @return {Device} Added device
              * @example
              * deviceManager.add('Tablet', '900px');
+             * deviceManager.add('Tablet2', '900px', {
+             *  height: '300px',
+             *  widthMedia: '810px', // the width that will be used for the CSS media
+             * });
              */
-            add(name, width, opts) {
+            add: function add(name, width, opts) {
                 var obj = opts || {};
                 obj.name = name;
                 obj.width = width;
@@ -83,7 +80,7 @@ define([
              * console.log(JSON.stringify(device));
              * // {name: 'Tablet', width: '900px'}
              */
-            get(name) {
+            get: function get(name) {
                 return devices.get(name);
             },
 
@@ -95,7 +92,7 @@ define([
              * console.log(JSON.stringify(devices));
              * // [{name: 'Desktop', width: ''}, ...]
              */
-            getAll() {
+            getAll: function getAll() {
                 return devices;
             },
 
@@ -104,11 +101,9 @@ define([
              * @return {string} HTML string
              * @private
              */
-            render() {
+            render: function render() {
                 return view.render().el;
-            },
-
+            }
         };
-
     };
 });

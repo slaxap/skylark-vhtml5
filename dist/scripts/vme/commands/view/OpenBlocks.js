@@ -1,29 +1,27 @@
-define([], function() {
-    return {
-        run(editor, sender) {
-            var config = editor.Config;
-            var pfx = config.stylePrefix;
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
+
+    module.exports = {
+        run: function run(editor, sender) {
             var bm = editor.BlockManager;
-            var panelC;
+            var pn = editor.Panels;
+
             if (!this.blocks) {
-                this.blocks = $('<div/>').get(0);
-                this.blocks.appendChild(bm.render());
-                var panels = editor.Panels;
-                if (!panels.getPanel('views-container'))
-                    panelC = panels.addPanel({
-                        id: 'views-container'
-                    });
-                else
-                    panelC = panels.getPanel('views-container');
-                panelC.set('appendContent', this.blocks).trigger('change:appendContent');
+                bm.render();
+                var id = 'views-container';
+                var blocks = document.createElement('div');
+                var panels = pn.getPanel(id) || pn.addPanel({ id: id });
+                blocks.appendChild(bm.getContainer());
+                panels.set('appendContent', blocks).trigger('change:appendContent');
+                this.blocks = blocks;
             }
 
             this.blocks.style.display = 'block';
         },
 
-        stop() {
-            if (this.blocks)
-                this.blocks.style.display = 'none';
+        stop: function stop() {
+            var blocks = this.blocks;
+            blocks && (blocks.style.display = 'none');
         }
     };
 });

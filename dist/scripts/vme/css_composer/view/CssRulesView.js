@@ -1,15 +1,18 @@
-define([
-    "backbone",
-    "./CssRuleView"
-], function(Backbone, CssRuleView) {
-    return Backbone.View.extend({
+define(['exports', 'module', './CssRuleView'], function(exports, module, CssRuleView) {
+    'use strict';
 
-        initialize(o) {
-            this.config = o.config || {};
-            this.pfx = this.config.stylePrefix || '';
+    var Backbone = require('backbone');
+
+    module.exports = Backbone.View.extend({
+        initialize: function initialize(o) {
+            var config = o.config || {};
+            this.config = config;
+            this.em = config.em;
+            this.pfx = config.stylePrefix || '';
             this.className = this.pfx + 'rules';
-            this.listenTo(this.collection, 'add', this.addTo);
-            this.listenTo(this.collection, 'reset', this.render);
+            var coll = this.collection;
+            this.listenTo(coll, 'add', this.addTo);
+            this.listenTo(coll, 'reset', this.render);
         },
 
         /**
@@ -17,8 +20,7 @@ define([
          * @param {Object} model
          * @private
          * */
-        addTo(model) {
-            //console.log('Added');
+        addTo: function addTo(model) {
             this.addToCollection(model);
         },
 
@@ -29,34 +31,33 @@ define([
          * @return {Object}
          * @private
          * */
-        addToCollection(model, fragmentEl) {
+        addToCollection: function addToCollection(model, fragmentEl) {
             var fragment = fragmentEl || null;
             var viewObject = CssRuleView;
 
             var view = new viewObject({
-                model,
-                config: this.config,
+                model: model,
+                config: this.config
             });
             var rendered = view.render().el;
 
-            if (fragment)
-                fragment.appendChild(rendered);
-            else
-                this.$el.append(rendered);
+            if (fragment) fragment.appendChild(rendered);
+            else this.$el.append(rendered);
 
             return rendered;
         },
 
-        render() {
-            var fragment = document.createDocumentFragment();
-            this.$el.empty();
+        render: function render() {
+            var _this = this;
 
+            var $el = this.$el;
+            var frag = document.createDocumentFragment();
+            $el.empty();
             this.collection.each(function(model) {
-                this.addToCollection(model, fragment);
-            }, this);
-
-            this.$el.append(fragment);
-            this.$el.attr('class', this.className);
+                return _this.addToCollection(model, frag);
+            });
+            $el.append(frag);
+            $el.attr('class', this.className);
             return this;
         }
     });

@@ -1,6 +1,10 @@
-define([], function() {
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
-    var getBoundingRect = (el, win) => {
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    var getBoundingRect = function getBoundingRect(el, win) {
         var w = win || window;
         var rect = el.getBoundingClientRect();
         return {
@@ -11,10 +15,9 @@ define([], function() {
         };
     };
 
-    return {
-
+    module.exports = {
         // TODO move to opts
-        setKey(keys, command) {
+        setKey: function setKey(keys, command) {
             //key(keys, command);
         },
 
@@ -23,10 +26,10 @@ define([], function() {
          * @param  {HTMLElement} el
          * @return {Object}
          */
-        getElementRect(el) {
+        getElementRect: function getElementRect(el) {
             var posFetcher = this.opts.posFetcher || '';
             return posFetcher ? posFetcher(el, {
-                avoidFrameOffset: 1,
+                avoidFrameOffset: 1
             }) : getBoundingRect(el);
         },
 
@@ -34,7 +37,7 @@ define([], function() {
          * Init the resizer
          * @param  {Object} opts
          */
-        init(opts) {
+        init: function init(opts) {
             this.setOptions(opts);
             this.handleMouseDown = this.handleMouseDown.bind(this);
             this.drag = this.drag.bind(this);
@@ -48,7 +51,7 @@ define([], function() {
          * Update options
          * @param {Object} options
          */
-        setOptions(opts) {
+        setOptions: function setOptions(opts) {
             this.opts = opts || {};
         },
 
@@ -56,7 +59,7 @@ define([], function() {
          * Focus dragger on the element
          * @param {HTMLElement} el
          */
-        focus(el) {
+        focus: function focus(el) {
             // Avoid focusing on already focused element
             if (el && el === this.el) {
                 return;
@@ -66,7 +69,6 @@ define([], function() {
             this.blur();
             this.el = el;
             this.handlers = this.opts.dragHandlers || [el];
-
 
             var elRect = this.getElementRect(el); //<-- TODO have wrong top:left
             this.elRect = elRect;
@@ -81,7 +83,7 @@ define([], function() {
         /**
          * Blur from the focused element
          */
-        blur() {
+        blur: function blur() {
             this.getDocumentEl().off('mousedown', this.handleMouseDown);
             this.el = null;
         },
@@ -90,7 +92,7 @@ define([], function() {
          * Start dragging
          * @param  {Event} e
          */
-        start(e) {
+        start: function start(e) {
             this.startPos = this.getMousePos(e);
             var docs = this.getDocumentEl();
             docs.on('mousemove', this.drag);
@@ -100,10 +102,10 @@ define([], function() {
             var onStart = this.opts.onStart;
             if (typeof onStart === 'function') {
                 onStart(e, {
-                    docs,
+                    docs: docs,
                     el: this.el,
                     start: this.startPos,
-                    elRect: this.elRect,
+                    elRect: this.elRect
                 });
             }
 
@@ -113,7 +115,7 @@ define([], function() {
         /**
          * Stop dragging
          */
-        stop(e) {
+        stop: function stop(e) {
             var docs = this.getDocumentEl();
             docs.off('mousemove', this.drag);
             docs.off('mouseup', this.stop);
@@ -123,11 +125,11 @@ define([], function() {
             var onEnd = this.opts.onEnd;
             if (typeof onEnd === 'function') {
                 onEnd(e, {
-                    docs,
+                    docs: docs,
                     delta: this.delta,
                     end: {
                         x: this.startLeft + this.delta.x,
-                        y: this.startTop + this.delta.y,
+                        y: this.startTop + this.delta.y
                     }
                 });
             }
@@ -137,7 +139,7 @@ define([], function() {
          * Handle mousedown to check if it's possible to drag
          * @param  {Event} e
          */
-        handleMouseDown(e) {
+        handleMouseDown: function handleMouseDown(e) {
             var el = e.target;
             if (this.isHandler(el)) {
                 this.start(e);
@@ -149,7 +151,7 @@ define([], function() {
          * @param  {HTMLElement} el
          * @return {Boolean}
          */
-        isHandler(el) {
+        isHandler: function isHandler(el) {
             var handlers = this.handlers;
 
             for (var n in handlers) {
@@ -164,7 +166,7 @@ define([], function() {
          * @param  {Event} e
          * @param  {Object} handler
          */
-        handleKey(e, handler) {
+        handleKey: function handleKey(e, handler) {
             switch (handler.shortcut) {
                 case 'up':
                     this.move(0, -1);
@@ -184,7 +186,7 @@ define([], function() {
         /**
          * Returns documents
          */
-        getDocumentEl(el) {
+        getDocumentEl: function getDocumentEl(el) {
             var el = el || this.el;
             if (!this.$doc) {
                 var docs = [document];
@@ -201,7 +203,7 @@ define([], function() {
          * @param  {Event} event
          * @return {Object}
          */
-        getMousePos(e) {
+        getMousePos: function getMousePos(e) {
             var mouseFetch = this.opts.mousePosFetcher;
             return mouseFetch ? mouseFetch(e) : {
                 x: e.clientX,
@@ -213,7 +215,7 @@ define([], function() {
          * Drag event
          * @param  {Event} event
          */
-        drag(e) {
+        drag: function drag(e) {
             var lockedAxis = this.lockedAxis;
             var currentPos = this.getMousePos(e);
             var delta = {
@@ -252,15 +254,15 @@ define([], function() {
             this.move(delta.x, delta.y);
 
             // Drag callback
-            const onDrag = this.opts.onDrag;
+            var onDrag = this.opts.onDrag;
             if (typeof onDrag === 'function') {
                 onDrag(e, {
-                    delta,
+                    delta: delta,
                     current: {
                         x: this.startLeft + delta.x,
                         y: this.startTop + delta.y
                     },
-                    lockedAxis
+                    lockedAxis: lockedAxis
                 });
             }
 
@@ -275,7 +277,7 @@ define([], function() {
          * @param  {integer} x
          * @param  {integer} y
          */
-        move: function(x, y) {
+        move: function move(x, y) {
             this.moveX(x);
             this.moveY(y);
         },
@@ -284,17 +286,17 @@ define([], function() {
          * Move in x direction
          * @param  {integer} x
          */
-        moveX(x) {
+        moveX: function moveX(x) {
             var el = this.el;
             var opts = this.opts;
             var xPos = this.startLeft + x;
-            const setX = this.opts.setX;
+            var setX = this.opts.setX;
 
             if (typeof setX === 'function') {
                 setX(xPos, {
-                    el,
+                    el: el,
                     start: this.startLeft,
-                    delta: x,
+                    delta: x
                 });
             } else {
                 el.style.left = xPos + 'px';
@@ -305,22 +307,21 @@ define([], function() {
          * Move in y direction
          * @param  {integer} y
          */
-        moveY(y) {
+        moveY: function moveY(y) {
             var el = this.el;
             var opts = this.opts;
             var yPos = this.startTop + y;
-            const setY = this.opts.setY;
+            var setY = this.opts.setY;
 
             if (typeof setY === 'function') {
                 setY(yPos, {
-                    el,
+                    el: el,
                     start: this.startTop,
-                    delta: y,
+                    delta: y
                 });
             } else {
                 el.style.top = yPos + 'px';
             }
-        },
-
+        }
     };
 });

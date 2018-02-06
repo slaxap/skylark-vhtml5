@@ -1,60 +1,89 @@
 {
-  "name": "skylark-vhtml5",
-  "title": "Skylark visual html5 designer",
-  "runtime": {
-    "waitseconds" : 600,
-    "skylarkjs": {
-      "version": "0.9.6"
+    "name": "skylark-vhtml5",
+    "title": "Skylark visual html5 designer",
+    "runtime": {
+        "waitseconds": 600,
+        "skylarkjs": {
+            "version": "0.9.6"
+        },
+        "packages": [
+            { "name": "codemirror", "location": "lib/codemirror" },
+            { "name": "codemirror-formatting", "location": "lib/codemirror-formatting", "main": "formatting" },
+            { "name": "spectrum-colorpicker", "location": "lib/spectrum-colorpicker", "main": "spectrum" }
+        ],
+        "paths": {
+            "server": "/src/services/server",
+            "commHelpers": "/src/helpers",
+            "handlebars": "https://cdn.bootcss.com/handlebars.js/4.0.11/handlebars.amd.min",
+            "text": "https://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text",
+            "skylark-jquery": "http://registry.skylarkjs.org/packages/skylark-jquery/v0.9.6-beta/skylark-jquery",
+            "underscore": "http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min",
+            "skylark-bs-swt": "http://registry.skylarkjs.org/packages/skylark-bs-swt/v0.9.0-beta/js/uncompressed/skylark-bs-swt",
+            "backbone": "http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone",
+            "backbone-undo": "/lib/backbone-undo/Backbone.Undo",
+            "ckeditor": "https://cdn.bootcss.com/ckeditor/4.8.0/ckeditor",
+            "aviary": "http://feather.aviary.com/imaging/v3/editor",
+            "toastr": "https://cdn.bootcss.com/toastr.js/latest/js/toastr",
+            "file-saver": "https://cdn.bootcss.com/FileSaver.js/2014-11-29/FileSaver.min",
+            "filestack": "http://static.filestackapi.com/v3/filestack-0.11.0",
+            "cash-dom": "https://cdn.jsdelivr.net/npm/cash-dom@1.3.5/dist/cash.min",
+            "jszip": "https://cdn.bootcss.com/jszip/3.1.5/jszip.min",
+            "promise-polyfill": "https://cdn.jsdelivr.net/npm/promise-polyfill@7.0.0/dist/promise.min",
+            "keymaster": "http://cdnjs.cloudflare.com/ajax/libs/keymaster/1.6.1/keymaster.min"
+        },
+        "map": {
+            "*": {
+                "jquery": "skylark-jquery",
+                "jQuery": "skylark-jquery",
+                "skylarkBs": "skylark-bs-swt"
+            }
+        },
+        "shim": {
+            "backbone": {
+                "deps": ["underscore", "jquery"],
+                "exports": "Backbone"
+            },
+            "backbone-undo": {
+                "deps": ["underscore", "backbone"],
+                "exports": "UndoManager"
+            },
+            "underscore": {
+                "exports": "_"
+            },
+            "keymaster": {
+                "exports": "key"
+            }
+        }
     },
-    "packages" : [
-       { "name": "codemirror","location": "lib/codemirror" },
-       { "name": "codemirror-formatting","location": "lib/codemirror-formatting","main":"formatting" },
-       { "name": "spectrum-colorpicker","location": "lib/spectrum-colorpicker","main":"spectrum" }
-    ],
-    "paths": {
-      "text": "https://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text",
-      "jquery" : "http://registry.skylarkjs.org/packages/skylark-jquery/v0.9.3/uncompressed/skylark-jquery",
-      "underscore" : "http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min",
-      "backbone" :  "http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.0/backbone",
-      "backbone-undo": "lib/backbone-undo/Backbone.Undo",
-      "keymaster" : "http://cdnjs.cloudflare.com/ajax/libs/keymaster/1.6.1/keymaster.min"      
+    "page": {
+        "routeViewer": "body"
     },
-    "shim": {
-      "backbone": {
-        "deps": ["underscore", "jquery"],
-        "exports": "Backbone"
-      },
-      "backbone-undo": {
-        "deps": ["underscore", "backbone"],
-        "exports": "UndoManager"
-      },
-      "underscore": {
-        "exports": "_"
-      },
-      "keymaster": {
-        "exports": "key"
-      }
-    }
-  },
-  "page": {
-    "routeViewer": "body"
-  },
 
-  "plugins":  {
+    "plugins": {
         "app": {
             "hookers": "starting started",
-            "controller":
-            {
+            "controller": {
                 "type": "scripts/plugins/app/AppController"
             }
         }
     },
     "routes": {
-        "home":  {
+        "home": {
             "pathto": "/",
-            "controller":
-            {
+            "controller": {
                 "type": "scripts/routes/home/HomeController"
+            }
+        },
+        "old": {
+            "pathto": "/old",
+            "controller": {
+                "type": "scripts/routes/home/HomeController.old"
+            }
+        },
+        "ns": {
+            "pathto": "/ns",
+            "controller": {
+                "type": "scripts/routes/home/HomeController.ns"
             }
         }
     }

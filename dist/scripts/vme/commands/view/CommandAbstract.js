@@ -1,14 +1,16 @@
-define([
-    "backbone"
-], function(Backbone) {
-    return Backbone.View.extend({
+define(['exports', 'module'], function(exports, module) {
+    'use strict';
 
+    var Backbone = require('backbone'),
+        $ = Backbone.$;
+
+    module.exports = Backbone.View.extend({
         /**
          * Initialize method that can't be removed
-         * @param	{Object}	o Options
+         * @param  {Object}  o Options
          * @private
          * */
-        initialize(o) {
+        initialize: function initialize(o) {
             this.config = o || {};
             this.editorModel = this.em = this.config.em || {};
             this.pfx = this.config.stylePrefix;
@@ -20,8 +22,7 @@ define([
 
             this.canvas = this.em.get && this.em.get('Canvas');
 
-            if (this.em.get)
-                this.setElement(this.getCanvas());
+            if (this.em.get) this.setElement(this.getCanvas());
 
             if (this.canvas) {
                 this.$canvas = this.$el;
@@ -39,13 +40,13 @@ define([
          * @param  {[type]} e [description]
          * @return {[type]}   [description]
          */
-        onFrameScroll(e) {},
+        onFrameScroll: function onFrameScroll(e) {},
 
         /**
          * Returns canval element
          * @return {HTMLElement}
          */
-        getCanvas() {
+        getCanvas: function getCanvas() {
             return this.canvas.getElement();
         },
 
@@ -53,7 +54,7 @@ define([
          * Get canvas body element
          * @return {HTMLElement}
          */
-        getCanvasBody() {
+        getCanvasBody: function getCanvasBody() {
             return this.canvas.getBody();
         },
 
@@ -61,7 +62,7 @@ define([
          * Get canvas wrapper element
          * @return {HTMLElement}
          */
-        getCanvasWrapper() {
+        getCanvasWrapper: function getCanvasWrapper() {
             return this.canvas.getWrapperEl();
         },
 
@@ -69,7 +70,7 @@ define([
          * Get canvas wrapper element
          * @return {HTMLElement}
          */
-        getCanvasTools() {
+        getCanvasTools: function getCanvasTools() {
             return this.canvas.getToolsEl();
         },
 
@@ -78,7 +79,7 @@ define([
          * @param  {HTMLElement} el
          * @return {Object}
          */
-        offset(el) {
+        offset: function offset(el) {
             var rect = el.getBoundingClientRect();
             return {
                 top: rect.top + el.ownerDocument.body.scrollTop,
@@ -88,26 +89,25 @@ define([
 
         /**
          * Callback triggered after initialize
-         * @param	{Object}	o 	Options
+         * @param  {Object}  o   Options
          * @private
          * */
-        init(o) {},
+        init: function init(o) {},
 
         /**
          * Method that run command
-         * @param	{Object}	em 		Editor model
-         * @param	{Object}	sender	Button sender
+         * @param  {Object}  em     Editor model
+         * @param  {Object}  sender  Button sender
          * @private
          * */
-        run(em, sender) {},
+        run: function run(em, sender) {},
 
         /**
          * Method that stop command
-         * @param	{Object}	em Editor model
-         * @param	{Object}	sender	Button sender
+         * @param  {Object}  em Editor model
+         * @param  {Object}  sender  Button sender
          * @private
          * */
-        stop(em, sender) {},
-
+        stop: function stop(em, sender) {}
     });
 });
