@@ -30,7 +30,7 @@ define(['exports', 'module', '../../utils/fetch'], function(exports, module, uti
                 this.uploadFile = this.constructor.embedAsBase64;
             }
 
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         /**

@@ -18,7 +18,7 @@ define(['exports', 'module', './PropertyView'], function(exports, module, Proper
             this.am = em.get('AssetManager');
             this.events['click #' + this.pfx + 'close'] = 'removeFile';
             this.events['click #' + this.pfx + 'images'] = 'openAssetManager';
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         onRender: function onRender() {

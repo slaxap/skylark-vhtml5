@@ -1,0 +1,20 @@
+v{
+    "home": {
+        "pathto": "/",
+        "controller": {
+            "type": "scripts/routes/home/HomeController"
+        }
+    },
+    "old": {
+        "pathto": "/old",
+        "controller": {
+            "type": "scripts/routes/home/HomeController.old"
+        }
+    },
+    "ns": {
+        "pathto": "/ns",
+        "controller": {
+            "type": "scripts/routes/home/HomeController.ns"
+        }
+    }
+}

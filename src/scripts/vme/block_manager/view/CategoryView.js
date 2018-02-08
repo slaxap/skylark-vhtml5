@@ -23,7 +23,7 @@ define(['exports', 'module'], function(exports, module) {
             this.events = {};
             this.events['click .' + pfx + 'title'] = 'toggle';
             this.listenTo(this.model, 'change:open', this.updateVisibility);
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         updateVisibility: function updateVisibility() {

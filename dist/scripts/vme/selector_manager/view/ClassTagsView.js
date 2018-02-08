@@ -35,7 +35,7 @@ define(['exports', 'module', './ClassTagView'], function(exports, module, ClassT
             this.listenTo(this.collection, 'reset', this.renderClasses);
             this.listenTo(this.collection, 'remove', this.tagRemoved);
 
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         /**

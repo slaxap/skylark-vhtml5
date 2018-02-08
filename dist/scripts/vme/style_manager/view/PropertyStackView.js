@@ -15,7 +15,7 @@ define(['exports', 'module', './PropertyCompositeView', './LayersView', './Prope
             this.events['click [data-add-layer]'] = 'addLayer';
             this.listenTo(model, 'change:stackIndex', this.indexChanged);
             this.listenTo(model, 'updateValue', this.inputValueChanged);
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         /**

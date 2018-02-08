@@ -42,7 +42,7 @@ define(['exports', 'module', 'underscore', './ButtonsView'], function(exports, m
                 this.events.mousedown = 'initDrag';
                 this.em.on('loaded', this.initSorter);
             } else this.events.click = 'clicked';
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         initSorter: function initSorter() {

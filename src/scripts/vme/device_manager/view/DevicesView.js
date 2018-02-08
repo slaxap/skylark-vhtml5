@@ -16,7 +16,7 @@ define(['exports', 'module'], function(exports, module) {
             this.ppfx = this.config.pStylePrefix || '';
             this.events['click .' + this.ppfx + 'add-trasp'] = this.startAdd;
             this.listenTo(this.em, 'change:device', this.updateSelect);
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         /**

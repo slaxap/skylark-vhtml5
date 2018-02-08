@@ -26,7 +26,7 @@ define(['exports', 'module'], function(exports, module) {
             this.listenTo(model, 'change:content', this.updateContent);
             this.events['click .' + pfx + 'btn-close'] = 'hide';
             bkd && (this.events['click .' + pfx + 'backlayer'] = 'hide');
-            // this.delegateEvents();
+            this.delegateEvents();
         },
 
         /**
