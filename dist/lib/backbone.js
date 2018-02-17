@@ -200,6 +200,8 @@
     // initialization logic.
     initialize: function(){},
 
+    init: function(){},
+
     // Proxy `Backbone.sync` by default -- but override this if you need
     // custom syncing semantics for *this* particular model.
     sync: function() {
