@@ -1,6 +1,6 @@
 {
   "name": "skylark-vhtml5",
-  "version": "0.9.1",
+  "version": "0.9.2-beta",
   "private": true,
   "scripts": {
     "browse": "sjs browse ./deploy/skylark-vhtml5.slax",

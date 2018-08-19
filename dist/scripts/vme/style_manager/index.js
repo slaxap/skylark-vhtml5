@@ -1,11 +1,12 @@
 define([
     'exports',
     'module',
+    "skylark-langx/langx",
     './config/config',
     './model/Sectors',
     './model/Properties',
     './view/SectorsView'
-], function(exports, module, defaults, Sectors, Properties, SectorsView) {
+], function(exports, module, langx,defaults, Sectors, Properties, SectorsView) {
     /**
      * With Style Manager you basically build categories (called sectors) of CSS properties which could
      * be used to custom components and classes.
@@ -47,8 +48,6 @@ define([
      * ...
      */
     'use strict';
-
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
     module.exports = function() {
         var c = {};
@@ -342,7 +341,7 @@ define([
                 var type = this.getType(id);
 
                 if (type) {
-                    return new type.view(_extends({
+                    return new type.view(langx.mixin({
                         model: new type.model(model),
                         config: c
                     }, view));

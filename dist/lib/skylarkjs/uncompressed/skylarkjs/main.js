@@ -9,15 +9,15 @@ define([
     "./finder",
     "./fx",
     "./geom",
-    "./http",
     "./images",
-    "./mover",
+    "./langx",
+    "./models",
     "./noder",
     "./query",
     "./scripter",
     "./styler",
     "./velm",
-    "./widget"
+    "./widgets"
 ], function(skylark) {
     return skylark;
 })

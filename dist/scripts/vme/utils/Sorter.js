@@ -1,10 +1,12 @@
-define(['exports', 'module', 'underscore', '../utils/mixins'], function(exports, module, underscore, utilsMixins) {
-    'use strict';
+define([
+    "skylark-langx/langx",
+    '../utils/mixins', 
+    "backbone",
+    'underscore'
+], function(langx,utilsMixins, Backbone,underscore) {
+    var $ = Backbone.$;
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
-
-    module.exports = Backbone.View.extend({
+    return Backbone.View.extend({
         initialize: function initialize(opt) {
             this.opt = opt || {};
             _.bindAll(this, 'startSort', 'onMove', 'endMove', 'rollback', 'udpateOffset', 'moveDragHelper');
