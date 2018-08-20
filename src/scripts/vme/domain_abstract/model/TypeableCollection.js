@@ -1,8 +1,12 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'backbone'
+], function(exports, module, backbone) {
     'use strict';
 
-    var Model = Backbone.Model;
-    var View = Backbone.View;
+    var Model = backbone.Model;
+    var View = backbone.View;
 
     module.exports = {
         types: [],

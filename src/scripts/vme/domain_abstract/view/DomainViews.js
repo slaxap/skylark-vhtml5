@@ -1,9 +1,11 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'backbone'
+], function(exports, module, backbone) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         // Default view
         itemView: '',
 

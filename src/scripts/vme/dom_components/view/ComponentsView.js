@@ -1,7 +1,13 @@
-define(['exports', 'module', 'underscore'], function(exports, module, underscore) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore',
+    "./ComponentView"
+], function(exports, module, backbone, underscore,ComponentView) {
     'use strict';
-    require(['scripts/vme/dom_components/view/ComponentView']);
-    module.exports = Backbone.View.extend({
+
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             this.opts = o || {};
             this.config = o.config || {};

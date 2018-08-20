@@ -1,8 +1,6 @@
 define(['exports', 'module', './ComponentImageView', './ComponentView'], function(exports, module, ComponentView, OComponentView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
     module.exports = ComponentView.extend({
         tagName: 'div',
 

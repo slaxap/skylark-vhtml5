@@ -1,7 +1,13 @@
-define(['exports', 'module', 'underscore', './ComponentsView'], function(exports, module, underscore, ComponentsView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore', 
+    './ComponentsView'
+], function(exports, module, backbone, underscore, ComponentsView) {
     'use strict';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         className: function className() {
             return this.getClasses();
         },

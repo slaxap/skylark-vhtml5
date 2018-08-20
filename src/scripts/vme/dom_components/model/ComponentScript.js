@@ -1,8 +1,13 @@
-define(['exports', 'module', './Component'], function(exports, module, Component) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    './Component'
+], function(exports, module, langx,Component) {
     'use strict';
 
     module.exports = Component.extend({
-        defaults: _.extend({}, Component.prototype.defaults, {
+        defaults: langx.mixin({}, Component.prototype.defaults, {
             type: 'script',
             droppable: false,
             draggable: false,

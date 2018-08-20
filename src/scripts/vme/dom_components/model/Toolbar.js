@@ -1,6 +1,11 @@
-define(['exports', 'module', './ToolbarButton'], function(exports, module, ToolbarButton) {
+define(['exports', 
+	'module', 
+	'backbone', 
+	'./ToolbarButton'
+], function(exports, module, backbone, ToolbarButton) {
     'use strict';
 
-    var Backbone = require('backbone');
-    module.exports = Backbone.Collection.extend({ model: ToolbarButton });
+    module.exports = backbone.Collection.extend({
+    	model: ToolbarButton 
+    });
 });

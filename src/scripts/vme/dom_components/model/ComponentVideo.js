@@ -1,13 +1,17 @@
-define(['exports', 'module', './ComponentImage', './Component'], function(exports, module, Component, OComponent) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    './ComponentImage', 
+    './Component'
+], function(exports, module, langx, Component, OComponent) {
     'use strict';
-
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
     var yt = 'yt';
     var vi = 'vi';
 
     module.exports = Component.extend({
-        defaults: _extends({}, Component.prototype.defaults, {
+        defaults: langx.mixin({}, Component.prototype.defaults, {
             type: 'video',
             tagName: 'video',
             videoId: '',

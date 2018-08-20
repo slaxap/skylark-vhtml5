@@ -1,9 +1,12 @@
-define(['exports', 'module', 'underscore'], function(exports, module, underscore) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore'
+], function(exports, module, backbone, underscore) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         initialize: function initialize(models, opt) {
             this.on('add', this.onAdd);
 

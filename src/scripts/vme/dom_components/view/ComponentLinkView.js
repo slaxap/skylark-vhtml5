@@ -1,7 +1,9 @@
-define(['exports', 'module', './ComponentTextView'], function(exports, module, ComponentView) {
+define([
+    'exports', 
+    'module', 
+    './ComponentTextView'
+], function(exports, module, ComponentView) {
     'use strict';
-
-    var Backbone = require('backbone');
 
     module.exports = ComponentView.extend({
         render: function render() {
