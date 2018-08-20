@@ -1,7 +1,11 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module', 
+    'backbone'
+], function(exports, module, backbone) {
     'use strict';
 
-    module.exports = require('backbone').View.extend({
+    module.exports = backbone.View.extend({
         tagName: 'style',
 
         initialize: function initialize() {

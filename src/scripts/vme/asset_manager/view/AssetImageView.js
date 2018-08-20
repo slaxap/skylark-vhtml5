@@ -1,7 +1,13 @@
-define(['exports', 'module', './AssetView'], function(exports, module, AssetView) {
+define([
+    'exports', 
+    'module', 
+    './AssetView'
+], function(exports, module, AssetView) {
     'use strict';
 
     module.exports = AssetView.extend({
+        'klassName' : 'AssetImageView',
+
         events: {
             'click [data-toggle=asset-remove]': 'onRemove',
             click: 'onClick',

@@ -1,9 +1,12 @@
-define(['exports', 'module', './Frame'], function(exports, module, Frame) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './Frame'
+], function(exports, module, backbone, Frame) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         defaults: {
             frame: '',
             wrapper: '',

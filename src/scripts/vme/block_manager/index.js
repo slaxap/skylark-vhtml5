@@ -1,5 +1,10 @@
-define(['exports', 'module', './config/config',
-    './model/Blocks', './model/Categories', './view/BlocksView'
+define([
+    'exports', 
+    'module', 
+    './config/config',
+    './model/Blocks', 
+    './model/Categories', 
+    './view/BlocksView'
 ], function(exports, module, defaults, Blocks, BlockCategories, BlocksView) {
     /**
      * * [add](#add)

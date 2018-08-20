@@ -1,7 +1,16 @@
-define(['exports', 'module', 'underscore', './BlockView', './CategoryView'], function(exports, module, underscore, BlockView, CategoryView) {
+define([
+    'exports', 
+    'module', 
+    'underscore', 
+    'backbone',
+    './BlockView', 
+    './CategoryView'
+], function(exports, module, underscore, backbone, BlockView, CategoryView) {
     'use strict';
 
-    module.exports = require('backbone').View.extend({
+    module.exports = backbone.View.extend({
+        klassName : 'BlocksView',
+        
         initialize: function initialize(opts, config) {
             _.bindAll(this, 'getSorter', 'onDrag', 'onDrop');
             this.config = config || {};

@@ -1,9 +1,13 @@
-define(['exports', 'module', './CreateComponent'], function(exports, module, CreateComponent) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    './CreateComponent'
+], function(exports, module, langx, backbone, CreateComponent) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = _.extend({}, CreateComponent, {
+    module.exports = langx.mixin({}, CreateComponent, {
         init: function init() {
             for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
                 args[_key] = arguments[_key];

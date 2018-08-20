@@ -1,9 +1,12 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'backbone'
+], function(exports, module, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         build: function build(model) {
             var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 

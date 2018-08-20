@@ -1,9 +1,12 @@
-define(['exports', 'module', './Category'], function(exports, module, Category) {
+define([
+	'exports', 
+	'module', 
+	'backbone',
+	'./Category'
+], function(exports, module, backbone, Category) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         model: Category
     });
 });

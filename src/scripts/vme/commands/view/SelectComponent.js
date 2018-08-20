@@ -1,18 +1,18 @@
 define([
     'exports',
     'module',
+    'skylark-langx/langx',
+    'backbone',
     'underscore',
     '../../utils/mixins',
     '../../dom_components/view/ToolbarView',
     '../../dom_components/model/Toolbar',
     'keymaster',
-], function(exports, module, underscore, utilsMixins, ToolbarView, Toolbar, key) {
+], function(exports, module, langx, backbone, underscore, utilsMixins, ToolbarView, Toolbar, key) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-
-    var $ = require('backbone').$;
+    var $ = backbone.$;
+    
     var showOffsets = undefined;
 
     module.exports = {

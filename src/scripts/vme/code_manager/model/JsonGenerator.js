@@ -1,9 +1,13 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    'backbone'
+], function(exports, module, langx, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         /** @inheritdoc */
         build: function build(model) {
             var json = model.toJSON();
@@ -13,7 +17,7 @@ define(['exports', 'module'], function(exports, module) {
                 var obj = json[attr];
                 if (obj instanceof Backbone.Model) {
                     json[attr] = this.build(obj);
-                } else if (obj instanceof Backbone.Collection) {
+                } else if (obj instanceof backbone.Collection) {
                     var coll = obj;
                     json[attr] = [];
                     if (coll.length) {

@@ -1,9 +1,12 @@
-define(['exports', 'module', '../../utils/fetch'], function(exports, module, utilsFetch) {
+define([
+    'exports', 
+    'module', 
+    '../../utils/fetch'
+], function(exports, module, fetch) {
     'use strict';
 
     function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-    var _fetch = _interopRequireDefault(utilsFetch);
 
     module.exports = Backbone.View.extend({
         template: _.template('\n  <form>\n    <div id="<%= pfx %>title"><%= title %></div>\n    <input type="file" id="<%= uploadId %>" name="file" accept="image/*" <%= disabled ? \'disabled\' : \'\' %> multiple/>\n    <div style="clear:both;"></div>\n  </form>\n  '),
@@ -117,7 +120,7 @@ define(['exports', 'module', '../../utils/fetch'], function(exports, module, uti
 
             if (url) {
                 this.onUploadStart();
-                return (0, _fetch['default'])(url, {
+                return fetch(url, {
                     method: 'post',
                     credentials: 'include',
                     headers: headers,
@@ -128,7 +131,7 @@ define(['exports', 'module', '../../utils/fetch'], function(exports, module, uti
                     });
                 }).then(function(text) {
                     return _this.onUploadResponse(text, clb);
-                })['catch'](function(err) {
+                }).catch(function(err) {
                     return _this.onUploadError(err);
                 });
             }

@@ -1,9 +1,15 @@
-define(['exports', 'module', './CreateComponent'], function(exports, module, CreateComponent) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    './CreateComponent'
+], function(exports, module, langx, backbone, CreateComponent) {
     'use strict';
 
-    var Backbone = require('backbone');
+    'use strict';
 
-    module.exports = _.extend({}, CreateComponent, {
+    module.exports = langx.mixin({}, CreateComponent, {
         /**
          * This event is triggered at the beginning of a draw operation
          * @param   {Object}   component  Object component before creation

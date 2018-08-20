@@ -1,7 +1,12 @@
-define(['exports', 'module', 'backbone', '../../navigator/index'], function(exports, module, Backbone, Layers) {
+define([
+    'exports', 
+    'module', 
+    'backbone', 
+    '../../navigator/index'
+], function(exports, module, backbone, Layers) {
     'use strict';
 
-    var $ = Backbone.$;
+    var $ = backbone.$;
 
     module.exports = {
         run: function run(em, sender) {

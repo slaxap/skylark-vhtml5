@@ -1,7 +1,12 @@
-define(['exports', 'module','backbone', '../../style_manager/index'], function(exports, module, Backbone, StyleManager) {
+define([
+    'exports', 
+    'module',
+    'backbone', 
+    '../../style_manager/index'
+], function(exports, module, backbone, StyleManager) {
     'use strict';
 
-    var $ = Backbone.$;
+    var $ = backbone.$;
 
     module.exports = {
         run: function run(em, sender) {

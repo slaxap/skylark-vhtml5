@@ -1,7 +1,13 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'backbone'
+], function(exports, module, backbone) {
     'use strict';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
+        'klassName' : 'AssetView',
+
         initialize: function initialize() {
             var o = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 

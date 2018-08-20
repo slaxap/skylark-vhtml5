@@ -1,4 +1,10 @@
-define(['exports', 'module', './config/config', './model/Devices', './view/DevicesView'], function(exports, module, defaults, Devices, DevicesView) {
+define([
+    'exports', 
+    'module', 
+    './config/config', 
+    './model/Devices', 
+    './view/DevicesView'
+], function(exports, module, defaults, Devices, DevicesView) {
     /**
      * Before using methods you should get first the module from the editor instance, in this way:
      *
@@ -30,7 +36,8 @@ define(['exports', 'module', './config/config', './model/Devices', './view/Devic
              * ...
              * {
              *    devices: [
-             *      {name: 'Desktop', width: ''}
+             *      {nam
+             e: 'Desktop', width: ''}
              *      {name: 'Tablet', width: '991px'}
              *    ],
              * }

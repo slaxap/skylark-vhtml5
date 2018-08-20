@@ -1,9 +1,13 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    'backbone'
+], function(exports, module, langx, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         defaults: {
             id: ''
         }

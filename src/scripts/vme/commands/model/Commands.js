@@ -1,9 +1,14 @@
-define(['exports', 'module', 'Command'], function(exports, module, Command) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    'backbone',
+    './Command'
+], function(exports, module, langx, backbone, Command) {
+
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         model: Command
     });
 });

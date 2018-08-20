@@ -1,9 +1,14 @@
-define(['exports', 'module', 'underscore'], function(exports, module, underscore) {
+define([
+    'exports', 
+    'module', 
+    'underscore',
+    'backbone'
+], function(exports, module, underscore, backbone) {
     'use strict';
 
     var motionsEv = 'transitionend oTransitionEnd transitionend webkitTransitionEnd';
 
-    module.exports = require('backbone').View.extend({
+    module.exports = backbone.View.extend({
         tagName: 'iframe',
 
         attributes: {

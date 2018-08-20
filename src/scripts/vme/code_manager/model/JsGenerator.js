@@ -1,9 +1,13 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    'backbone'
+], function(exports, module, langx, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         mapModel: function mapModel(model) {
             var code = '';
             var script = model.get('script');
@@ -14,7 +18,7 @@ define(['exports', 'module'], function(exports, module) {
             if (script) {
                 // If the component has scripts we need to expose his ID
                 var attr = model.get('attributes');
-                attr = _.extend({}, attr, { id: id });
+                attr = langx.mixin({}, attr, { id: id });
                 model.set('attributes', attr);
                 var scrStr = model.getScriptString();
 
