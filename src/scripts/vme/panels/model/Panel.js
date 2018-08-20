@@ -1,9 +1,12 @@
-define(['exports', 'module', './Buttons'], function(exports, module, Buttons) {
+define([
+    'exports', 
+    'module',
+    'backbone', 
+    './Buttons'
+], function(exports, module, backbone, Buttons) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         defaults: {
             id: '',
             content: '',

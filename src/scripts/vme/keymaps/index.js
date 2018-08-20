@@ -1,4 +1,10 @@
-define(['exports', 'module', 'underscore', 'keymaster'], function(exports, module, underscore, keymaster) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'underscore', 
+    'keymaster'
+], function(exports, module, langx, underscore, keymaster) {
     /**
      * This module allows to create shortcuts for functions and commands (via command id)
      *
@@ -9,8 +15,6 @@ define(['exports', 'module', 'underscore', 'keymaster'], function(exports, modul
      *
      */
     'use strict';
-
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
     module.exports = function() {
         var em = undefined;
@@ -58,7 +62,7 @@ define(['exports', 'module', 'underscore', 'keymaster'], function(exports, modul
             init: function init() {
                 var opts = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-                config = _extends({}, configDef, opts);
+                config = langx.mixin({}, configDef, opts);
                 em = config.em;
                 this.em = em;
                 return this;

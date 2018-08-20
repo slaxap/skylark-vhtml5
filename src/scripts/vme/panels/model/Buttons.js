@@ -1,9 +1,12 @@
-define(['exports', 'module', './Button'], function(exports, module, Button) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './Button'
+], function(exports, module, backbone, Button) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         model: Button,
 
         /**

@@ -1,7 +1,11 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'backbone'
+], function(exports, module, backbone) {
     'use strict';
 
-    module.exports = require('backbone').View.extend({
+    module.exports = backbone.View.extend({
         template: function template(_ref) {
             var pfx = _ref.pfx;
             var ppfx = _ref.ppfx;
