@@ -1,9 +1,7 @@
-define(['exports', 'module', './LayerView'], function(exports, module, LayerView) {
+define(['exports', 'module', 'backbone','./LayerView'], function(exports, module, backbone, LayerView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             this.config = o.config || {};
             this.stackModel = o.stackModel;

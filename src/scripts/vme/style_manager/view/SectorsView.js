@@ -1,9 +1,14 @@
-define(['exports', 'module', 'underscore', './SectorView'], function(exports, module, underscore, SectorView) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    'underscore', 
+    './SectorView'
+], function(exports, module, langx, backbone, underscore, SectorView) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             this.config = o.config || {};
             this.pfx = this.config.stylePrefix || '';
@@ -15,7 +20,7 @@ define(['exports', 'module', 'underscore', './SectorView'], function(exports, mo
             var body = document.body;
             var dummy = document.createElement('el-' + new Date().getTime());
             body.appendChild(dummy);
-            target.computedDefault = _extends({}, window.getComputedStyle(dummy));
+            target.computedDefault = langx.mixin({}, window.getComputedStyle(dummy));
             body.removeChild(dummy);
             this.propTarget = target;
             var coll = this.collection;

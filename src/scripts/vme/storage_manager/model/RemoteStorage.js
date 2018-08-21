@@ -1,12 +1,14 @@
-define(['exports', 'module', '../../utils/fetch', 'underscore'], function(exports, module, utilsFetch, underscore) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    '../../utils/fetch', 
+    'underscore'
+], function(exports, module, backbone, fetch, underscore) {
     'use strict';
 
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _fetch = _interopRequireDefault(utilsFetch);
-
-    module.exports = require('backbone').Model.extend({
-        fetch: _fetch['default'],
+    module.exports = backbone.Model.extend({
+        fetch: fetch,
 
         defaults: {
             urlStore: '',

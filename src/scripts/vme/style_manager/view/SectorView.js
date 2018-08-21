@@ -1,9 +1,12 @@
-define(['exports', 'module', './PropertiesView'], function(exports, module, PropertiesView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './PropertiesView'
+], function(exports, module, backbone, PropertiesView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         template: _.template('\n  <div class="<%= pfx %>title" data-sector-title>\n    <i id="<%= pfx %>caret" class="fa"></i>\n    <%= label %>\n  </div>'),
 
         events: {

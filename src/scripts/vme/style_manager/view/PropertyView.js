@@ -1,11 +1,17 @@
-define(['exports', 'module', 'underscore', '../../utils/mixins'], function(exports, module, underscore, utilsMixins) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore', 
+    '../../utils/mixins'
+], function(exports, module, backbone, underscore, utilsMixins) {
     'use strict';
 
     function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
     var clearProp = 'data-clear-style';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         template: function template(model) {
             var pfx = this.pfx;
             return '\n      <div class="' + pfx + 'label">\n        ' + this.templateLabel(model) + '\n      </div>\n      <div class="' + this.ppfx + 'fields">\n        ' + this.templateInput(model) + '\n      </div>\n    ';

@@ -1,11 +1,10 @@
-define(['exports', 'module', 'underscore'], function(exports, module, underscore) {
+define(['exports', 'module', 'backbone','underscore'], function(exports, module, backbone,underscore) {
     'use strict';
 
-    var Backbone = require('backbone');
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var 
+        $ = backbone.$;
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         events: {
             change: 'onChange'
         },

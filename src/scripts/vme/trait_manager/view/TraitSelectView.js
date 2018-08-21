@@ -1,8 +1,8 @@
-define(['exports', 'module', './TraitView'], function(exports, module, TraitView) {
+define(['exports', 'module', 'backbone','./TraitView'], function(exports, module, backbone,TraitView) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var 
+        $ = backbone.$;
 
     module.exports = TraitView.extend({
         initialize: function initialize(o) {

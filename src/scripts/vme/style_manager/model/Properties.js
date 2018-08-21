@@ -1,6 +1,7 @@
 define([
     'exports',
     'module',
+    'skylark-langx/langx',
     'backbone',
     '../../domain_abstract/model/TypeableCollection',
     './Property',
@@ -18,20 +19,14 @@ define([
     './PropertyInteger',
     '../view/PropertyIntegerView',
     '../view/PropertyView'
-], function(exports, module, Backbone, domain_abstractModelTypeableCollection, Property, PropertyStack,
+], function(exports, module, langx, backbone, TypeableCollection, Property, PropertyStack,
     PropertyStackView, PropertyComposite, PropertyCompositeView, PropertyFileView,
     PropertyColorView, PropertyRadio, PropertySelectView, PropertyRadioView, PropertySlider,
     PropertySliderView, PropertyInteger, PropertyIntegerView, PropertyView
 ) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _TypeableCollection = _interopRequireDefault(domain_abstractModelTypeableCollection);
-
-    module.exports = Backbone.Collection.extend(_TypeableCollection['default']).extend({
+    module.exports = backbone.Collection.extend(TypeableCollection).extend({
         types: [{
             id: 'stack',
             model: PropertyStack,

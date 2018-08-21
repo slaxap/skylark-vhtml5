@@ -1,10 +1,15 @@
-define(['exports', 'module', './Property', '../../domain_abstract/ui/InputNumber'], function(exports, module, Property, InputNumber) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    './Property', 
+    '../../domain_abstract/ui/InputNumber'
+], function(exports, module, langx, Property, InputNumber) {
+
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
     module.exports = Property.extend({
-        defaults: _extends({}, Property.prototype.defaults, {
+        defaults: langx.mixin({}, Property.prototype.defaults, {
             // Array of units, eg. ['px', '%']
             units: [],
 

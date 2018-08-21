@@ -1,7 +1,7 @@
-define(['exports', 'module', 'underscore', './Selector'], function(exports, module, underscore, Selector) {
+define(['exports', 'module', 'underscore', 'backbone','./Selector'], function(exports, module, underscore, backbone,Selector) {
     'use strict';
 
-    module.exports = require('backbone').Collection.extend({
+    module.exports = backbone.Collection.extend({
         model: Selector,
 
         getStyleable: function getStyleable() {

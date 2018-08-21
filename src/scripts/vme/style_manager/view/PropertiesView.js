@@ -1,6 +1,7 @@
 define([
     'exports',
     'module',
+    'backbone',
     './PropertyView',
     './PropertyIntegerView',
     './PropertyRadioView',
@@ -9,11 +10,11 @@ define([
     './PropertyFileView',
     './PropertyCompositeView',
     './PropertyStackView'
-], function(exports, module, PropertyView, PropertyIntegerView, PropertyRadioView, PropertySelectView, PropertyColorView,
+], function(exports, module, backbone, PropertyView, PropertyIntegerView, PropertyRadioView, PropertySelectView, PropertyColorView,
     PropertyFileView, PropertyCompositeView, PropertyStackView) {
     'use strict';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             this.config = o.config || {};
             this.pfx = this.config.stylePrefix || '';

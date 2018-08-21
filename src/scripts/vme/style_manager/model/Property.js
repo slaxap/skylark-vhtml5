@@ -1,9 +1,12 @@
-define(['exports', 'module', 'backbone'], function(exports, module, Backbone) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone'
+], function(exports, module, langx, backbone) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         defaults: {
             name: '',
             property: '',
@@ -49,7 +52,7 @@ define(['exports', 'module', 'backbone'], function(exports, module, Backbone) {
             var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
             var parsed = this.parseValue(value);
-            this.set(parsed, _extends({}, opts, { avoidStore: 1 }));
+            this.set(parsed, langx.mixin({}, opts, { avoidStore: 1 }));
 
             // It's important to set an empty value, otherwise the
             // UndoManager won't see the change
@@ -70,7 +73,7 @@ define(['exports', 'module', 'backbone'], function(exports, module, Backbone) {
         setValueFromInput: function setValueFromInput(value, complete) {
             var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-            this.setValue(value, complete, _extends({}, opts, { fromInput: 1 }));
+            this.setValue(value, complete, langx.mixin({}, opts, { fromInput: 1 }));
         },
 
         /**
