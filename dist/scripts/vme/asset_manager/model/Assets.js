@@ -1,17 +1,15 @@
 define([
     'exports',
     'module',
+    'backbone',
     './AssetImage',
     '../view/AssetImageView',
     '../../domain_abstract/model/TypeableCollection'
-], function(exports, module, AssetImage, AssetImageView, domain_abstractModelTypeableCollection) {
+], function(exports, module, backbone, AssetImage, AssetImageView, TypeableCollection) {
     'use strict';
 
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-    var _TypeableCollection = _interopRequireDefault(domain_abstractModelTypeableCollection);
-
-    module.exports = require('backbone').Collection.extend(_TypeableCollection['default']).extend({
+    module.exports = backbone.Collection.extend(TypeableCollection).extend({
         types: [{
             id: 'image',
             model: AssetImage,

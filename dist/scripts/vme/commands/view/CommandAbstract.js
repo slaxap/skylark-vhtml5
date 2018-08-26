@@ -1,10 +1,15 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    'backbone'
+], function(exports, module, langx, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = Backbone.$;
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         /**
          * Initialize method that can't be removed
          * @param  {Object}  o Options

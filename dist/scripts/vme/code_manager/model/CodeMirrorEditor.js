@@ -1,13 +1,13 @@
 define([
+	"skylark-langx/langx",
     "backbone",
     "codemirror/lib/codemirror",
     "codemirror/mode/htmlmixed/htmlmixed",
     "codemirror/mode/css/css",
     "codemirror-formatting"
-], function(Backbone, CodeMirror, htmlMode, cssMode, formatting) {
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+], function(langx,backbone, CodeMirror, htmlMode, cssMode, formatting) {
 
-    return Backbone.Model.extend({
+    return backbone.Model.extend({
         defaults: {
             input: '',
             label: '',
@@ -19,7 +19,7 @@ define([
 
         /** @inheritdoc */
         init: function init(el) {
-            this.editor = CodeMirror.fromTextArea(el, _extends({
+            this.editor = CodeMirror.fromTextArea(el, langx.mixin({
                 dragDrop: false,
                 lineWrapping: true,
                 mode: this.get('codeName')

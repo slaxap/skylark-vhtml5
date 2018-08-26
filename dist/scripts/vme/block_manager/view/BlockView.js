@@ -1,7 +1,15 @@
-define(['exports', 'module', 'underscore', '../../utils/mixins'], function(exports, module, underscore, utilsMixins) {
+define([
+    'exports', 
+    'module', 
+    'underscore', 
+    'backbone',
+    '../../utils/mixins'
+], function(exports, module, underscore, backbone, utilsMixins) {
     'use strict';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
+        klassName : 'BlockView',
+        
         events: {
             mousedown: 'startDrag',
             dragstart: 'handleDragStart',

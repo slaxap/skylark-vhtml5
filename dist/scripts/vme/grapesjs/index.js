@@ -6,16 +6,10 @@ define([
     '../editor/index',
     '../plugin_manager/index',
     '../utils/polyfills'
-], function(exports, module, _cashDom, underscore, Editor, PluginManager, _utilsPolyfills) {
+], function(exports, module, cashDom, underscore, Editor, PluginManager, Polyfills) {
     'use strict';
 
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _$ = _interopRequireDefault(_cashDom);
-
-    var _polyfills = _interopRequireDefault(_utilsPolyfills);
-
-    (0, _polyfills['default'])();
+    Polyfills();
 
     module.exports = (function() {
         var plugins = new PluginManager();
@@ -47,7 +41,7 @@ define([
         };
 
         return {
-            $: _$['default'],
+            $: cashDom,
 
             editors: editors,
 

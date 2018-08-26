@@ -1,7 +1,11 @@
-define([], function() {
+define([
+    'backbone',
+    '../vme/../model/Properties'
+], function(backbone, Properties) {
+
     'use strict';
-    require(['scripts/vme/style_manager/model/Properties']);
-    return Backbone.Model.extend({
+
+    return backbone.Model.extend({
         defaults: {
             index: '',
             value: '',
@@ -12,7 +16,6 @@ define([], function() {
         },
 
         initialize: function initialize() {
-            var Properties = require('scripts/vme/style_manager/model/Properties');
             var properties = this.get('properties');
             var value = this.get('value');
             this.set('properties', properties instanceof Properties ? properties : new Properties(properties));

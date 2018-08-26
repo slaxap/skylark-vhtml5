@@ -1,10 +1,15 @@
-define(['exports', 'module', './SelectPosition'], function(exports, module, SelectPosition) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    './SelectPosition'
+], function(exports, module, langx, backbone, SelectPosition) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var  $ = backbone.$;
 
-    module.exports = _.extend({}, SelectPosition, {
+    module.exports = langx.mixin({}, SelectPosition, {
         init: function init(opt) {
             _.bindAll(this, 'startDraw', 'draw', 'endDraw', 'rollback');
             this.config = opt || {};

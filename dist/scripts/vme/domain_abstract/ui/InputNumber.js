@@ -1,9 +1,14 @@
-define(['exports', 'module', 'underscore', '../../utils/mixins', './Input'], function(exports, module, underscore, utilsMixins, Input) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore', 
+    '../../utils/mixins', 
+    './Input'
+], function(exports, module, backbone, underscore, utilsMixins, Input) {
     'use strict';
 
-    var Backbone = require('backbone');
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = backbone.$;
 
     module.exports = Input.extend({
         events: {

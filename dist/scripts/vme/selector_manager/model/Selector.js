@@ -1,12 +1,10 @@
-define(['exports', 'module'], function(exports, module) {
+define(['exports', 'module','backbone'], function(exports, module,backbone) {
     'use strict';
-
-    var Backbone = require('backbone');
 
     var TYPE_CLASS = 1;
     var TYPE_ID = 2;
 
-    var Selector = Backbone.Model.extend({
+    var Selector = backbone.Model.extend({
         idAttribute: 'name',
 
         defaults: {

@@ -1,9 +1,14 @@
-define(['exports', 'module', 'underscore', './Properties', './PropertyFactory'], function(exports, module, underscore, Properties, PropertyFactory) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore', 
+    './Properties', 
+    './PropertyFactory'
+], function(exports, module, backbone, underscore, Properties, PropertyFactory) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Model.extend({
+    module.exports = backbone.Model.extend({
         defaults: {
             id: '',
             name: '',

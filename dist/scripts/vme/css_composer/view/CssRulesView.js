@@ -1,9 +1,12 @@
-define(['exports', 'module', './CssRuleView'], function(exports, module, CssRuleView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './CssRuleView'
+], function(exports, module, backbone, CssRuleView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             var config = o.config || {};
             this.config = config;

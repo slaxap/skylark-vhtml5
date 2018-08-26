@@ -1,9 +1,12 @@
-define(['exports', 'module', './PanelView'], function(exports, module, PanelView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './PanelView'
+], function(exports, module, backbone, PanelView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             this.opt = o || {};
             this.config = this.opt.config || {};

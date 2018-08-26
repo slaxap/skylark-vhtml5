@@ -1,5 +1,7 @@
 define([
     'exports',
+    'skylark-langx/langx',
+    'backbone',
     'underscore',
     'scripts/vme/utils/index',
     'scripts/vme/utils/extender',
@@ -21,10 +23,9 @@ define([
     'scripts/vme/canvas/index',
     'scripts/vme/commands/index',
     'scripts/vme/block_manager/index'
-], function(exports, _underscore) {
+], function(exports, langx, backbone, _underscore) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
     var deps = [
         require('scripts/vme/utils/index'),
         require('scripts/vme/keymaps/index'),
@@ -46,15 +47,14 @@ define([
         require('scripts/vme/commands/index'),
         require('scripts/vme/block_manager/index')
     ]
-    var Backbone = require('backbone');
     var timedInterval = undefined;
 
     require('scripts/vme/utils/extender')({
-        Backbone: Backbone,
-        $: Backbone.$
+        Backbone: backbone,
+        $: backbone.$
     });
 
-    return Backbone.Model.extend({
+    return backbone.Model.extend({
         defaults: {
             clipboard: null,
             designerMode: false,
@@ -178,7 +178,7 @@ define([
             }
 
             cfg.em = this;
-            Mod.init(_extends({}, cfg));
+            Mod.init(langx.mixin({}, cfg));
 
             // Bind the module to the editor model if public
             !Mod['private'] && this.set(Mod.name, Mod);

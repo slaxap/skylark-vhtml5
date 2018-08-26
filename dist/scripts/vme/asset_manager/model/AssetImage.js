@@ -1,10 +1,15 @@
-define(['exports', 'module', './Asset'], function(exports, module, Asset) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    './Asset'
+], function(exports, module, langx,Asset) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
     module.exports = Asset.extend({
-        defaults: _extends({}, Asset.prototype.defaults, {
+        'klassName' : 'AssetImage',
+        
+        defaults: langx.mixin({}, Asset.prototype.defaults, {
             type: 'image',
             unitDim: 'px',
             height: 0,

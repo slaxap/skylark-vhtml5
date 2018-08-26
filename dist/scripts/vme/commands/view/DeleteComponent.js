@@ -1,10 +1,15 @@
-define(['exports', 'module', './SelectComponent'], function(exports, module, SelectComponent) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    './SelectComponent'
+], function(exports, module, langx, backbone, SelectComponent) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var  $ = backbone.$;
 
-    module.exports = _.extend({}, SelectComponent, {
+    module.exports = langx.mixin({}, SelectComponent, {
         init: function init(o) {
             _.bindAll(this, 'startDelete', 'stopDelete', 'onDelete');
             this.hoverClass = this.pfx + 'hover-delete';

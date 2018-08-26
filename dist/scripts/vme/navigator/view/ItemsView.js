@@ -1,9 +1,12 @@
-define(['exports', 'module', './ItemView'], function(exports, module, ItemView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './ItemView'
+], function(exports, module, backbone, ItemView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize() {
             var o = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 

@@ -1,10 +1,15 @@
-define(['exports', 'module', 'underscore', './ButtonsView'], function(exports, module, underscore, btnsView) {
+define([
+    'exports', 
+    'module',
+    'backbone', 
+    'underscore', 
+    './ButtonsView'
+], function(exports, module, backbone, underscore, btnsView) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = backbone.$;
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         tagName: 'span',
 
         initialize: function initialize(o) {

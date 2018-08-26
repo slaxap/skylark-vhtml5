@@ -1,7 +1,11 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+	'exports', 
+	'module',
+	'backbone'
+], function(exports, module,backbone) {
     'use strict';
 
-    module.exports = require('backbone').Model.extend({
+    module.exports = backbone.Model.extend({
         idAttribute: 'src',
 
         defaults: {

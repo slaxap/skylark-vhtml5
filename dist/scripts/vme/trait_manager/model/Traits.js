@@ -5,10 +5,10 @@ define([
     'backbone',
     './Trait',
     './TraitFactory'
-], function(exports, module, underscore, Backbone, Trait, TraitFactory) {
+], function(exports, module, underscore, backbone, Trait, TraitFactory) {
     'use strict';
 
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         model: Trait,
 
         initialize: function initialize(coll) {

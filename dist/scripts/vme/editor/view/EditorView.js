@@ -1,10 +1,14 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'backbone'
+], function(exports, module, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = backbone.$;
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize() {
             var _this = this;
 

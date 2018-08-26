@@ -1,8 +1,8 @@
-define(['exports', 'module', '../model/Selector'], function(exports, module, Selector) {
+define(['exports', 'module', 'backbone','../model/Selector'], function(exports, module, backbone,Selector) {
     'use strict';
     var inputProp = 'contentEditable';
 
-    module.exports = require('backbone').View.extend({
+    module.exports = backbone.View.extend({
         template: function template() {
             var pfx = this.pfx;
             var ppfx = this.ppfx;

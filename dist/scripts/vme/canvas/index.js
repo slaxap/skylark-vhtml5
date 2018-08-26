@@ -1,11 +1,13 @@
-define(['exports', 'module', '../utils/mixins',
-    '../utils/Droppable', './config/config', './model/Canvas', './view/CanvasView'
-], function(exports, module, utilsMixins, _utilsDroppable, defaults, Canvas, CanvasView) {
+define([
+    'exports', 
+    'module', 
+    '../utils/mixins',
+    '../utils/Droppable', 
+    './config/config', 
+    './model/Canvas', 
+    './view/CanvasView'
+], function(exports, module, utilsMixins, Droppable, defaults, Canvas, CanvasView) {
     'use strict';
-
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _Droppable = _interopRequireDefault(_utilsDroppable);
 
     module.exports = function() {
         var c = {};
@@ -400,7 +402,7 @@ define(['exports', 'module', '../utils/mixins',
             },
 
             postRender: function postRender() {
-                if ((0, utilsMixins.hasDnd)(c.em)) this.droppable = new _Droppable['default'](c.em);
+                if (utilsMixins.hasDnd(c.em)) this.droppable = new Droppable(c.em);
             },
 
             /**

@@ -1,9 +1,13 @@
-define(['exports', 'module', './InsertCustom'], function(exports, module, InsertCustom) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    './InsertCustom'
+], function(exports, module, langx, backbone, InsertCustom) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = _.extend({}, InsertCustom, {
+    module.exports = langx.mixin({}, InsertCustom, {
         /**
          * Trigger before insert
          * @param   {Object}  object

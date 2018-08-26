@@ -1,8 +1,11 @@
-define(['./Layer'], function(Layer) {
+define([
+    'skylark-langx/langx',
+    'backbone',
+    './Layer'
+], function(langx,backbone,Layer) {
     'use strict';
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-    return Backbone.Collection.extend({
+    return backbone.Collection.extend({
         model: Layer,
 
         initialize: function initialize() {
@@ -68,7 +71,7 @@ define(['./Layer'], function(Layer) {
                 values.forEach(function(value, i) {
                     value = propModel.parseValue(value.trim()).value;
                     var layer = layers[i];
-                    var propertyObj = _extends({}, propModel.attributes, { value: value });
+                    var propertyObj = langx.mixin({}, propModel.attributes, { value: value });
 
                     if (layer) {
                         layer.properties.push(propertyObj);
@@ -89,7 +92,7 @@ define(['./Layer'], function(Layer) {
                     var propertyName = propModel.get('property');
 
                     if (layerProprs.indexOf(propertyName) < 0) {
-                        layer.properties.push(_extends({}, propModel.attributes));
+                        layer.properties.push(langx.mixin({}, propModel.attributes));
                     }
                 });
             });

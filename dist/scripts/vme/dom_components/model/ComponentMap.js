@@ -1,8 +1,14 @@
-define(['exports', 'module', './ComponentImage', './Component'], function(exports, module, Component, OComponent) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    './ComponentImage', 
+    './Component'
+], function(exports, module, langx, Component, OComponent) {
     'use strict';
 
     module.exports = Component.extend({
-        defaults: _.extend({}, Component.prototype.defaults, {
+        defaults: langx.mixin({}, Component.prototype.defaults, {
             type: 'map',
             'void': 0,
             mapUrl: 'https://maps.google.com/maps',

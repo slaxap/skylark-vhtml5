@@ -1,9 +1,16 @@
-define(['exports', 'module', './AssetView',
-    './AssetImageView', './FileUploader'
-], function(exports, module, AssetView, AssetImageView, FileUploader) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './AssetView',
+    './AssetImageView', 
+    './FileUploader'
+], function(exports, module, backbone, AssetView, AssetImageView, FileUploader) {
     'use strict';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
+        'klassName' : 'AssetsView',
+
         events: {
             submit: 'handleSubmit'
         },

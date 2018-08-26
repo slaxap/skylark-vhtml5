@@ -1,9 +1,15 @@
-define(['exports', 'module', 'underscore', '../../dom_components/view/ComponentView'], function(exports, module, underscore, ComponentView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    'underscore', 
+    '../../dom_components/view/ComponentView'
+], function(exports, module, backbone, underscore, ComponentView) {
     'use strict';
     require(['scripts/vme/navigator/view/ItemsView']);
     var ItemsView = undefined;
 
-    module.exports = require('backbone').View.extend({
+    module.exports = backbone.View.extend({
         events: {
             'mousedown [data-toggle-move]': 'startSort',
             'click [data-toggle-visible]': 'toggleVisibility',

@@ -1,10 +1,14 @@
-define(['exports', 'module', './Input', '../../utils/ColorPicker'], function(exports, module, Input) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    './Input', 
+    '../../utils/ColorPicker'
+], function(exports, module, langx,backbone, Input) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = backbone.$;
 
     module.exports = Input.extend({
         template: function template() {
@@ -75,7 +79,7 @@ define(['exports', 'module', './Input', '../../utils/ColorPicker'], function(exp
                     var changed = 0;
                     var previousColor = undefined;
                     _this.$el.find('[data-colorp-c]').append(colorEl);
-                    colorEl.spectrum(_extends({
+                    colorEl.spectrum(langx.mixin({
                         containerClassName: ppfx + 'one-bg ' + ppfx + 'two-color',
                         appendTo: elToAppend || 'body',
                         maxSelectionSize: 8,

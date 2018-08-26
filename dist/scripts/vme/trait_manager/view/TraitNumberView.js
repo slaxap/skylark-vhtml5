@@ -1,8 +1,6 @@
 define(['exports', 'module', './TraitView', '../../domain_abstract/ui/InputNumber'], function(exports, module, TraitView, InputNumber) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
 
     module.exports = TraitView.extend({
         getValueForTarget: function getValueForTarget() {

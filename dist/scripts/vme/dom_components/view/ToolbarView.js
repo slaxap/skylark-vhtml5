@@ -1,8 +1,6 @@
 define(['exports', 'module', '../../domain_abstract/view/DomainViews', './ToolbarButtonView'], function(exports, module, DomainViews, ToolbarButtonView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
     module.exports = DomainViews.extend({
         itemView: ToolbarButtonView,
 

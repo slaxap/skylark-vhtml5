@@ -1,8 +1,13 @@
-define(['exports', 'module', '../../domain_abstract/ui/InputNumber', './PropertyView'], function(exports, module, InputNumber, PropertyView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    '../../domain_abstract/ui/InputNumber', 
+    './PropertyView'
+], function(exports, module, backbone, InputNumber, PropertyView) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = backbone.$;
 
     module.exports = PropertyView.extend({
         templateInput: function templateInput() {

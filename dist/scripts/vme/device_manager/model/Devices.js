@@ -1,9 +1,12 @@
-define(['exports', 'module', './Device'], function(exports, module, Device) {
+define([
+	'exports', 
+	'module', 
+	'backbone',
+	'./Device'
+], function(exports, module, backbone, Device) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         model: Device
     });
 });

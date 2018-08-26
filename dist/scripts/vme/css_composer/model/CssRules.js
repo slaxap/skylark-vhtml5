@@ -1,9 +1,12 @@
-define(['exports', 'module', './CssRule'], function(exports, module, CssRule) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './CssRule'
+], function(exports, module, backbone, CssRule) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.Collection.extend({
+    module.exports = backbone.Collection.extend({
         initialize: function initialize(models, opt) {
             // Inject editor
             if (opt && opt.sm) this.editor = opt.sm;

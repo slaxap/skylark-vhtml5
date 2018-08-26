@@ -1,6 +1,7 @@
 define([
     'exports',
     'module',
+    'skylark-langx/langx',
     'underscore',
     '../../utils/mixins',
     '../../domain_abstract/model/Styleable',
@@ -9,15 +10,9 @@ define([
     '../../selector_manager/model/Selector',
     '../../selector_manager/model/Selectors',
     '../../trait_manager/model/Traits'
-], function(exports, module, underscore, utilsMixins, _domain_abstractModelStyleable, Backbone,
+], function(exports, module, langx, underscore, utilsMixins, Styleable, backbone,
     Components, Selector, Selectors, Traits) {
     'use strict';
-
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _Styleable = _interopRequireDefault(_domain_abstractModelStyleable);
 
 
     var componentList = {};
@@ -27,7 +22,7 @@ define([
         return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
     };
 
-    var Component = Backbone.Model.extend(_Styleable['default']).extend({
+    var Component = backbone.Model.extend(Styleable).extend({
         defaults: {
             // HTML tag of the component
             tagName: 'div',
@@ -164,7 +159,7 @@ define([
                         return newAttr[prop] = parent.get(prop);
                     });
                     newAttr.propagate = toPropagate;
-                    newAttr = _extends({}, newAttr, props);
+                    newAttr = langx.mixin({}, newAttr, props);
                     _this.set(newAttr);
                 })();
             }
@@ -259,8 +254,8 @@ define([
         attrUpdated: function attrUpdated() {
             var _this2 = this;
 
-            var attrPrev = _extends({}, this.previous('attributes'));
-            var attrCurrent = _extends({}, this.get('attributes'));
+            var attrPrev = langx.mixin({}, this.previous('attributes'));
+            var attrCurrent = langx.mixin({}, this.get('attributes'));
             var diff = (0, utilsMixins.shallowDiff)(attrPrev, attrCurrent);
             (0, underscore.keys)(diff).forEach(function(pr) {
                 return _this2.trigger('change:attributes:' + pr);
@@ -274,7 +269,7 @@ define([
          * model.setAttributes({id: 'test', 'data-key': 'value'});
          */
         setAttributes: function setAttributes(attrs) {
-            attrs = _extends({}, attrs);
+            attrs = langx.mixin({}, attrs);
 
             // Handle classes
             var classes = attrs['class'];
@@ -303,7 +298,7 @@ define([
                 }
             }
 
-            return _Styleable['default'].getStyle.call(this);
+            return Styleable.getStyle.call(this);
         },
 
         setStyle: function setStyle() {
@@ -319,7 +314,7 @@ define([
                 var state = this.get('state');
                 var cc = em.get('CssComposer');
                 var propOrig = this.getStyle();
-                this.rule = cc.setIdRule(this.getId(), prop, _extends({}, opts, { state: state }));
+                this.rule = cc.setIdRule(this.getId(), prop, langx.mixin({}, opts, { state: state }));
                 var diff = (0, utilsMixins.shallowDiff)(propOrig, prop);
                 (0, underscore.keys)(diff).forEach(function(pr) {
                     return _this3.trigger('change:style:' + pr);
@@ -337,7 +332,7 @@ define([
          */
         getAttributes: function getAttributes() {
             var classes = [];
-            var attributes = _extends({}, this.get('attributes'));
+            var attributes = langx.mixin({}, this.get('attributes'));
 
             // Add classes
             this.get('classes').each(function(cls) {
@@ -495,7 +490,7 @@ define([
          */
         traitsUpdated: function traitsUpdated() {
             var found = 0;
-            var attrs = _extends({}, this.get('attributes'));
+            var attrs = langx.mixin({}, this.get('attributes'));
             var traits = this.get('traits');
 
             if (!(traits instanceof Traits)) {
@@ -605,8 +600,8 @@ define([
         clone: function clone(reset) {
             var em = this.em;
             var style = this.getStyle();
-            var attr = _extends({}, this.attributes);
-            attr.attributes = _extends({}, attr.attributes);
+            var attr = langx.mixin({}, this.attributes);
+            attr.attributes = langx.mixin({}, attr.attributes);
             delete attr.attributes.id;
             attr.components = [];
             attr.classes = [];

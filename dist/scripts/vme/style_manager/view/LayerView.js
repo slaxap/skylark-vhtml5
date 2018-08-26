@@ -1,7 +1,7 @@
-define(['exports', 'module', './PropertiesView'], function(exports, module, PropertiesView) {
+define(['exports', 'module', 'backbone','./PropertiesView'], function(exports, module, backbone,PropertiesView) {
     'use strict';
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         events: {
             click: 'active',
             'click [data-close-layer]': 'remove',

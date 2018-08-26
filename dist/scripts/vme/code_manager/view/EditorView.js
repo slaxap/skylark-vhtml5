@@ -1,9 +1,13 @@
-define(['exports', 'module'], function(exports, module) {
+define([
+    'exports', 
+    'module',
+    'skylark-langx/langx',
+    'backbone'
+], function(exports, module, langx, backbone) {
+
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         template: _.template('\n  <div class="<%= pfx %>editor" id="<%= pfx %><%= codeName %>">\n  \t<div id="<%= pfx %>title"><%= label %></div>\n  \t<div id="<%= pfx %>code"></div>\n  </div>'),
 
         initialize: function initialize(o) {

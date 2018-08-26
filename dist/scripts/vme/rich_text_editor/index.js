@@ -1,4 +1,10 @@
-define(['exports', 'module', './model/RichTextEditor', '../utils/mixins', './config/config'], function(exports, module, modelRichTextEditor, utilsMixins, defaults) {
+define([
+    'exports', 
+    'module', 
+    './model/RichTextEditor', 
+    '../utils/mixins', 
+    './config/config'
+], function(exports, module, RichTextEditor, utilsMixins, defaults) {
     /**
      * This module allows to customize the toolbar of the Rich Text Editor and use commands from the HTML Editing APIs.
      * For more info about HTML Editing APIs check here:
@@ -16,9 +22,6 @@ define(['exports', 'module', './model/RichTextEditor', '../utils/mixins', './con
      */
     'use strict';
 
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _RichTextEditor = _interopRequireDefault(modelRichTextEditor);
 
     module.exports = function() {
         var config = {};
@@ -108,7 +111,7 @@ define(['exports', 'module', './model/RichTextEditor', '../utils/mixins', './con
                     button: pfx + 'action',
                     active: pfx + 'active'
                 };
-                var rte = new _RichTextEditor['default']({
+                var rte = new RichTextEditor({
                     el: el,
                     classes: classes,
                     actions: actions,

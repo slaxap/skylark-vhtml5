@@ -1,12 +1,14 @@
-define(['exports', 'module', '../../domain_abstract/model/Styleable', '../../selector_manager/model/Selectors'], function(exports, module, domain_abstractModelStyleable, Selectors) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    '../../domain_abstract/model/Styleable', 
+    '../../selector_manager/model/Selectors'
+], function(exports, module, backbone, Styleable, Selectors) {
+
     'use strict';
 
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-    var _Styleable = _interopRequireDefault(domain_abstractModelStyleable);
-
-    var Backbone = require('backbone');
-    module.exports = Backbone.Model.extend(_Styleable['default']).extend({
+    module.exports = backbone.Model.extend(Styleable).extend({
         defaults: {
             // Css selectors
             selectors: {},

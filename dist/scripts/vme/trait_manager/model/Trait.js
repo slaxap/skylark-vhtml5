@@ -1,9 +1,13 @@
-define(['exports', 'module', 'underscore'], function(exports, module, underscore) {
+define([
+    'exports', 
+    'module', 
+    'skylark-langx/langx',
+    'backbone',
+    'underscore'
+], function(exports, module, langx,backbone,underscore) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-    module.exports = require('backbone').Model.extend({
+    module.exports = backbone.Model.extend({
         defaults: {
             type: 'text', // text, number, range, select
             label: '',
@@ -53,7 +57,7 @@ define(['exports', 'module', 'underscore'], function(exports, module, underscore
             if (this.get('changeProp')) {
                 target.set(name, value);
             } else {
-                var attrs = _extends({}, target.get('attributes'));
+                var attrs = langx.mixin({}, target.get('attributes'));
                 attrs[name] = value;
                 target.set('attributes', attrs);
             }
@@ -64,7 +68,7 @@ define(['exports', 'module', 'underscore'], function(exports, module, underscore
             var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
             var toSet = { value: value };
-            this.set(toSet, _extends({}, opts, { avoidStore: 1 }));
+            this.set(toSet, langx.mixin({}, opts, { avoidStore: 1 }));
 
             // Have to trigger the change
             if (final) {

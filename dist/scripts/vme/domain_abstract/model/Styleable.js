@@ -1,13 +1,16 @@
-define(['exports', 'module', 'underscore', '../../utils/mixins', '../../parser/model/ParserHtml'], function(exports, module, underscore, utilsMixins, _parserModelParserHtml) {
+define([
+    'exports', 
+    'module', 
+    'underscore', 
+    'skylark-langx/langx',
+    '../../utils/mixins', 
+    '../../parser/model/ParserHtml'
+], function(exports, module, underscore, langx,utilsMixins, ParserHtml) {
     'use strict';
 
-    var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+    var parseStyle = ParserHtml().parseStyle;
 
-    var _ParserHtml = _interopRequireDefault(_parserModelParserHtml);
-
-    var parseStyle = (0, _ParserHtml['default'])().parseStyle;
     module.exports = {
         parseStyle: parseStyle,
 
@@ -18,7 +21,7 @@ define(['exports', 'module', 'underscore', '../../utils/mixins', '../../parser/m
          * @return {Object}
          */
         extendStyle: function extendStyle(prop) {
-            return _extends({}, this.getStyle(), prop);
+            return langx.mixin({}, this.getStyle(), prop);
         },
 
         /**
@@ -26,7 +29,7 @@ define(['exports', 'module', 'underscore', '../../utils/mixins', '../../parser/m
          * @return {Object}
          */
         getStyle: function getStyle() {
-            return _extends({}, this.get('style'));
+            return langx.mixin({}, this.get('style'));
         },
 
         /**
@@ -46,7 +49,7 @@ define(['exports', 'module', 'underscore', '../../utils/mixins', '../../parser/m
             }
 
             var propOrig = this.getStyle();
-            var propNew = _extends({}, prop);
+            var propNew = langx.mixin({}, prop);
             this.set('style', propNew, opts);
             var diff = (0, utilsMixins.shallowDiff)(propOrig, propNew);
             (0, underscore.keys)(diff).forEach(function(pr) {

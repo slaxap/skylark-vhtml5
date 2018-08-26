@@ -1,9 +1,14 @@
-define(['exports', 'module', './Category'], function(exports, module, Category) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './Category'
+], function(exports, module, backbone, Category) {
     'use strict';
 
-    var Backbone = require('backbone');
+    module.exports = backbone.Model.extend({
+        'klassName' : 'Block',
 
-    module.exports = Backbone.Model.extend({
         defaults: {
             label: '',
             content: '',

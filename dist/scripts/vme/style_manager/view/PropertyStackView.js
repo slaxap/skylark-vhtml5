@@ -1,4 +1,10 @@
-define(['exports', 'module', './PropertyCompositeView', './LayersView', './PropertiesView'], function(exports, module, PropertyCompositeView, LayersView, PropertiesView) {
+define([
+    'exports', 
+    'module', 
+    './PropertyCompositeView', 
+    './LayersView', 
+    './PropertiesView'
+], function(exports, module, PropertyCompositeView, LayersView, PropertiesView) {
     'use strict';
 
     module.exports = PropertyCompositeView.extend({

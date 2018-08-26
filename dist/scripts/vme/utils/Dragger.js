@@ -1,8 +1,8 @@
-define(['exports', 'module'], function(exports, module) {
+define(['exports', 'module','backbone'], function(exports, module,backbone) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var 
+        $ = backbone.$;
 
     var getBoundingRect = function getBoundingRect(el, win) {
         var w = win || window;

@@ -1,11 +1,10 @@
-define(['exports', 'module'], function(exports, module) {
+define(['exports', 'module','backbone'], function(exports, module,backbone) {
     'use strict';
 
 
     require(['scripts/vme/panels/view/ButtonView']);
-    var Backbone = require('backbone');
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             this.opt = o || {};
             this.config = this.opt.config || {};

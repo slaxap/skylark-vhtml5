@@ -1,9 +1,12 @@
-define(['exports', 'module', './ButtonsView'], function(exports, module, ButtonsView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './ButtonsView'
+], function(exports, module, backbone, ButtonsView) {
     'use strict';
 
-    var Backbone = require('backbone');
-
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             var config = o.config || {};
             this.config = config;

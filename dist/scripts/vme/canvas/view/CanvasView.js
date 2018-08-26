@@ -1,10 +1,14 @@
-define(['exports', 'module', './FrameView'], function(exports, module, FrameView) {
+define([
+    'exports', 
+    'module', 
+    'backbone',
+    './FrameView'
+], function(exports, module, backbone, FrameView) {
     'use strict';
 
-    var Backbone = require('backbone'),
-        $ = Backbone.$;
+    var $ = backbone.$;
 
-    module.exports = Backbone.View.extend({
+    module.exports = backbone.View.extend({
         initialize: function initialize(o) {
             _.bindAll(this, 'renderBody', 'onFrameScroll', 'clearOff');
             window.onscroll = this.clearOff;
